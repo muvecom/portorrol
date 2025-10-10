@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Análise de Atendimento</title>
+    <title>Dashboard - Portorrol Monitor IA</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary-color: #1a73e8;
@@ -40,6 +41,26 @@
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-placeholder {
+            width: 150px;
+            height: 60px;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+            padding: 5px;
         }
         
         h1 {
@@ -121,36 +142,11 @@
             font-weight: 500;
         }
         
-        .sentiment-transition {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .transition-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .transition-label {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            width: 100px;
-        }
-        
-        .transition-bar {
-            height: 20px;
-            background-color: var(--neutral-color);
-            border-radius: 10px;
-            overflow: hidden;
-            flex-grow: 1;
-        }
-        
-        .transition-fill {
-            height: 100%;
-            border-radius: 10px;
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            margin: 10px 0;
         }
         
         .sentiment-legend {
@@ -270,14 +266,14 @@
             font-size: 14px;
         }
         
-        .cars-grid {
+        .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 10px;
         }
         
-        .car-item {
+        .product-item {
             background-color: var(--neutral-color);
             border-radius: 4px;
             padding: 8px;
@@ -359,7 +355,13 @@
 <body>
     <div class="container">
         <header>
-            <h1>Análise de Atendimento</h1>
+            <div class="logo-container">
+                <div class="logo-placeholder" id="logo-placeholder">
+                    Logo da Portorrol<br>
+                    <small>Insira a URL da imagem</small>
+                </div>
+                <h1>Monitor IA - Portorrol</h1>
+            </div>
             <div class="period-selector">
                 <div class="dropdown">
                     <div class="dropdown-btn">
@@ -380,10 +382,10 @@
             <!-- Card de Transição de Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Transição de Sentimento</div>
+                    <div class="card-title">Transição de Sentimento dos Clientes</div>
                 </div>
-                <div class="sentiment-transition" id="sentiment-transition">
-                    <!-- Conteúdo será preenchido dinamicamente -->
+                <div class="chart-container">
+                    <canvas id="sentimentTransitionChart"></canvas>
                 </div>
                 <div class="sentiment-legend">
                     <div class="legend-item">
@@ -416,75 +418,50 @@
             <!-- Card de Distribuição do Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Distribuição do Sentimento ao Final do Atendimento</div>
+                    <div class="card-title">Sentimento do Cliente ao Final do Atendimento</div>
                 </div>
-                <div class="sentiment-distribution" id="sentiment-distribution">
-                    <!-- Conteúdo será preenchido dinamicamente -->
+                <div class="chart-container">
+                    <canvas id="sentimentDistributionChart"></canvas>
                 </div>
             </div>
             
-            <!-- Card de Anúncios que mais geram leads -->
+            <!-- Card de Top 3 Objeções -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Anúncios que mais geram leads</div>
+                    <div class="card-title">Top 3 Objeções dos Clientes</div>
                 </div>
-                <table class="leads-table" id="leads-table">
-                    <!-- Conteúdo será preenchido dinamicamente -->
-                </table>
+                <div class="chart-container">
+                    <canvas id="objectionsChart"></canvas>
+                </div>
             </div>
-        </div>
-        
-        <!-- Seção de Métricas de Interesse -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="card-header">
-                <div class="card-title">Métricas de Interesse</div>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-                <div>
-                    <div class="card-title">Interesse em Visita</div>
-                    <div id="visit-interest">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
+            
+            <!-- Card de Top 3 Produtos -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Top 3 Produtos Mais Buscados</div>
                 </div>
-                <div>
-                    <div class="card-title">Interesse em Test Drive</div>
-                    <div id="test-drive-interest">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Interesse por Financiamento</div>
-                    <div id="financing-interest">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Avaliação de Usado</div>
-                    <div id="used-evaluation">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Cliente "só pesquisando"</div>
-                    <div id="just-browsing">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Cliente sem Responder</div>
-                    <div id="no-response">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
+                <div class="chart-container">
+                    <canvas id="productsChart"></canvas>
                 </div>
             </div>
         </div>
         
-        <!-- Seção de Carros mais buscados -->
+        <!-- Seção de Análise de Atendentes -->
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">
-                <div class="card-title">Carros mais buscados</div>
+                <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
             </div>
-            <div class="cars-grid" id="popular-cars">
+            <div class="chart-container">
+                <canvas id="attendantAnalysisChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Seção de Produtos mais buscados -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Produtos mais buscados</div>
+            </div>
+            <div class="products-grid" id="popular-products">
                 <!-- Conteúdo será preenchido dinamicamente -->
             </div>
         </div>
@@ -496,50 +473,26 @@
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
                 <div>
-                    <div class="card-title">Falta Estoque</div>
-                    <div id="lack-stock">
+                    <div class="card-title">Preço Elevado</div>
+                    <div id="high-price">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
                 <div>
-                    <div class="card-title">Loja muito Longe</div>
-                    <div id="store-far">
+                    <div class="card-title">Prazo de Entrega</div>
+                    <div id="delivery-time">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
                 <div>
-                    <div class="card-title">Sem Tempo de Visitar</div>
-                    <div id="no-time">
+                    <div class="card-title">Qualidade do Produto</div>
+                    <div id="product-quality">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
                 <div>
-                    <div class="card-title">Valor de Entrada Alto</div>
-                    <div id="high-down-payment">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Tenta Agendar Visita</div>
-                    <div id="schedule-visit">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Pergunta Forma de Pagamento</div>
-                    <div id="payment-method">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Fez Análise de Crédito</div>
-                    <div id="credit-analysis">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Demonstra Conhecimento</div>
-                    <div id="demonstrates-knowledge">
+                    <div class="card-title">Disponibilidade</div>
+                    <div id="availability">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
@@ -575,7 +528,7 @@
     </div>
 
     <script>
-        // Dados de exemplo que serão substituídos pelo JSON do webhook
+        // Dados de exemplo adaptados para uma loja de rolamentos
         const sampleData = {
             "totalConversations": 574,
             "sentimentTransitions": [
@@ -594,55 +547,53 @@
                 "neutral": 488,
                 "negative": 24
             },
-            "topLeads": [
-                {"link": "https://fb.me/6u3EGKXYQ", "count": 19},
-                {"link": "https://fb.me/6W1sLQZkA", "count": 13},
-                {"link": "https://fb.me/1NQh05fx6d", "count": 13},
-                {"link": "https://www.instagram.com/p...", "count": 13},
-                {"link": "https://fb.me/8SzrjPiAz", "count": 10}
+            "topObjections": [
+                {"objection": "Preço Elevado", "count": 45},
+                {"objection": "Prazo de Entrega", "count": 32},
+                {"objection": "Qualidade", "count": 18}
             ],
-            "interestMetrics": {
-                "visit": {"yes": 8, "no": 92},
-                "testDrive": {"yes": 19.7, "no": 80.3},
-                "financing": {"yes": 93.6, "no": 6.4},
-                "usedEvaluation": {"yes": 93.7, "no": 6.3},
-                "justBrowsing": {"yes": 24.9, "no": 75.1},
-                "noResponse": {"yes": 82.8, "no": 17.2}
-            },
-            "popularCars": [
-                "HR-V", "HRV", "Honda City", "Honda Fit", "HR-V...", 
-                "Honda Ci...", "Honda H...", "New Ci...", "Hrv", "Creta",
-                "HR...", "New HR...", "New HR...", "New Cit...", "City",
-                "HB20", "Fit Ho...", "HR...", "City...", "CR-...",
-                "Iris", "Hond...", "Civic...", "Outros"
+            "topProducts": [
+                {"product": "Rolamento de Roda", "count": 120},
+                {"product": "Rolamento AXK", "count": 85},
+                {"product": "Rolamento de Embreagem", "count": 65}
+            ],
+            "attendantAnalysis": [
+                {"attendant": "João Silva", "technical": 85, "persuasion": 78},
+                {"attendant": "Maria Santos", "technical": 92, "persuasion": 85},
+                {"attendant": "Pedro Costa", "technical": 76, "persuasion": 82},
+                {"attendant": "Ana Oliveira", "technical": 88, "persuasion": 79}
+            ],
+            "popularProducts": [
+                "Rolamento de Roda", "Rolamento AXK", "Rolamento de Embreagem", 
+                "Rolamento de Direção", "Rolamento de Transmissão", "Rolamento de Motor",
+                "Rolamento de Correia", "Rolamento de Polia", "Rolamento de Eixo",
+                "Rolamento de Cubo", "Rolamento de Pinhão", "Rolamento de Esferas",
+                "Rolamento de Rolos", "Rolamento de Agulhas", "Rolamento de Contato Angular",
+                "Outros"
             ],
             "objections": {
-                "lackStock": {"yes": 18, "no": 82},
-                "storeFar": {"yes": 1.4, "no": 98.6},
-                "noTime": {"yes": 2.1, "no": 97.9},
-                "highDownPayment": {"yes": 1.2, "no": 98.8},
-                "scheduleVisit": {"yes": 47.8, "no": 52.2},
-                "paymentMethod": {"yes": 97.5, "no": 2.5},
-                "creditAnalysis": {"yes": 97.5, "no": 2.5},
-                "demonstratesKnowledge": {"yes": 8, "no": 92}
+                "highPrice": {"yes": 18, "no": 82},
+                "deliveryTime": {"yes": 12, "no": 88},
+                "productQuality": {"yes": 8, "no": 92},
+                "availability": {"yes": 15, "no": 85}
             },
             "conversations": [
                 {
                     "date": "09, outubro 20...",
                     "session": "8174e8cc-...",
-                    "summary": "O cliente, interessado na HR-V EXL para uso como táxi, buscou informações...",
+                    "summary": "O cliente, interessado em rolamentos de roda para seu caminhão, buscou informações sobre preços e disponibilidade...",
                     "sentiment": {"from": "positive", "to": "negative"}
                 },
                 {
                     "date": "09, outubro 20...",
                     "session": "d1afb272-...",
-                    "summary": "O cliente Giuseppe manifestou interesse inicialmente em adquirir um Hon...",
+                    "summary": "O cliente Giuseppe manifestou interesse inicialmente em adquirir rolamentos AXK para sua máquina industrial...",
                     "sentiment": {"from": "positive", "to": "positive"}
                 },
                 {
                     "date": "09, outubro 20...",
                     "session": "c0b9c795-...",
-                    "summary": "O cliente iniciou contato solicitando o e-mail da concessionária Hville para...",
+                    "summary": "O cliente iniciou contato solicitando o catálogo de produtos da Portorrol para comparar especificações técnicas...",
                     "sentiment": {"from": "neutral", "to": "neutral"}
                 }
                 // Mais conversas seriam adicionadas aqui
@@ -655,153 +606,247 @@
             }
         };
 
-        // Função para renderizar a transição de sentimento
-        function renderSentimentTransition(data) {
-            const container = document.getElementById('sentiment-transition');
-            container.innerHTML = '';
+        // Função para renderizar o gráfico de transição de sentimento
+        function renderSentimentTransitionChart(data) {
+            const ctx = document.getElementById('sentimentTransitionChart').getContext('2d');
             
-            // Encontrar o valor máximo para normalizar as barras
-            const maxCount = Math.max(...data.map(item => item.count));
+            // Preparar dados para o gráfico de pizza
+            const labels = data.map(item => `${item.from} → ${item.to}`);
+            const counts = data.map(item => item.count);
             
-            data.forEach(item => {
-                const transitionItem = document.createElement('div');
-                transitionItem.className = 'transition-item';
-                
-                const label = document.createElement('div');
-                label.className = 'transition-label';
-                
-                // Criar os círculos de sentimento
-                const fromDot = document.createElement('div');
-                fromDot.className = `sentiment-dot sentiment-${item.from}`;
-                
-                const toDot = document.createElement('div');
-                toDot.className = `sentiment-dot sentiment-${item.to}`;
-                
-                label.appendChild(fromDot);
-                label.appendChild(toDot);
-                
-                const bar = document.createElement('div');
-                bar.className = 'transition-bar';
-                
-                const fill = document.createElement('div');
-                fill.className = 'transition-fill';
-                fill.style.width = `${(item.count / maxCount) * 100}%`;
-                
-                // Definir cor baseada no sentimento
+            // Cores para diferentes transições
+            const backgroundColors = data.map(item => {
                 if (item.from === 'positive' && item.to === 'positive') {
-                    fill.style.backgroundColor = '#34a853';
+                    return '#34a853'; // Verde
                 } else if (item.from === 'neutral' && item.to === 'neutral') {
-                    fill.style.backgroundColor = '#f9ab00';
+                    return '#f9ab00'; // Amarelo
                 } else if (item.from === 'negative' && item.to === 'negative') {
-                    fill.style.backgroundColor = '#ea4335';
+                    return '#ea4335'; // Vermelho
+                } else if (item.from === 'positive' && item.to === 'negative') {
+                    return '#ff6b6b'; // Vermelho claro
+                } else if (item.from === 'negative' && item.to === 'positive') {
+                    return '#51cf66'; // Verde claro
                 } else {
-                    fill.style.backgroundColor = '#9aa0a6';
+                    return '#9aa0a6'; // Cinza
                 }
-                
-                fill.textContent = item.count;
-                bar.appendChild(fill);
-                
-                transitionItem.appendChild(label);
-                transitionItem.appendChild(bar);
-                container.appendChild(transitionItem);
+            });
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
-        // Função para renderizar a distribuição de sentimento
-        function renderSentimentDistribution(data) {
-            const container = document.getElementById('sentiment-distribution');
+        // Função para renderizar o gráfico de distribuição de sentimento
+        function renderSentimentDistributionChart(data) {
+            const ctx = document.getElementById('sentimentDistributionChart').getContext('2d');
+            
+            const labels = Object.keys(data).map(key => {
+                if (key === 'positive') return 'Positivo';
+                if (key === 'neutral') return 'Neutro';
+                if (key === 'negative') return 'Negativo';
+                return key;
+            });
+            
+            const counts = Object.values(data);
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: [
+                            '#34a853', // Verde para positivo
+                            '#f9ab00', // Amarelo para neutro
+                            '#ea4335'  // Vermelho para negativo
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para renderizar o gráfico de objeções
+        function renderObjectionsChart(data) {
+            const ctx = document.getElementById('objectionsChart').getContext('2d');
+            
+            const labels = data.map(item => item.objection);
+            const counts = data.map(item => item.count);
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: [
+                            '#ff6b6b',
+                            '#ffa8a8',
+                            '#ffc9c9'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para renderizar o gráfico de produtos
+        function renderProductsChart(data) {
+            const ctx = document.getElementById('productsChart').getContext('2d');
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: [
+                            '#4dabf7',
+                            '#339af0',
+                            '#1c7ed6'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para renderizar a análise de atendentes
+        function renderAttendantAnalysisChart(data) {
+            const ctx = document.getElementById('attendantAnalysisChart').getContext('2d');
+            
+            const labels = data.map(item => item.attendant);
+            const technicalData = data.map(item => item.technical);
+            const persuasionData = data.map(item => item.persuasion);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Conhecimento Técnico',
+                            data: technicalData,
+                            backgroundColor: '#4dabf7',
+                            borderColor: '#339af0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Capacidade de Persuasão',
+                            data: persuasionData,
+                            backgroundColor: '#ffa94d',
+                            borderColor: '#ff922b',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Pontuação (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para renderizar produtos mais buscados
+        function renderPopularProducts(data) {
+            const container = document.getElementById('popular-products');
             container.innerHTML = '';
             
-            Object.entries(data).forEach(([sentiment, count]) => {
-                const item = document.createElement('div');
-                item.className = 'sentiment-item';
-                
-                const value = document.createElement('div');
-                value.className = 'sentiment-value';
-                value.textContent = count;
-                
-                const label = document.createElement('div');
-                label.className = 'sentiment-label';
-                
-                if (sentiment === 'positive') {
-                    label.textContent = 'Positivo';
-                    value.style.color = '#34a853';
-                } else if (sentiment === 'neutral') {
-                    label.textContent = 'Neutro';
-                    value.style.color = '#f9ab00';
-                } else if (sentiment === 'negative') {
-                    label.textContent = 'Negativo';
-                    value.style.color = '#ea4335';
-                }
-                
-                item.appendChild(value);
-                item.appendChild(label);
-                container.appendChild(item);
+            data.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.textContent = product;
+                container.appendChild(productItem);
             });
         }
 
-        // Função para renderizar a tabela de leads
-        function renderLeadsTable(data) {
-            const container = document.getElementById('leads-table');
-            container.innerHTML = '';
+        // Função para renderizar objeções
+        function renderObjections(data) {
+            // Preço Elevado
+            renderPercentageBar('high-price', 'Preço Elevado', data.highPrice);
             
-            // Cabeçalho da tabela
-            const headerRow = document.createElement('tr');
-            const headerNumber = document.createElement('th');
-            headerNumber.textContent = '#';
-            const headerLink = document.createElement('th');
-            headerLink.textContent = 'Link do Anúncio';
-            const headerCount = document.createElement('th');
-            headerCount.textContent = 'Contagem';
+            // Prazo de Entrega
+            renderPercentageBar('delivery-time', 'Prazo de Entrega', data.deliveryTime);
             
-            headerRow.appendChild(headerNumber);
-            headerRow.appendChild(headerLink);
-            headerRow.appendChild(headerCount);
-            container.appendChild(headerRow);
+            // Qualidade do Produto
+            renderPercentageBar('product-quality', 'Qualidade do Produto', data.productQuality);
             
-            // Linhas de dados
-            data.forEach((item, index) => {
-                const row = document.createElement('tr');
-                
-                const cellNumber = document.createElement('td');
-                cellNumber.textContent = index + 1;
-                
-                const cellLink = document.createElement('td');
-                const link = document.createElement('a');
-                link.href = item.link;
-                link.textContent = item.link;
-                link.target = '_blank';
-                cellLink.appendChild(link);
-                
-                const cellCount = document.createElement('td');
-                cellCount.textContent = item.count;
-                
-                row.appendChild(cellNumber);
-                row.appendChild(cellLink);
-                row.appendChild(cellCount);
-                container.appendChild(row);
-            });
-        }
-
-        // Função para renderizar métricas de interesse
-        function renderInterestMetrics(data) {
-            // Interesse em Visita
-            renderPercentageBar('visit-interest', 'Interesse em Visita', data.visit);
-            
-            // Interesse em Test Drive
-            renderPercentageBar('test-drive-interest', 'Interesse em Test Drive', data.testDrive);
-            
-            // Interesse por Financiamento
-            renderPercentageBar('financing-interest', 'Interesse por Financiamento', data.financing);
-            
-            // Avaliação de Usado
-            renderPercentageBar('used-evaluation', 'Avaliação de Usado', data.usedEvaluation);
-            
-            // Cliente "só pesquisando"
-            renderPercentageBar('just-browsing', 'Cliente "só pesquisando"', data.justBrowsing);
-            
-            // Cliente sem Responder
-            renderPercentageBar('no-response', 'Cliente sem Responder', data.noResponse);
+            // Disponibilidade
+            renderPercentageBar('availability', 'Disponibilidade', data.availability);
         }
 
         // Função auxiliar para renderizar barras de porcentagem
@@ -839,46 +884,6 @@
             
             container.appendChild(bar);
             container.appendChild(label);
-        }
-
-        // Função para renderizar carros mais buscados
-        function renderPopularCars(data) {
-            const container = document.getElementById('popular-cars');
-            container.innerHTML = '';
-            
-            data.forEach(car => {
-                const carItem = document.createElement('div');
-                carItem.className = 'car-item';
-                carItem.textContent = car;
-                container.appendChild(carItem);
-            });
-        }
-
-        // Função para renderizar objeções
-        function renderObjections(data) {
-            // Falta Estoque
-            renderPercentageBar('lack-stock', 'Falta Estoque', data.lackStock);
-            
-            // Loja muito Longe
-            renderPercentageBar('store-far', 'Loja muito Longe', data.storeFar);
-            
-            // Sem Tempo de Visitar
-            renderPercentageBar('no-time', 'Sem Tempo de Visitar', data.noTime);
-            
-            // Valor de Entrada Alto
-            renderPercentageBar('high-down-payment', 'Valor de Entrada Alto', data.highDownPayment);
-            
-            // Tenta Agendar Visita
-            renderPercentageBar('schedule-visit', 'Tenta Agendar Visita', data.scheduleVisit);
-            
-            // Pergunta Forma de Pagamento
-            renderPercentageBar('payment-method', 'Pergunta Forma de Pagamento', data.paymentMethod);
-            
-            // Fez Análise de Crédito
-            renderPercentageBar('credit-analysis', 'Fez Análise de Crédito', data.creditAnalysis);
-            
-            // Demonstra Conhecimento
-            renderPercentageBar('demonstrates-knowledge', 'Demonstra Conhecimento', data.demonstratesKnowledge);
         }
 
         // Função para renderizar conversas
@@ -938,11 +943,12 @@
                 const data = await response.json();
                 
                 // Renderizar todos os componentes com os dados
-                renderSentimentTransition(data.sentimentTransitions);
-                renderSentimentDistribution(data.finalSentiment);
-                renderLeadsTable(data.topLeads);
-                renderInterestMetrics(data.interestMetrics);
-                renderPopularCars(data.popularCars);
+                renderSentimentTransitionChart(data.sentimentTransitions);
+                renderSentimentDistributionChart(data.finalSentiment);
+                renderObjectionsChart(data.topObjections);
+                renderProductsChart(data.topProducts);
+                renderAttendantAnalysisChart(data.attendantAnalysis);
+                renderPopularProducts(data.popularProducts);
                 renderObjections(data.objections);
                 renderConversations(data.conversations);
                 renderPagination(data.pagination);
@@ -956,18 +962,43 @@
 
         // Função para usar dados de exemplo
         function useSampleData() {
-            renderSentimentTransition(sampleData.sentimentTransitions);
-            renderSentimentDistribution(sampleData.finalSentiment);
-            renderLeadsTable(sampleData.topLeads);
-            renderInterestMetrics(sampleData.interestMetrics);
-            renderPopularCars(sampleData.popularCars);
+            renderSentimentTransitionChart(sampleData.sentimentTransitions);
+            renderSentimentDistributionChart(sampleData.finalSentiment);
+            renderObjectionsChart(sampleData.topObjections);
+            renderProductsChart(sampleData.topProducts);
+            renderAttendantAnalysisChart(sampleData.attendantAnalysis);
+            renderPopularProducts(sampleData.popularProducts);
             renderObjections(sampleData.objections);
             renderConversations(sampleData.conversations);
             renderPagination(sampleData.pagination);
         }
 
+        // Função para carregar logo
+        function loadLogo() {
+            const logoPlaceholder = document.getElementById('logo-placeholder');
+            
+            // Verificar se há uma URL de logo armazenada
+            const logoUrl = localStorage.getItem('portorrol-logo-url');
+            
+            if (logoUrl) {
+                logoPlaceholder.innerHTML = `<img src="${logoUrl}" alt="Logo Portorrol" style="max-width: 100%; max-height: 100%;">`;
+            } else {
+                // Permitir que o usuário insira a URL da logo
+                logoPlaceholder.addEventListener('click', function() {
+                    const url = prompt('Insira a URL da logo da Portorrol:');
+                    if (url) {
+                        localStorage.setItem('portorrol-logo-url', url);
+                        logoPlaceholder.innerHTML = `<img src="${url}" alt="Logo Portorrol" style="max-width: 100%; max-height: 100%;">`;
+                    }
+                });
+            }
+        }
+
         // Inicializar a página
         document.addEventListener('DOMContentLoaded', function() {
+            // Carregar logo
+            loadLogo();
+            
             // Carregar dados do webhook
             loadDataFromWebhook();
             
