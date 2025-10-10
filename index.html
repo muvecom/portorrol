@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Análise de Atendimento</title>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --neutral-color: #f8f9fa;
+            --border-color: #dadce0;
+            --text-color: #202124;
+            --success-color: #34a853;
+            --warning-color: #f9ab00;
+            --danger-color: #ea4335;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .period-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropdown-btn {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            z-index: 1;
+            margin-top: 5px;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--neutral-color);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .sentiment-transition {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .transition-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .transition-label {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            width: 100px;
+        }
+        
+        .transition-bar {
+            height: 20px;
+            background-color: var(--neutral-color);
+            border-radius: 10px;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        
+        .transition-fill {
+            height: 100%;
+            border-radius: 10px;
+        }
+        
+        .sentiment-legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .sentiment-dots {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .sentiment-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .sentiment-positive {
+            background-color: var(--success-color);
+        }
+        
+        .sentiment-neutral {
+            background-color: var(--warning-color);
+        }
+        
+        .sentiment-negative {
+            background-color: var(--danger-color);
+        }
+        
+        .sentiment-unknown {
+            background-color: #9aa0a6;
+        }
+        
+        .sentiment-distribution {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .sentiment-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .sentiment-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .sentiment-label {
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .leads-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .leads-table th, .leads-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .leads-table th {
+            font-weight: 500;
+            color: #5f6368;
+        }
+        
+        .leads-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .percentage-bar {
+            display: flex;
+            height: 24px;
+            background-color: var(--neutral-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .percentage-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .percentage-yes {
+            background-color: var(--success-color);
+        }
+        
+        .percentage-no {
+            background-color: #dadce0;
+        }
+        
+        .percentage-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+        
+        .cars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .car-item {
+            background-color: var(--neutral-color);
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .conversations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .conversations-table th, .conversations-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .conversations-table th {
+            font-weight: 500;
+            color: #5f6368;
+            background-color: var(--neutral-color);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .pagination-info {
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .pagination-btn {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 16px;
+            color: #5f6368;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sentiment-distribution {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .sentiment-item {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Análise de Atendimento</h1>
+            <div class="period-selector">
+                <div class="dropdown">
+                    <div class="dropdown-btn">
+                        <span>Selecionar período</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Últimos 7 dias</div>
+                        <div class="dropdown-item">Últimos 30 dias</div>
+                        <div class="dropdown-item">Últimos 90 dias</div>
+                        <div class="dropdown-item">Personalizado</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="stats-grid">
+            <!-- Card de Transição de Sentimento -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Transição de Sentimento</div>
+                </div>
+                <div class="sentiment-transition" id="sentiment-transition">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </div>
+                <div class="sentiment-legend">
+                    <div class="legend-item">
+                        <span>Legenda:</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-positive"></div>
+                            <div class="sentiment-dot sentiment-positive"></div>
+                        </div>
+                        <span>Positivo</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-neutral"></div>
+                            <div class="sentiment-dot sentiment-neutral"></div>
+                        </div>
+                        <span>Neutro</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-negative"></div>
+                            <div class="sentiment-dot sentiment-negative"></div>
+                        </div>
+                        <span>Negativo</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card de Distribuição do Sentimento -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Distribuição do Sentimento ao Final do Atendimento</div>
+                </div>
+                <div class="sentiment-distribution" id="sentiment-distribution">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </div>
+            </div>
+            
+            <!-- Card de Anúncios que mais geram leads -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Anúncios que mais geram leads</div>
+                </div>
+                <table class="leads-table" id="leads-table">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </table>
+            </div>
+        </div>
+        
+        <!-- Seção de Métricas de Interesse -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Métricas de Interesse</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <div class="card-title">Interesse em Visita</div>
+                    <div id="visit-interest">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Interesse em Test Drive</div>
+                    <div id="test-drive-interest">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Interesse por Financiamento</div>
+                    <div id="financing-interest">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Avaliação de Usado</div>
+                    <div id="used-evaluation">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Cliente "só pesquisando"</div>
+                    <div id="just-browsing">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Cliente sem Responder</div>
+                    <div id="no-response">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Carros mais buscados -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Carros mais buscados</div>
+            </div>
+            <div class="cars-grid" id="popular-cars">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+        </div>
+        
+        <!-- Seção de Objeções -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Objeções</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <div class="card-title">Falta Estoque</div>
+                    <div id="lack-stock">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Loja muito Longe</div>
+                    <div id="store-far">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Sem Tempo de Visitar</div>
+                    <div id="no-time">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Valor de Entrada Alto</div>
+                    <div id="high-down-payment">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Tenta Agendar Visita</div>
+                    <div id="schedule-visit">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Pergunta Forma de Pagamento</div>
+                    <div id="payment-method">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Fez Análise de Crédito</div>
+                    <div id="credit-analysis">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Demonstra Conhecimento</div>
+                    <div id="demonstrates-knowledge">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Resumo das Conversas -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Resumo das Conversas</div>
+            </div>
+            <table class="conversations-table" id="conversations-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Sessão</th>
+                        <th>Resumo</th>
+                        <th>Sentimento</th>
+                    </tr>
+                </thead>
+                <tbody id="conversations-body">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </tbody>
+            </table>
+            <div class="pagination">
+                <div class="pagination-info" id="pagination-info">1 - 100 / 511</div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" id="prev-page">Anterior</button>
+                    <button class="pagination-btn" id="next-page">Próxima</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dados de exemplo que serão substituídos pelo JSON do webhook
+        const sampleData = {
+            "totalConversations": 574,
+            "sentimentTransitions": [
+                {"from": "neutral", "to": "neutral", "count": 300},
+                {"from": "positive", "to": "neutral", "count": 200},
+                {"from": "positive", "to": "positive", "count": 59},
+                {"from": "neutral", "to": "positive", "count": 150},
+                {"from": "neutral", "to": "negative", "count": 50},
+                {"from": "negative", "to": "negative", "count": 24},
+                {"from": "positive", "to": "negative", "count": 10},
+                {"from": "positive", "to": "unknown", "count": 5},
+                {"from": "unknown", "to": "unknown", "count": 3}
+            ],
+            "finalSentiment": {
+                "positive": 59,
+                "neutral": 488,
+                "negative": 24
+            },
+            "topLeads": [
+                {"link": "https://fb.me/6u3EGKXYQ", "count": 19},
+                {"link": "https://fb.me/6W1sLQZkA", "count": 13},
+                {"link": "https://fb.me/1NQh05fx6d", "count": 13},
+                {"link": "https://www.instagram.com/p...", "count": 13},
+                {"link": "https://fb.me/8SzrjPiAz", "count": 10}
+            ],
+            "interestMetrics": {
+                "visit": {"yes": 8, "no": 92},
+                "testDrive": {"yes": 19.7, "no": 80.3},
+                "financing": {"yes": 93.6, "no": 6.4},
+                "usedEvaluation": {"yes": 93.7, "no": 6.3},
+                "justBrowsing": {"yes": 24.9, "no": 75.1},
+                "noResponse": {"yes": 82.8, "no": 17.2}
+            },
+            "popularCars": [
+                "HR-V", "HRV", "Honda City", "Honda Fit", "HR-V...", 
+                "Honda Ci...", "Honda H...", "New Ci...", "Hrv", "Creta",
+                "HR...", "New HR...", "New HR...", "New Cit...", "City",
+                "HB20", "Fit Ho...", "HR...", "City...", "CR-...",
+                "Iris", "Hond...", "Civic...", "Outros"
+            ],
+            "objections": {
+                "lackStock": {"yes": 18, "no": 82},
+                "storeFar": {"yes": 1.4, "no": 98.6},
+                "noTime": {"yes": 2.1, "no": 97.9},
+                "highDownPayment": {"yes": 1.2, "no": 98.8},
+                "scheduleVisit": {"yes": 47.8, "no": 52.2},
+                "paymentMethod": {"yes": 97.5, "no": 2.5},
+                "creditAnalysis": {"yes": 97.5, "no": 2.5},
+                "demonstratesKnowledge": {"yes": 8, "no": 92}
+            },
+            "conversations": [
+                {
+                    "date": "09, outubro 20...",
+                    "session": "8174e8cc-...",
+                    "summary": "O cliente, interessado na HR-V EXL para uso como táxi, buscou informações...",
+                    "sentiment": {"from": "positive", "to": "negative"}
+                },
+                {
+                    "date": "09, outubro 20...",
+                    "session": "d1afb272-...",
+                    "summary": "O cliente Giuseppe manifestou interesse inicialmente em adquirir um Hon...",
+                    "sentiment": {"from": "positive", "to": "positive"}
+                },
+                {
+                    "date": "09, outubro 20...",
+                    "session": "c0b9c795-...",
+                    "summary": "O cliente iniciou contato solicitando o e-mail da concessionária Hville para...",
+                    "sentiment": {"from": "neutral", "to": "neutral"}
+                }
+                // Mais conversas seriam adicionadas aqui
+            ],
+            "pagination": {
+                "currentPage": 1,
+                "totalPages": 6,
+                "itemsPerPage": 100,
+                "totalItems": 511
+            }
+        };
+
+        // Função para renderizar a transição de sentimento
+        function renderSentimentTransition(data) {
+            const container = document.getElementById('sentiment-transition');
+            container.innerHTML = '';
+            
+            // Encontrar o valor máximo para normalizar as barras
+            const maxCount = Math.max(...data.map(item => item.count));
+            
+            data.forEach(item => {
+                const transitionItem = document.createElement('div');
+                transitionItem.className = 'transition-item';
+                
+                const label = document.createElement('div');
+                label.className = 'transition-label';
+                
+                // Criar os círculos de sentimento
+                const fromDot = document.createElement('div');
+                fromDot.className = `sentiment-dot sentiment-${item.from}`;
+                
+                const toDot = document.createElement('div');
+                toDot.className = `sentiment-dot sentiment-${item.to}`;
+                
+                label.appendChild(fromDot);
+                label.appendChild(toDot);
+                
+                const bar = document.createElement('div');
+                bar.className = 'transition-bar';
+                
+                const fill = document.createElement('div');
+                fill.className = 'transition-fill';
+                fill.style.width = `${(item.count / maxCount) * 100}%`;
+                
+                // Definir cor baseada no sentimento
+                if (item.from === 'positive' && item.to === 'positive') {
+                    fill.style.backgroundColor = '#34a853';
+                } else if (item.from === 'neutral' && item.to === 'neutral') {
+                    fill.style.backgroundColor = '#f9ab00';
+                } else if (item.from === 'negative' && item.to === 'negative') {
+                    fill.style.backgroundColor = '#ea4335';
+                } else {
+                    fill.style.backgroundColor = '#9aa0a6';
+                }
+                
+                fill.textContent = item.count;
+                bar.appendChild(fill);
+                
+                transitionItem.appendChild(label);
+                transitionItem.appendChild(bar);
+                container.appendChild(transitionItem);
+            });
+        }
+
+        // Função para renderizar a distribuição de sentimento
+        function renderSentimentDistribution(data) {
+            const container = document.getElementById('sentiment-distribution');
+            container.innerHTML = '';
+            
+            Object.entries(data).forEach(([sentiment, count]) => {
+                const item = document.createElement('div');
+                item.className = 'sentiment-item';
+                
+                const value = document.createElement('div');
+                value.className = 'sentiment-value';
+                value.textContent = count;
+                
+                const label = document.createElement('div');
+                label.className = 'sentiment-label';
+                
+                if (sentiment === 'positive') {
+                    label.textContent = 'Positivo';
+                    value.style.color = '#34a853';
+                } else if (sentiment === 'neutral') {
+                    label.textContent = 'Neutro';
+                    value.style.color = '#f9ab00';
+                } else if (sentiment === 'negative') {
+                    label.textContent = 'Negativo';
+                    value.style.color = '#ea4335';
+                }
+                
+                item.appendChild(value);
+                item.appendChild(label);
+                container.appendChild(item);
+            });
+        }
+
+        // Função para renderizar a tabela de leads
+        function renderLeadsTable(data) {
+            const container = document.getElementById('leads-table');
+            container.innerHTML = '';
+            
+            // Cabeçalho da tabela
+            const headerRow = document.createElement('tr');
+            const headerNumber = document.createElement('th');
+            headerNumber.textContent = '#';
+            const headerLink = document.createElement('th');
+            headerLink.textContent = 'Link do Anúncio';
+            const headerCount = document.createElement('th');
+            headerCount.textContent = 'Contagem';
+            
+            headerRow.appendChild(headerNumber);
+            headerRow.appendChild(headerLink);
+            headerRow.appendChild(headerCount);
+            container.appendChild(headerRow);
+            
+            // Linhas de dados
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                const cellNumber = document.createElement('td');
+                cellNumber.textContent = index + 1;
+                
+                const cellLink = document.createElement('td');
+                const link = document.createElement('a');
+                link.href = item.link;
+                link.textContent = item.link;
+                link.target = '_blank';
+                cellLink.appendChild(link);
+                
+                const cellCount = document.createElement('td');
+                cellCount.textContent = item.count;
+                
+                row.appendChild(cellNumber);
+                row.appendChild(cellLink);
+                row.appendChild(cellCount);
+                container.appendChild(row);
+            });
+        }
+
+        // Função para renderizar métricas de interesse
+        function renderInterestMetrics(data) {
+            // Interesse em Visita
+            renderPercentageBar('visit-interest', 'Interesse em Visita', data.visit);
+            
+            // Interesse em Test Drive
+            renderPercentageBar('test-drive-interest', 'Interesse em Test Drive', data.testDrive);
+            
+            // Interesse por Financiamento
+            renderPercentageBar('financing-interest', 'Interesse por Financiamento', data.financing);
+            
+            // Avaliação de Usado
+            renderPercentageBar('used-evaluation', 'Avaliação de Usado', data.usedEvaluation);
+            
+            // Cliente "só pesquisando"
+            renderPercentageBar('just-browsing', 'Cliente "só pesquisando"', data.justBrowsing);
+            
+            // Cliente sem Responder
+            renderPercentageBar('no-response', 'Cliente sem Responder', data.noResponse);
+        }
+
+        // Função auxiliar para renderizar barras de porcentagem
+        function renderPercentageBar(containerId, title, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            const bar = document.createElement('div');
+            bar.className = 'percentage-bar';
+            
+            const yesFill = document.createElement('div');
+            yesFill.className = 'percentage-fill percentage-yes';
+            yesFill.style.width = `${data.yes}%`;
+            yesFill.textContent = `${data.yes}%`;
+            
+            const noFill = document.createElement('div');
+            noFill.className = 'percentage-fill percentage-no';
+            noFill.style.width = `${data.no}%`;
+            noFill.textContent = `${data.no}%`;
+            
+            bar.appendChild(yesFill);
+            bar.appendChild(noFill);
+            
+            const label = document.createElement('div');
+            label.className = 'percentage-label';
+            
+            const yesLabel = document.createElement('span');
+            yesLabel.textContent = 'Sim';
+            
+            const noLabel = document.createElement('span');
+            noLabel.textContent = 'Não';
+            
+            label.appendChild(yesLabel);
+            label.appendChild(noLabel);
+            
+            container.appendChild(bar);
+            container.appendChild(label);
+        }
+
+        // Função para renderizar carros mais buscados
+        function renderPopularCars(data) {
+            const container = document.getElementById('popular-cars');
+            container.innerHTML = '';
+            
+            data.forEach(car => {
+                const carItem = document.createElement('div');
+                carItem.className = 'car-item';
+                carItem.textContent = car;
+                container.appendChild(carItem);
+            });
+        }
+
+        // Função para renderizar objeções
+        function renderObjections(data) {
+            // Falta Estoque
+            renderPercentageBar('lack-stock', 'Falta Estoque', data.lackStock);
+            
+            // Loja muito Longe
+            renderPercentageBar('store-far', 'Loja muito Longe', data.storeFar);
+            
+            // Sem Tempo de Visitar
+            renderPercentageBar('no-time', 'Sem Tempo de Visitar', data.noTime);
+            
+            // Valor de Entrada Alto
+            renderPercentageBar('high-down-payment', 'Valor de Entrada Alto', data.highDownPayment);
+            
+            // Tenta Agendar Visita
+            renderPercentageBar('schedule-visit', 'Tenta Agendar Visita', data.scheduleVisit);
+            
+            // Pergunta Forma de Pagamento
+            renderPercentageBar('payment-method', 'Pergunta Forma de Pagamento', data.paymentMethod);
+            
+            // Fez Análise de Crédito
+            renderPercentageBar('credit-analysis', 'Fez Análise de Crédito', data.creditAnalysis);
+            
+            // Demonstra Conhecimento
+            renderPercentageBar('demonstrates-knowledge', 'Demonstra Conhecimento', data.demonstratesKnowledge);
+        }
+
+        // Função para renderizar conversas
+        function renderConversations(data) {
+            const container = document.getElementById('conversations-body');
+            container.innerHTML = '';
+            
+            data.forEach(conversation => {
+                const row = document.createElement('tr');
+                
+                const cellDate = document.createElement('td');
+                cellDate.textContent = conversation.date;
+                
+                const cellSession = document.createElement('td');
+                cellSession.textContent = conversation.session;
+                
+                const cellSummary = document.createElement('td');
+                cellSummary.textContent = conversation.summary;
+                
+                const cellSentiment = document.createElement('td');
+                
+                const sentimentDots = document.createElement('div');
+                sentimentDots.className = 'sentiment-dots';
+                
+                const fromDot = document.createElement('div');
+                fromDot.className = `sentiment-dot sentiment-${conversation.sentiment.from}`;
+                
+                const toDot = document.createElement('div');
+                toDot.className = `sentiment-dot sentiment-${conversation.sentiment.to}`;
+                
+                sentimentDots.appendChild(fromDot);
+                sentimentDots.appendChild(toDot);
+                cellSentiment.appendChild(sentimentDots);
+                
+                row.appendChild(cellDate);
+                row.appendChild(cellSession);
+                row.appendChild(cellSummary);
+                row.appendChild(cellSentiment);
+                container.appendChild(row);
+            });
+        }
+
+        // Função para renderizar informações de paginação
+        function renderPagination(data) {
+            const container = document.getElementById('pagination-info');
+            const startItem = (data.currentPage - 1) * data.itemsPerPage + 1;
+            const endItem = Math.min(data.currentPage * data.itemsPerPage, data.totalItems);
+            
+            container.textContent = `${startItem} - ${endItem} / ${data.totalItems}`;
+        }
+
+        // Função para carregar dados do webhook
+        async function loadDataFromWebhook() {
+            try {
+                // Substitua esta URL pela URL do seu webhook
+                const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
+                const data = await response.json();
+                
+                // Renderizar todos os componentes com os dados
+                renderSentimentTransition(data.sentimentTransitions);
+                renderSentimentDistribution(data.finalSentiment);
+                renderLeadsTable(data.topLeads);
+                renderInterestMetrics(data.interestMetrics);
+                renderPopularCars(data.popularCars);
+                renderObjections(data.objections);
+                renderConversations(data.conversations);
+                renderPagination(data.pagination);
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do webhook:', error);
+                // Em caso de erro, usar dados de exemplo
+                useSampleData();
+            }
+        }
+
+        // Função para usar dados de exemplo
+        function useSampleData() {
+            renderSentimentTransition(sampleData.sentimentTransitions);
+            renderSentimentDistribution(sampleData.finalSentiment);
+            renderLeadsTable(sampleData.topLeads);
+            renderInterestMetrics(sampleData.interestMetrics);
+            renderPopularCars(sampleData.popularCars);
+            renderObjections(sampleData.objections);
+            renderConversations(sampleData.conversations);
+            renderPagination(sampleData.pagination);
+        }
+
+        // Inicializar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carregar dados do webhook
+            loadDataFromWebhook();
+            
+            // Configurar eventos de paginação
+            document.getElementById('prev-page').addEventListener('click', function() {
+                // Lógica para carregar página anterior
+                console.log('Carregar página anterior');
+            });
+            
+            document.getElementById('next-page').addEventListener('click', function() {
+                // Lógica para carregar próxima página
+                console.log('Carregar próxima página');
+            });
+        });
+    </script>
+</body>
+</html>
