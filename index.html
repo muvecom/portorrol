@@ -5,215 +5,166 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Portorrol Monitor IA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root {
-            --primary-color: #1e40af;
-            --secondary-color: #3b82f6;
-            --neutral-color: #f8fafc;
-            --border-color: #e2e8f0;
-            --text-color: #1e293b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --primary-color: #1a73e8;
+            --neutro-color: #f8f9fa;
+            --border-color: #dadce0;
+            --text-color: #202124;
+            --success-color: #34a853;
+            --warning-color: #f9ab00;
+            --danger-color: #ea4335;
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
         }
         
         body {
-            background-color: #f1f5f9;
+            background-color: #f5f5f5;
             color: var(--text-color);
-            line-height: 1.6;
+            padding: 20px;
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
         
-        /* Header Styles */
         header {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 24px;
-            box-shadow: var(--card-shadow);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 15px;
         }
         
-        .logo-placeholder {
-            width: 180px;
-            height: 70px;
-            background: linear-gradient(135deg, #1e40af, #3b82f6);
+        .logo {
+            width: 150px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            border-radius: 4px;
         }
         
-        .logo-placeholder:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(30, 64, 175, 0.3);
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
         }
         
-        .header-title h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 4px;
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
         }
         
-        .header-title p {
-            color: #64748b;
-            font-size: 14px;
-        }
-        
-        .filters-container {
+        .period-selector {
             display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
         }
         
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .dropdown {
+            position: relative;
+            display: inline-block;
         }
         
-        .filter-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .filter-select {
-            padding: 10px 16px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            background: white;
-            font-size: 14px;
-            min-width: 180px;
+        .dropdown-btn {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        .filter-select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            z-index: 1;
+            margin-top: 5px;
         }
         
-        /* Stats Grid */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: var(--neutro-color);
+        }
+        
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
         
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px;
         }
         
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .card-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-color);
-        }
-        
-        .card-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
         
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: #64748b;
-        }
-        
-        .btn-outline:hover {
-            background: var(--neutral-color);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-        
-        /* Chart Containers */
         .chart-container {
             position: relative;
-            height: 280px;
+            height: 200px;
             width: 100%;
             margin: 10px 0;
         }
         
-        .small-chart {
-            height: 200px;
-        }
-        
-        /* Sentiment Styles */
         .sentiment-legend {
             display: flex;
-            gap: 20px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            font-size: 14px;
         }
         
         .legend-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 14px;
+            gap: 5px;
+        }
+        
+        .sentiment-dots {
+            display: flex;
+            gap: 5px;
         }
         
         .sentiment-dot {
@@ -222,236 +173,208 @@
             border-radius: 50%;
         }
         
-        .sentiment-positive { background-color: var(--success-color); }
-        .sentiment-neutral { background-color: var(--warning-color); }
-        .sentiment-negative { background-color: var(--danger-color); }
-        
-        /* Products Grid */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
+        .sentiment-positivo {
+            background-color: var(--success-color);
         }
         
-        .product-item {
-            background: var(--neutral-color);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        .sentiment-neutro {
+            background-color: var(--warning-color);
         }
         
-        .product-item:hover {
-            background: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
+        .sentiment-negativo {
+            background-color: var(--danger-color);
         }
         
-        /* Objections Grid */
-        .objections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        .sentiment-nenhum {
+            background-color: #9aa0a6;
         }
         
-        .objection-card {
-            background: var(--neutral-color);
-            border-radius: 8px;
-            padding: 16px;
-        }
-        
-        .objection-header {
+        .sentiment-distribution {
             display: flex;
-            justify-content: space-between;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .sentiment-item {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 12px;
+            gap: 5px;
         }
         
-        .objection-title {
+        .sentiment-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .sentiment-label {
             font-size: 14px;
-            font-weight: 600;
-            color: var(--text-color);
+            color: #5f6368;
         }
         
-        .objection-percentage {
-            font-size: 16px;
-            font-weight: 700;
+        .leads-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
         
-        .percentage-positive { color: var(--success-color); }
-        .percentage-negative { color: var(--danger-color); }
+        .leads-table th, .leads-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .leads-table th {
+            font-weight: 500;
+            color: #5f6368;
+        }
+        
+        .leads-table tr:last-child td {
+            border-bottom: none;
+        }
         
         .percentage-bar {
-            height: 8px;
-            background: #e2e8f0;
-            border-radius: 4px;
+            display: flex;
+            height: 24px;
+            background-color: var(--neutro-color);
+            border-radius: 12px;
             overflow: hidden;
-            margin: 8px 0;
+            margin: 5px 0;
         }
         
         .percentage-fill {
             height: 100%;
-            border-radius: 4px;
-            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
         }
         
-        .fill-positive { background: var(--success-color); }
-        .fill-negative { background: #cbd5e1; }
+        .percentage-yes {
+            background-color: var(--success-color);
+        }
         
-        .percentage-labels {
+        .percentage-no {
+            background-color: #dadce0;
+        }
+        
+        .percentage-label {
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
-            color: #64748b;
+            font-size: 14px;
         }
         
-        /* Conversations Table */
-        .conversations-table-container {
-            overflow-x: auto;
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .product-item {
+            background-color: var(--neutro-color);
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
         }
         
         .conversations-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 10px;
+        }
+        
+        .conversations-table th, .conversations-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .conversations-table th {
-            background: var(--neutral-color);
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 14px;
-            color: #64748b;
-            border-bottom: 2px solid var(--border-color);
+            font-weight: 500;
+            color: #5f6368;
+            background-color: var(--neutro-color);
         }
         
-        .conversations-table td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
-        }
-        
-        .conversations-table tr:hover {
-            background: #f8fafc;
-        }
-        
-        .sentiment-indicator {
-            display: flex;
-            gap: 4px;
-            align-items: center;
-        }
-        
-        /* Pagination */
         .pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
             border-top: 1px solid var(--border-color);
         }
         
         .pagination-info {
             font-size: 14px;
-            color: #64748b;
+            color: #5f6368;
         }
         
         .pagination-controls {
             display: flex;
-            gap: 8px;
+            gap: 10px;
         }
         
         .pagination-btn {
-            padding: 8px 16px;
+            background-color: white;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: white;
+            border-radius: 4px;
+            padding: 6px 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
         
-        .pagination-btn:hover:not(:disabled) {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Loading State */
         .loading {
             display: flex;
             justify-content: center;
             align-items: center;
             height: 200px;
             font-size: 16px;
-            color: #64748b;
+            color: #5f6368;
+        }
+
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
         }
         
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 12px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 1024px) {
+        @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
             
-            header {
+            .sentiment-distribution {
                 flex-direction: column;
-                align-items: stretch;
+                gap: 10px;
             }
             
-            .filters-container {
-                justify-content: center;
+            .sentiment-item {
+                flex-direction: row;
+                justify-content: space-between;
             }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 12px;
-            }
-            
-            .card {
-                padding: 16px;
-            }
-            
-            .products-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            }
-            
-            .filter-select {
-                min-width: 140px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .filters-container {
-                flex-direction: column;
-            }
-            
-            .filter-select {
-                min-width: 100%;
+
+            .filter-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -460,76 +383,89 @@
     <div class="container">
         <header>
             <div class="logo-container">
-                <div class="logo-placeholder" id="logo-placeholder">
-                    PORTORROL<br>
-                    <small>Rolamentos Industriais</small>
+                <div class="logo">
+                    <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol">
                 </div>
-                <div class="header-title">
-                    <h1>Monitor IA - Dashboard</h1>
-                    <p>Análise de atendimento e desempenho comercial</p>
-                </div>
+                <h1>Monitor IA - Portorrol</h1>
             </div>
-            <div class="filters-container">
-                <div class="filter-group">
-                    <label class="filter-label">Período</label>
-                    <select class="filter-select" id="period-filter">
-                        <option value="7">Últimos 7 dias</option>
-                        <option value="30" selected>Últimos 30 dias</option>
-                        <option value="90">Últimos 90 dias</option>
-                        <option value="custom">Personalizado</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Atendente</label>
-                    <select class="filter-select" id="attendant-filter">
-                        <option value="all">Todos os Atendentes</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Objeção</label>
-                    <select class="filter-select" id="objection-filter">
-                        <option value="all">Todas as Objeções</option>
-                        <option value="highPrice">Preço Elevado</option>
-                        <option value="deliveryTime">Prazo de Entrega</option>
-                        <option value="productQuality">Qualidade</option>
-                        <option value="availability">Disponibilidade</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Sentimento</label>
-                    <select class="filter-select" id="sentiment-filter">
-                        <option value="all">Todos os Sentimentos</option>
-                        <option value="positive">Positivo</option>
-                        <option value="neutral">Neutro</option>
-                        <option value="negative">Negativo</option>
-                    </select>
+            <div class="period-selector">
+                <div class="dropdown">
+                    <div class="dropdown-btn">
+                        <span>Selecionar período</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item">Últimos 7 dias</div>
+                        <div class="dropdown-item">Últimos 30 dias</div>
+                        <div class="dropdown-item">Últimos 90 dias</div>
+                        <div class="dropdown-item">Personalizado</div>
+                    </div>
                 </div>
             </div>
         </header>
+
+        <!-- Filtros -->
+        <div class="filter-section">
+            <div class="card-title">Filtros</div>
+            <div class="filter-grid">
+                <select class="filter-select" id="sentiment-filter">
+                    <option value="">Todos os Sentimentos</option>
+                    <option value="positive">Positivo</option>
+                    <option value="neutral">Neutro</option>
+                    <option value="negative">Negativo</option>
+                </select>
+                
+                <select class="filter-select" id="objection-filter">
+                    <option value="">Todas as Objeções</option>
+                    <option value="highPrice">Preço Elevado</option>
+                    <option value="deliveryTime">Prazo de Entrega</option>
+                    <option value="productQuality">Qualidade do Produto</option>
+                    <option value="availability">Disponibilidade</option>
+                    <option value="technicalSupport">Suporte Técnico</option>
+                </select>
+                
+                <select class="filter-select" id="attendant-filter">
+                    <option value="">Todos os Atendentes</option>
+                </select>
+                
+                <select class="filter-select" id="product-filter">
+                    <option value="">Todos os Produtos</option>
+                </select>
+            </div>
+        </div>
         
         <div class="stats-grid">
             <!-- Card de Transição de Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Transição de Sentimento</div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline" onclick="downloadChart('sentimentTransitionChart')">Exportar</button>
-                    </div>
+                    <div class="card-title">Transição de Sentimento dos Clientes</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="sentimentTransitionChart"></canvas>
                 </div>
                 <div class="sentiment-legend">
                     <div class="legend-item">
-                        <div class="sentiment-dot sentiment-positive"></div>
+                        <span>Legenda:</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-positivo"></div>
+                            <div class="sentiment-dot sentiment-positivo"></div>
+                        </div>
                         <span>Positivo</span>
                     </div>
                     <div class="legend-item">
-                        <div class="sentiment-dot sentiment-neutral"></div>
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-neutro"></div>
+                            <div class="sentiment-dot sentiment-neutro"></div>
+                        </div>
                         <span>Neutro</span>
                     </div>
                     <div class="legend-item">
-                        <div class="sentiment-dot sentiment-negative"></div>
+                        <div class="sentiment-dots">
+                            <div class="sentiment-dot sentiment-negativo"></div>
+                            <div class="sentiment-dot sentiment-negativo"></div>
+                        </div>
                         <span>Negativo</span>
                     </div>
                 </div>
@@ -538,75 +474,90 @@
             <!-- Card de Distribuição do Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Sentimento Final</div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline" onclick="downloadChart('sentimentDistributionChart')">Exportar</button>
-                    </div>
+                    <div class="card-title">Sentimento do Cliente ao Final do Atendimento</div>
                 </div>
                 <div class="chart-container">
                     <canvas id="sentimentDistributionChart"></canvas>
                 </div>
             </div>
-        </div>
-        
-        <div class="stats-grid">
-            <!-- Card de Top Objeções -->
+            
+            <!-- Card de Top 3 Objeções -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 3 Objeções</div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline" onclick="downloadChart('objectionsChart')">Exportar</button>
-                    </div>
+                    <div class="card-title">Top 3 Objeções dos Clientes</div>
                 </div>
-                <div class="chart-container small-chart">
+                <div class="chart-container">
                     <canvas id="objectionsChart"></canvas>
                 </div>
             </div>
             
-            <!-- Card de Top Produtos -->
+            <!-- Card de Top 3 Produtos -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 3 Produtos</div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline" onclick="downloadChart('productsChart')">Exportar</button>
-                    </div>
+                    <div class="card-title">Top 3 Produtos Mais Buscados</div>
                 </div>
-                <div class="chart-container small-chart">
+                <div class="chart-container">
                     <canvas id="productsChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Card de Análise de Atendentes -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Desempenho dos Atendentes</div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline" onclick="downloadChart('attendantAnalysisChart')">Exportar</button>
-                    </div>
-                </div>
-                <div class="chart-container small-chart">
-                    <canvas id="attendantAnalysisChart"></canvas>
                 </div>
             </div>
         </div>
         
-        <!-- Seção de Produtos Mais Buscados -->
-        <div class="card" style="margin-bottom: 24px;">
+        <!-- Seção de Análise de Atendentes -->
+        <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">
-                <div class="card-title">Produtos Mais Buscados</div>
+                <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="attendantAnalysisChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Seção de Produtos mais buscados -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Produtos mais buscados</div>
             </div>
             <div class="products-grid" id="popular-products">
                 <!-- Conteúdo será preenchido dinamicamente -->
             </div>
         </div>
         
-        <!-- Seção de Objeções Detalhadas -->
-        <div class="card" style="margin-bottom: 24px;">
+        <!-- Seção de Objeções -->
+        <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">
-                <div class="card-title">Análise de Objeções</div>
+                <div class="card-title">Objeções</div>
             </div>
-            <div class="objections-grid" id="objections-detailed">
-                <!-- Conteúdo será preenchido dinamicamente -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <div class="card-title">Preço Elevado</div>
+                    <div id="high-price">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Prazo de Entrega</div>
+                    <div id="delivery-time">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Qualidade do Produto</div>
+                    <div id="product-quality">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Disponibilidade</div>
+                    <div id="availability">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div>
+                    <div class="card-title">Suporte Técnico</div>
+                    <div id="technical-support">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -615,171 +566,76 @@
             <div class="card-header">
                 <div class="card-title">Resumo das Conversas</div>
             </div>
-            <div class="conversations-table-container">
-                <table class="conversations-table">
-                    <thead>
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>Cliente</th>
-                            <th>Atendente</th>
-                            <th>Resumo</th>
-                            <th>Sentimento</th>
-                            <th>Duração</th>
-                        </tr>
-                    </thead>
-                    <tbody id="conversations-body">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </tbody>
-                </table>
-            </div>
+            <table class="conversations-table" id="conversations-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Sessão</th>
+                        <th>Resumo</th>
+                        <th>Sentimento</th>
+                        <th>Atendente</th>
+                    </tr>
+                </thead>
+                <tbody id="conversations-body">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </tbody>
+            </table>
             <div class="pagination">
                 <div class="pagination-info" id="pagination-info">Carregando...</div>
                 <div class="pagination-controls">
-                    <button class="pagination-btn" id="prev-page" disabled>Anterior</button>
-                    <button class="pagination-btn" id="next-page" disabled>Próxima</button>
+                    <button class="pagination-btn" id="prev-page">Anterior</button>
+                    <button class="pagination-btn" id="next-page">Próxima</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Dados de exemplo adaptados para rolamentos industriais
-        const sampleData = {
-            "totalConversations": 847,
-            "sentimentTransitions": [
-                {"from": "neutral", "to": "neutral", "count": 420},
-                {"from": "positive", "to": "neutral", "count": 185},
-                {"from": "positive", "to": "positive", "count": 89},
-                {"from": "neutral", "to": "positive", "count": 98},
-                {"from": "neutral", "to": "negative", "count": 45},
-                {"from": "negative", "to": "negative", "count": 28},
-                {"from": "positive", "to": "negative", "count": 12}
-            ],
-            "finalSentiment": {
-                "positive": 187,
-                "neutral": 645,
-                "negative": 15
-            },
-            "topObjections": [
-                {"objection": "Preço Elevado", "count": 156},
-                {"objection": "Prazo de Entrega", "count": 89},
-                {"objection": "Disponibilidade", "count": 67}
-            ],
-            "topProducts": [
-                {"product": "Rolamento AXK 2035", "count": 234},
-                {"product": "Rolamento SKF 6308", "count": 189},
-                {"product": "Rolamento FAG 6205", "count": 156}
-            ],
-            "attendantAnalysis": [
-                {"attendant": "João Silva", "technical": 88, "persuasion": 82, "conversionRate": 68, "totalConversations": 145},
-                {"attendant": "Maria Santos", "technical": 92, "persuasion": 85, "conversionRate": 72, "totalConversations": 132},
-                {"attendant": "Pedro Costa", "technical": 79, "persuasion": 76, "conversionRate": 61, "totalConversations": 118},
-                {"attendant": "Ana Oliveira", "technical": 85, "persuasion": 81, "conversionRate": 65, "totalConversations": 127}
-            ],
-            "popularProducts": [
-                "Rolamento AXK 2035", "Rolamento SKF 6308", "Rolamento FAG 6205", 
-                "Rolamento NSK 6006", "Rolamento TIMKEN 30210", "Rolamento Roda Industrial",
-                "Rolamento de Esferas", "Rolamento de Rolos", "Rolamento de Agulhas",
-                "Rolamento AXK 2542", "Rolamento SKF 6310", "Rolamento FAG 6309"
-            ],
-            "objections": {
-                "highPrice": {"yes": 24, "no": 76},
-                "deliveryTime": {"yes": 18, "no": 82},
-                "productQuality": {"yes": 8, "no": 92},
-                "availability": {"yes": 15, "no": 85}
-            },
-            "conversations": [
-                {
-                    "date": "10/10/2024 14:30",
-                    "session": "9a5088b1-fbbc-4364-8511-8c8f53898686",
-                    "summary": "Cliente da empresa LITORAL interessado em rolamentos AXK para equipamento industrial. Solicitou orçamento urgente.",
-                    "sentiment": {"from": "positive", "to": "positive"},
-                    "attendantName": "João Silva",
-                    "contactName": "Eduardo Amorim",
-                    "duration": 1066
-                },
-                {
-                    "date": "10/10/2024 13:15",
-                    "session": "c54d22dd-f84e-49e4-b69c-6def4495085f",
-                    "summary": "Cliente CAMPANELLI consultou sobre disponibilidade de rolamentos SKF 6308. Objeção: prazo de entrega.",
-                    "sentiment": {"from": "neutral", "to": "negative"},
-                    "attendantName": "Maria Santos",
-                    "contactName": "Lucas Campanelli",
-                    "duration": 115250
-                },
-                {
-                    "date": "10/10/2024 11:45",
-                    "session": "cdd28587-9b1c-47b6-b9e8-7de84a4a634e",
-                    "summary": "Empresa RENOVOMAQ solicitou catálogo completo de rolamentos industriais para reposição de estoque.",
-                    "sentiment": {"from": "neutral", "to": "positive"},
-                    "attendantName": "Pedro Costa",
-                    "contactName": "Renovomaq",
-                    "duration": 102589
-                }
-            ],
-            "attendants": [
-                { "id": "5ddfc13f-2c7f-4e8c-b9d1-55ece9147cbb", "name": "João Silva" },
-                { "id": "fa1eecef-571d-4653-9688-abf9d7e64f96", "name": "Maria Santos" },
-                { "id": "0bac9236-fcd5-4e55-b796-b8deadec3179", "name": "Pedro Costa" },
-                { "id": "a186e053-6ba3-4d4b-88e8-46f7fba109ff", "name": "Ana Oliveira" }
-            ],
-            "pagination": {
-                "currentPage": 1,
-                "totalPages": 9,
-                "itemsPerPage": 100,
-                "totalItems": 847
-            }
-        };
-
-        // Variáveis globais
-        let currentData = {};
-        let currentFilters = {
-            period: '30',
-            attendant: 'all',
-            objection: 'all',
-            sentiment: 'all'
-        };
+        // Variáveis globais para armazenar dados e estado
+        let currentData = null;
+        let currentPage = 1;
+        let itemsPerPage = 10;
 
         // Função para renderizar o gráfico de transição de sentimento
         function renderSentimentTransitionChart(data) {
             const ctx = document.getElementById('sentimentTransitionChart').getContext('2d');
             
+            // Verificar se os dados existem e têm a estrutura esperada
             if (!data || !Array.isArray(data) || data.length === 0) {
                 console.warn('Dados de transição de sentimento inválidos');
-                data = sampleData.sentimentTransitions;
+                document.getElementById('sentimentTransitionChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                return;
             }
             
-            const labels = data.map(item => {
-                const fromText = item.from === 'positive' ? 'Positivo' : item.from === 'neutral' ? 'Neutro' : 'Negativo';
-                const toText = item.to === 'positive' ? 'Positivo' : item.to === 'neutral' ? 'Neutro' : 'Negativo';
-                return `${fromText} → ${toText}`;
-            });
-            
+            // Preparar dados para o gráfico de pizza
+            const labels = data.map(item => `${item.from} → ${item.to}`);
             const counts = data.map(item => item.count);
-            const total = counts.reduce((sum, count) => sum + count, 0);
             
+            // Cores para diferentes transições
             const backgroundColors = data.map(item => {
-                if (item.from === 'positive' && item.to === 'positive') return '#10b981';
-                if (item.from === 'neutral' && item.to === 'neutral') return '#f59e0b';
-                if (item.from === 'negative' && item.to === 'negative') return '#ef4444';
-                if (item.from === 'positive' && item.to === 'negative') return '#f87171';
-                if (item.from === 'negative' && item.to === 'positive') return '#86efac';
-                return '#94a3b8';
+                if (item.from === 'positive' && item.to === 'positive') {
+                    return '#34a853'; // Verde
+                } else if (item.from === 'neutral' && item.to === 'neutral') {
+                    return '#f9ab00'; // Amarelo
+                } else if (item.from === 'negative' && item.to === 'negative') {
+                    return '#ea4335'; // Vermelho
+                } else if (item.from === 'positive' && item.to === 'negative') {
+                    return '#ff6b6b'; // Vermelho claro
+                } else if (item.from === 'negative' && item.to === 'positive') {
+                    return '#51cf66'; // Verde claro
+                } else {
+                    return '#9aa0a6'; // Cinza
+                }
             });
-
-            if (window.sentimentTransitionChart) {
-                window.sentimentTransitionChart.destroy();
-            }
-
-            window.sentimentTransitionChart = new Chart(ctx, {
-                type: 'doughnut',
+            
+            new Chart(ctx, {
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
                         backgroundColor: backgroundColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -790,9 +646,8 @@
                             position: 'right',
                             labels: {
                                 boxWidth: 12,
-                                padding: 15,
                                 font: {
-                                    size: 11
+                                    size: 10
                                 }
                             }
                         },
@@ -801,51 +656,49 @@
                                 label: function(context) {
                                     const label = context.label || '';
                                     const value = context.raw || 0;
-                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
                                     return `${label}: ${value} (${percentage}%)`;
                                 }
                             }
-                        }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const transition = data[index];
-                            alert(`Detalhes da transição:\n${labels[index]}\nQuantidade: ${counts[index]} conversas\n\nClique em "Filtrar por Atendente" para ver detalhes específicos.`);
                         }
                     }
                 }
             });
         }
-
+        
         // Função para renderizar o gráfico de distribuição de sentimento
         function renderSentimentDistributionChart(data) {
             const ctx = document.getElementById('sentimentDistributionChart').getContext('2d');
             
+            // Verificar se os dados existem
             if (!data || typeof data !== 'object') {
                 console.warn('Dados de distribuição de sentimento inválidos');
-                data = sampleData.finalSentiment;
+                document.getElementById('sentimentDistributionChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                return;
             }
             
-            const labels = ['Positivo', 'Neutro', 'Negativo'];
-            const counts = [data.positive || 0, data.neutral || 0, data.negative || 0];
-            const total = counts.reduce((sum, count) => sum + count, 0);
+            const labels = Object.keys(data).map(key => {
+                if (key === 'positive') return 'Positivo';
+                if (key === 'neutral') return 'Neutro';
+                if (key === 'negative') return 'Negativo';
+                return key;
+            });
             
-            const backgroundColors = ['#10b981', '#f59e0b', '#ef4444'];
-
-            if (window.sentimentDistributionChart) {
-                window.sentimentDistributionChart.destroy();
-            }
-
-            window.sentimentDistributionChart = new Chart(ctx, {
+            const counts = Object.values(data);
+            
+            new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
+                        backgroundColor: [
+                            '#34a853', // Verde para positivo
+                            '#f9ab00', // Amarelo para neutro
+                            '#ea4335'  // Vermelho para negativo
+                        ],
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -853,58 +706,39 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 15,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
+                            position: 'right'
                         }
                     }
                 }
             });
         }
-
+        
         // Função para renderizar o gráfico de objeções
         function renderObjectionsChart(data) {
             const ctx = document.getElementById('objectionsChart').getContext('2d');
             
+            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0) {
                 console.warn('Dados de objeções inválidos');
-                data = sampleData.topObjections;
+                document.getElementById('objectionsChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                return;
             }
             
             const labels = data.map(item => item.objection);
             const counts = data.map(item => item.count);
-            const total = counts.reduce((sum, count) => sum + count, 0);
             
-            const backgroundColors = ['#3b82f6', '#60a5fa', '#93c5fd'];
-
-            if (window.objectionsChart) {
-                window.objectionsChart.destroy();
-            }
-
-            window.objectionsChart = new Chart(ctx, {
-                type: 'bar',
+            new Chart(ctx, {
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 0,
-                        borderRadius: 4
+                        backgroundColor: [
+                            '#ff6b6b',
+                            '#ffa8a8',
+                            '#ffc9c9'
+                        ],
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -912,73 +746,39 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw || 0;
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `Quantidade: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                drawBorder: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            },
-                            ticks: {
-                                font: {
-                                    size: 11
-                                }
-                            }
+                            position: 'right'
                         }
                     }
                 }
             });
         }
-
+        
         // Função para renderizar o gráfico de produtos
         function renderProductsChart(data) {
             const ctx = document.getElementById('productsChart').getContext('2d');
             
+            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0) {
                 console.warn('Dados de produtos inválidos');
-                data = sampleData.topProducts;
+                document.getElementById('productsChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                return;
             }
             
             const labels = data.map(item => item.product);
             const counts = data.map(item => item.count);
-            const total = counts.reduce((sum, count) => sum + count, 0);
             
-            const backgroundColors = ['#8b5cf6', '#a78bfa', '#c4b5fd'];
-
-            if (window.productsChart) {
-                window.productsChart.destroy();
-            }
-
-            window.productsChart = new Chart(ctx, {
-                type: 'doughnut',
+            new Chart(ctx, {
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
+                        backgroundColor: [
+                            '#4dabf7',
+                            '#339af0',
+                            '#1c7ed6'
+                        ],
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -986,86 +786,59 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 10,
-                                padding: 10,
-                                font: {
-                                    size: 10
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
+                            position: 'right'
                         }
                     }
                 }
             });
         }
-
+        
         // Função para renderizar a análise de atendentes
         function renderAttendantAnalysisChart(data) {
             const ctx = document.getElementById('attendantAnalysisChart').getContext('2d');
             
+            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0) {
                 console.warn('Dados de análise de atendentes inválidos');
-                data = sampleData.attendantAnalysis;
+                document.getElementById('attendantAnalysisChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                return;
             }
             
             const labels = data.map(item => item.attendant);
             const technicalData = data.map(item => item.technical);
             const persuasionData = data.map(item => item.persuasion);
-
-            if (window.attendantAnalysisChart) {
-                window.attendantAnalysisChart.destroy();
-            }
-
-            window.attendantAnalysisChart = new Chart(ctx, {
-                type: 'radar',
+            
+            new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: ['Conhecimento Técnico', 'Capacidade de Persuasão', 'Taxa de Conversão'],
-                    datasets: data.map((item, index) => ({
-                        label: item.attendant,
-                        data: [item.technical, item.persuasion, item.conversionRate],
-                        backgroundColor: `rgba(${59 + index * 50}, ${130 + index * 30}, ${246 - index * 40}, 0.2)`,
-                        borderColor: `rgb(${59 + index * 50}, ${130 + index * 30}, ${246 - index * 40})`,
-                        borderWidth: 2,
-                        pointBackgroundColor: `rgb(${59 + index * 50}, ${130 + index * 30}, ${246 - index * 40})`
-                    }))
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Conhecimento Técnico',
+                            data: technicalData,
+                            backgroundColor: '#4dabf7',
+                            borderColor: '#339af0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Capacidade de Persuasão',
+                            data: persuasionData,
+                            backgroundColor: '#ffa94d',
+                            borderColor: '#ff922b',
+                            borderWidth: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        r: {
-                            angleLines: {
-                                display: true
-                            },
-                            suggestedMin: 0,
-                            suggestedMax: 100,
-                            ticks: {
-                                font: {
-                                    size: 10
-                                }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 10,
-                                padding: 10,
-                                font: {
-                                    size: 10
-                                }
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Pontuação (%)'
                             }
                         }
                     }
@@ -1073,162 +846,157 @@
             });
         }
 
-        // Função para renderizar produtos mais buscados
-        function renderPopularProducts(data) {
+        // Função para renderizar produtos populares
+        function renderPopularProducts(products) {
             const container = document.getElementById('popular-products');
-            if (!container) return;
-            
             container.innerHTML = '';
             
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de produtos populares inválidos');
-                data = sampleData.popularProducts;
+            if (!products || !Array.isArray(products) || products.length === 0) {
+                container.innerHTML = '<div class="loading">Sem produtos disponíveis</div>';
+                return;
             }
             
-            data.forEach(product => {
+            products.forEach(product => {
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
-                productItem.textContent = product;
+                
+                if (typeof product === 'object' && product.product && product.count) {
+                    productItem.textContent = `${product.product} (${product.count})`;
+                } else if (typeof product === 'string') {
+                    productItem.textContent = product;
+                } else {
+                    productItem.textContent = 'Produto não especificado';
+                }
+                
                 container.appendChild(productItem);
             });
         }
 
-        // Função para renderizar objeções detalhadas
-        function renderObjectionsDetailed(data) {
-            const container = document.getElementById('objections-detailed');
-            if (!container) return;
-            
-            container.innerHTML = '';
-            
-            if (!data || typeof data !== 'object') {
-                console.warn('Dados de objeções detalhadas inválidos');
-                data = sampleData.objections;
+        // Função para renderizar objeções
+        function renderObjections(objections) {
+            if (!objections || typeof objections !== 'object') {
+                return;
             }
             
-            const objectionTitles = {
-                'highPrice': 'Preço Elevado',
-                'deliveryTime': 'Prazo de Entrega',
-                'productQuality': 'Qualidade do Produto',
-                'availability': 'Disponibilidade'
-            };
+            // Preço Elevado
+            const highPrice = document.getElementById('high-price');
+            if (objections.highPrice) {
+                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
+            }
             
-            Object.entries(data).forEach(([key, value]) => {
-                const objectionCard = document.createElement('div');
-                objectionCard.className = 'objection-card';
-                
-                const yesPercentage = value.yes || 0;
-                const noPercentage = value.no || 100;
-                
-                objectionCard.innerHTML = `
-                    <div class="objection-header">
-                        <div class="objection-title">${objectionTitles[key] || key}</div>
-                        <div class="objection-percentage percentage-positive">${yesPercentage}%</div>
-                    </div>
-                    <div class="percentage-bar">
-                        <div class="percentage-fill fill-positive" style="width: ${yesPercentage}%"></div>
-                    </div>
-                    <div class="percentage-labels">
-                        <span>Sim: ${yesPercentage}%</span>
-                        <span>Não: ${noPercentage}%</span>
-                    </div>
-                `;
-                
-                container.appendChild(objectionCard);
-            });
+            // Prazo de Entrega
+            const deliveryTime = document.getElementById('delivery-time');
+            if (objections.deliveryTime) {
+                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
+            }
+            
+            // Qualidade do Produto
+            const productQuality = document.getElementById('product-quality');
+            if (objections.productQuality) {
+                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
+            }
+            
+            // Disponibilidade
+            const availability = document.getElementById('availability');
+            if (objections.availability) {
+                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
+            }
+            
+            // Suporte Técnico
+            const technicalSupport = document.getElementById('technical-support');
+            if (objections.technicalSupport) {
+                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no);
+            }
+        }
+
+        function createPercentageBar(yes, no) {
+            const total = yes + no;
+            const yesPercentage = Math.round((yes / total) * 100);
+            const noPercentage = 100 - yesPercentage;
+            
+            return `
+                <div class="percentage-bar">
+                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">${yesPercentage}%</div>
+                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">${noPercentage}%</div>
+                </div>
+                <div class="percentage-label">
+                    <span>Sim: ${yes}</span>
+                    <span>Não: ${no}</span>
+                </div>
+            `;
         }
 
         // Função para renderizar conversas
-        function renderConversations(data) {
+        function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
-            if (!container) return;
-            
             container.innerHTML = '';
             
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de conversas inválidos');
-                data = sampleData.conversations;
+            if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma conversa disponível</td></tr>';
+                return;
             }
             
-            data.forEach(conversation => {
+            // Aplicar paginação
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedConversations = conversations.slice(startIndex, endIndex);
+            
+            paginatedConversations.forEach(conversation => {
                 const row = document.createElement('tr');
                 
-                const fromClass = `sentiment-${conversation.sentiment.from}`;
-                const toClass = `sentiment-${conversation.sentiment.to}`;
+                // Determinar cor do sentimento
+                let sentimentColor = '#9aa0a6';
+                let sentimentText = 'N/A';
                 
-                const durationMinutes = Math.floor(conversation.duration / 60);
-                const durationSeconds = conversation.duration % 60;
-                const durationText = `${durationMinutes}min ${durationSeconds}s`;
+                if (conversation.sentiment && conversation.sentiment.to) {
+                    sentimentText = conversation.sentiment.to;
+                    if (conversation.sentiment.to === 'positive') {
+                        sentimentColor = '#34a853';
+                        sentimentText = 'Positivo';
+                    } else if (conversation.sentiment.to === 'neutral') {
+                        sentimentColor = '#f9ab00';
+                        sentimentText = 'Neutro';
+                    } else if (conversation.sentiment.to === 'negative') {
+                        sentimentColor = '#ea4335';
+                        sentimentText = 'Negativo';
+                    }
+                }
                 
                 row.innerHTML = `
-                    <td>${conversation.date}</td>
-                    <td>${conversation.contactName || 'Cliente'}</td>
-                    <td>${conversation.attendantName || 'Atendente'}</td>
-                    <td>${conversation.summary}</td>
-                    <td>
-                        <div class="sentiment-indicator">
-                            <div class="sentiment-dot ${fromClass}"></div>
-                            <span>→</span>
-                            <div class="sentiment-dot ${toClass}"></div>
-                        </div>
-                    </td>
-                    <td>${durationText}</td>
+                    <td>${conversation.date || 'N/A'}</td>
+                    <td>${conversation.session || 'N/A'}</td>
+                    <td>${conversation.summary || 'N/A'}</td>
+                    <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
+                    <td>${conversation.attendantName || 'N/A'}</td>
                 `;
                 
                 container.appendChild(row);
             });
         }
 
-        // Função para renderizar informações de paginação
-        function renderPagination(data) {
-            const infoContainer = document.getElementById('pagination-info');
-            const prevBtn = document.getElementById('prev-page');
-            const nextBtn = document.getElementById('next-page');
+        // Função para renderizar paginação
+        function renderPagination(pagination) {
+            if (!pagination) return;
             
-            if (!data || !infoContainer) return;
+            const info = document.getElementById('pagination-info');
+            const totalItems = pagination.totalItems || 0;
+            const totalPages = pagination.totalPages || 1;
+            const itemsPerPage = pagination.itemsPerPage || 10;
             
-            const startItem = (data.currentPage - 1) * data.itemsPerPage + 1;
-            const endItem = Math.min(data.currentPage * data.itemsPerPage, data.totalItems);
+            const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
             
-            infoContainer.textContent = `${startItem} - ${endItem} de ${data.totalItems} conversas`;
+            info.textContent = `${startItem} - ${endItem} / ${totalItems}`;
             
-            prevBtn.disabled = data.currentPage <= 1;
-            nextBtn.disabled = data.currentPage >= data.totalPages;
-        }
-
-        // Função para carregar atendentes no filtro
-        function loadAttendantsFilter(attendants) {
-            const filter = document.getElementById('attendant-filter');
-            if (!filter) return;
-            
-            // Limpar opções existentes (exceto "Todos")
-            while (filter.children.length > 1) {
-                filter.removeChild(filter.lastChild);
-            }
-            
-            if (attendants && Array.isArray(attendants)) {
-                attendants.forEach(attendant => {
-                    const option = document.createElement('option');
-                    option.value = attendant.id;
-                    option.textContent = attendant.name;
-                    filter.appendChild(option);
-                });
-            }
-        }
-
-        // Função para aplicar filtros
-        function applyFilters() {
-            console.log('Aplicando filtros:', currentFilters);
-            // Aqui você implementaria a lógica para filtrar os dados
-            // Por enquanto, vamos apenas recarregar os dados
-            loadDataFromWebhook();
+            // Atualizar estado dos botões
+            document.getElementById('prev-page').disabled = currentPage <= 1;
+            document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
         // Função para carregar dados do webhook
         async function loadDataFromWebhook() {
-            showLoadingState();
-            
             try {
-                // Substitua esta URL pela URL do seu webhook
+                // URL do webhook que recebe os dados do n8n
                 const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
                 
                 if (!response.ok) {
@@ -1237,24 +1005,28 @@
                 
                 const data = await response.json();
                 
+                // Verificar se a resposta tem a estrutura esperada
                 if (!data) {
                     throw new Error('Resposta vazia do servidor');
                 }
                 
                 currentData = data;
+                
+                // Renderizar todos os componentes com os dados
                 renderAllComponents(data);
                 
             } catch (error) {
                 console.error('Erro ao carregar dados do webhook:', error);
-                useSampleData();
+                document.body.innerHTML = `
+                    <div class="container">
+                        <div style="text-align: center; padding: 50px;">
+                            <h2>Erro ao carregar dados</h2>
+                            <p>${error.message}</p>
+                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar Novamente</button>
+                        </div>
+                    </div>
+                `;
             }
-        }
-
-        // Função para usar dados de exemplo
-        function useSampleData() {
-            console.log('Usando dados de exemplo');
-            currentData = sampleData;
-            renderAllComponents(sampleData);
         }
 
         // Função para renderizar todos os componentes
@@ -1265,96 +1037,88 @@
             renderProductsChart(data.topProducts);
             renderAttendantAnalysisChart(data.attendantAnalysis);
             renderPopularProducts(data.popularProducts);
-            renderObjectionsDetailed(data.objections);
+            renderObjections(data.objections);
             renderConversations(data.conversations);
             renderPagination(data.pagination);
-            loadAttendantsFilter(data.attendants);
-            
-            hideLoadingState();
+            populateFilters(data);
         }
 
-        // Função para mostrar estado de carregamento
-        function showLoadingState() {
-            // Implementar visual de carregamento se necessário
-        }
-
-        // Função para esconder estado de carregamento
-        function hideLoadingState() {
-            // Implementar fim do visual de carregamento se necessário
-        }
-
-        // Função para baixar gráfico
-        function downloadChart(chartId) {
-            const chart = window[chartId];
-            if (chart) {
-                const link = document.createElement('a');
-                link.download = `${chartId}-${new Date().toISOString().split('T')[0]}.png`;
-                link.href = chart.toBase64Image();
-                link.click();
+        // Função para popular filtros
+        function populateFilters(data) {
+            // Popular filtro de atendentes
+            const attendantFilter = document.getElementById('attendant-filter');
+            if (data.attendants && Array.isArray(data.attendants)) {
+                data.attendants.forEach(attendant => {
+                    const option = document.createElement('option');
+                    option.value = attendant.id;
+                    option.textContent = attendant.name;
+                    attendantFilter.appendChild(option);
+                });
             }
-        }
 
-        // Função para carregar logo
-        function loadLogo() {
-            const logoPlaceholder = document.getElementById('logo-placeholder');
-            
-            const logoUrl = "https://portal.portorrol.com.br/imagens/logo.png";
-            
-            if (logoUrl) {
-                logoPlaceholder.innerHTML = `<img src="${logoUrl}" alt="Logo Portorrol" style="max-width: 100%; max-height: 100%; border-radius: 6px;">`;
-            } else {
-                logoPlaceholder.addEventListener('click', function() {
-                    const url = prompt('Insira a URL da logo da Portorrol:');
-                    if (url) {
-                        localStorage.setItem('portorrol-logo-url', url);
-                        logoPlaceholder.innerHTML = `<img src="${url}" alt="Logo Portorrol" style="max-width: 100%; max-height: 100%; border-radius: 6px;">`;
+            // Popular filtro de produtos
+            const productFilter = document.getElementById('product-filter');
+            if (data.popularProducts && Array.isArray(data.popularProducts)) {
+                data.popularProducts.forEach(product => {
+                    const option = document.createElement('option');
+                    if (typeof product === 'object' && product.product) {
+                        option.value = product.product;
+                        option.textContent = product.product;
+                    } else if (typeof product === 'string') {
+                        option.value = product;
+                        option.textContent = product;
                     }
+                    productFilter.appendChild(option);
                 });
             }
         }
 
-        // Configurar eventos de filtro
-        function setupFilterEvents() {
-            document.getElementById('period-filter').addEventListener('change', function(e) {
-                currentFilters.period = e.target.value;
-                applyFilters();
-            });
+        // Função para aplicar filtros
+        function applyFilters() {
+            if (!currentData) return;
             
-            document.getElementById('attendant-filter').addEventListener('change', function(e) {
-                currentFilters.attendant = e.target.value;
-                applyFilters();
-            });
+            const sentimentFilter = document.getElementById('sentiment-filter').value;
+            const objectionFilter = document.getElementById('objection-filter').value;
+            const attendantFilter = document.getElementById('attendant-filter').value;
+            const productFilter = document.getElementById('product-filter').value;
             
-            document.getElementById('objection-filter').addEventListener('change', function(e) {
-                currentFilters.objection = e.target.value;
-                applyFilters();
-            });
-            
-            document.getElementById('sentiment-filter').addEventListener('change', function(e) {
-                currentFilters.sentiment = e.target.value;
-                applyFilters();
-            });
-            
-            document.getElementById('prev-page').addEventListener('click', function() {
-                if (currentData.pagination && currentData.pagination.currentPage > 1) {
-                    console.log('Carregar página anterior');
-                    // Implementar carregamento da página anterior
-                }
-            });
-            
-            document.getElementById('next-page').addEventListener('click', function() {
-                if (currentData.pagination && currentData.pagination.currentPage < currentData.pagination.totalPages) {
-                    console.log('Carregar próxima página');
-                    // Implementar carregamento da próxima página
-                }
-            });
+            // Aqui você implementaria a lógica de filtragem
+            // Por enquanto, apenas recarregamos os dados originais
+            renderAllComponents(currentData);
         }
 
         // Inicializar a página
         document.addEventListener('DOMContentLoaded', function() {
-            loadLogo();
-            setupFilterEvents();
+            // Carregar dados do webhook
             loadDataFromWebhook();
+            
+            // Configurar eventos de paginação
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    if (currentData && currentData.conversations) {
+                        renderConversations(currentData.conversations);
+                        renderPagination(currentData.pagination);
+                    }
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', function() {
+                if (currentData && currentData.pagination) {
+                    const totalPages = currentData.pagination.totalPages || 1;
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderConversations(currentData.conversations);
+                        renderPagination(currentData.pagination);
+                    }
+                }
+            });
+
+            // Configurar eventos de filtro
+            document.getElementById('sentiment-filter').addEventListener('change', applyFilters);
+            document.getElementById('objection-filter').addEventListener('change', applyFilters);
+            document.getElementById('attendant-filter').addEventListener('change', applyFilters);
+            document.getElementById('product-filter').addEventListener('change', applyFilters);
         });
     </script>
 </body>
