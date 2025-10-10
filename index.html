@@ -410,9 +410,9 @@
             <div class="filter-grid">
                 <select class="filter-select" id="sentiment-filter">
                     <option value="">Todos os Sentimentos</option>
-                    <option value="positive">Positivo</option>
-                    <option value="neutral">Neutro</option>
-                    <option value="negative">Negativo</option>
+                    <option value="positivo">Positivo</option>
+                    <option value="neutro">Neutro</option>
+                    <option value="negativo">Negativo</option>
                 </select>
                 
                 <select class="filter-select" id="objection-filter">
@@ -613,15 +613,15 @@
             
             // Cores para diferentes transições
             const backgroundColors = data.map(item => {
-                if (item.from === 'positive' && item.to === 'positive') {
+                if (item.from === 'positivo' && item.to === 'positivo') {
                     return '#34a853'; // Verde
-                } else if (item.from === 'neutral' && item.to === 'neutral') {
+                } else if (item.from === 'neutro' && item.to === 'neutro') {
                     return '#f9ab00'; // Amarelo
-                } else if (item.from === 'negative' && item.to === 'negative') {
+                } else if (item.from === 'negativo' && item.to === 'negativo') {
                     return '#ea4335'; // Vermelho
-                } else if (item.from === 'positive' && item.to === 'negative') {
+                } else if (item.from === 'positivo' && item.to === 'negativo') {
                     return '#ff6b6b'; // Vermelho claro
-                } else if (item.from === 'negative' && item.to === 'positive') {
+                } else if (item.from === 'negativo' && item.to === 'positivo') {
                     return '#51cf66'; // Verde claro
                 } else {
                     return '#9aa0a6'; // Cinza
@@ -679,9 +679,9 @@
             }
             
             const labels = Object.keys(data).map(key => {
-                if (key === 'positive') return 'Positivo';
-                if (key === 'neutral') return 'Neutro';
-                if (key === 'negative') return 'Negativo';
+                if (key === 'positivo') return 'Positivo';
+                if (key === 'neutro') return 'Neutro';
+                if (key === 'negativo') return 'Negativo';
                 return key;
             });
             
@@ -950,13 +950,13 @@
                 
                 if (conversation.sentiment && conversation.sentiment.to) {
                     sentimentText = conversation.sentiment.to;
-                    if (conversation.sentiment.to === 'positive') {
+                    if (conversation.sentiment.to === 'positivo') {
                         sentimentColor = '#34a853';
                         sentimentText = 'Positivo';
-                    } else if (conversation.sentiment.to === 'neutral') {
+                    } else if (conversation.sentiment.to === 'neutro') {
                         sentimentColor = '#f9ab00';
                         sentimentText = 'Neutro';
-                    } else if (conversation.sentiment.to === 'negative') {
+                    } else if (conversation.sentiment.to === 'negativo') {
                         sentimentColor = '#ea4335';
                         sentimentText = 'Negativo';
                     }
