@@ -281,25 +281,25 @@
             font-size: 14px;
         }
         
-        .conversas-table {
+        .conversations-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
         
-        .conversas-table th, .conversas-table td {
+        .conversations-table th, .conversations-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
         
-        .conversas-table th {
+        .conversations-table th {
             font-weight: 500;
             color: #5f6368;
             background-color: var(--neutral-color);
         }
         
-        .paginacao {
+        .pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -308,17 +308,17 @@
             border-top: 1px solid var(--border-color);
         }
         
-        .paginacao-info {
+        .pagination-info {
             font-size: 14px;
             color: #5f6368;
         }
         
-        .paginacao-controls {
+        .pagination-controls {
             display: flex;
             gap: 10px;
         }
         
-        .paginacao-btn {
+        .pagination-btn {
             background-color: white;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -1096,20 +1096,20 @@
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    if (currentData && currentdata.conversations) {
-                        renderConversations(currentdata.conversations);
-                        renderPagination(currentdata.pagination);
+                    if (currentData && currentData.conversations) {
+                        renderConversations(currentData.conversations);
+                        renderPagination(currentData.pagination);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
-                if (currentData && currentdata.pagination) {
-                    const totalPages = currentdata.pagination.totalPages || 1;
+                if (currentData && currentData.pagination) {
+                    const totalPages = currentData.pagination.totalPages || 1;
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(currentdata.conversations);
-                        renderPagination(currentdata.pagination);
+                        renderConversations(currentData.conversations);
+                        renderPagination(currentData.pagination);
                     }
                 }
             });
