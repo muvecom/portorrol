@@ -91,7 +91,7 @@
         }
         
         .dropdown-content {
-            display: none;
+            display: naone;
             position: absolute;
             background-color: white;
             min-width: 160px;
@@ -230,7 +230,7 @@
         }
         
         .leads-table tr:last-child td {
-            border-bottom: none;
+            border-bottom: naone;
         }
         
         .percentage-bar {
@@ -252,11 +252,11 @@
             font-weight: 500;
         }
         
-        .percentage-yes {
+        .percentage-sim {
             background-color: var(--success-color);
         }
         
-        .percentage-no {
+        .percentage-nao {
             background-color: #dadce0;
         }
         
@@ -417,11 +417,11 @@
                 
                 <select class="filter-select" id="objection-filter">
                     <option value="">Todas as Objeções</option>
-                    <option value="highPrice">Preço Elevado</option>
-                    <option value="deliveryTime">Prazo de Entrega</option>
-                    <option value="productQuality">Qualidade do Produto</option>
-                    <option value="availability">Disponibilidade</option>
-                    <option value="technicalSupport">Suporte Técnico</option>
+                    <option value="precoAlto">Preço Elevado</option>
+                    <option value="prazoEntrega">Prazo de Entrega</option>
+                    <option value="qualidadeProduto">Qualidade do Produto</option>
+                    <option value="disponibilidade">Disponibilidade</option>
+                    <option value="suporteTecnico">Suporte Técnico</option>
                 </select>
                 
                 <select class="filter-select" id="attendant-filter">
@@ -548,7 +548,7 @@
                 </div>
                 <div>
                     <div class="card-title">Disponibilidade</div>
-                    <div id="availability">
+                    <div id="disponibilidade">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
@@ -879,49 +879,49 @@
             }
             
             // Preço Elevado
-            const highPrice = document.getElementById('high-price');
-            if (objections.highPrice) {
-                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
+            const precoAlto = document.getElementById('high-price');
+            if (objections.precoAlto) {
+                precoAlto.innerHTML = createPercentageBar(objections.precoAlto.sim, objections.precoAlto.nao);
             }
             
             // Prazo de Entrega
-            const deliveryTime = document.getElementById('delivery-time');
-            if (objections.deliveryTime) {
-                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
+            const prazoEntrega = document.getElementById('delivery-time');
+            if (objections.prazoEntrega) {
+                prazoEntrega.innerHTML = createPercentageBar(objections.prazoEntrega.sim, objections.prazoEntrega.nao);
             }
             
             // Qualidade do Produto
-            const productQuality = document.getElementById('product-quality');
-            if (objections.productQuality) {
-                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
+            const qualidadeProduto = document.getElementById('product-quality');
+            if (objections.qualidadeProduto) {
+                qualidadeProduto.innerHTML = createPercentageBar(objections.qualidadeProduto.sim, objections.qualidadeProduto.nao);
             }
             
             // Disponibilidade
-            const availability = document.getElementById('availability');
-            if (objections.availability) {
-                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
+            const disponibilidade = document.getElementById('disponibilidade');
+            if (objections.disponibilidade) {
+                disponibilidade.innerHTML = createPercentageBar(objections.disponibilidade.sim, objections.disponibilidade.nao);
             }
             
             // Suporte Técnico
-            const technicalSupport = document.getElementById('technical-support');
-            if (objections.technicalSupport) {
-                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no);
+            const suporteTecnico = document.getElementById('technical-support');
+            if (objections.suporteTecnico) {
+                suporteTecnico.innerHTML = createPercentageBar(objections.suporteTecnico.sim, objections.suporteTecnico.nao);
             }
         }
 
-        function createPercentageBar(yes, no) {
-            const total = yes + no;
-            const yesPercentage = Math.round((yes / total) * 100);
-            const noPercentage = 100 - yesPercentage;
+        function createPercentageBar(sim, nao) {
+            const total = sim + nao;
+            const simPercentage = Math.round((sim / total) * 100);
+            const naoPercentage = 100 - simPercentage;
             
             return `
                 <div class="percentage-bar">
-                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">${yesPercentage}%</div>
-                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">${noPercentage}%</div>
+                    <div class="percentage-fill percentage-sim" style="width: ${simPercentage}%">${simPercentage}%</div>
+                    <div class="percentage-fill percentage-nao" style="width: ${naoPercentage}%">${naoPercentage}%</div>
                 </div>
                 <div class="percentage-label">
-                    <span>Sim: ${yes}</span>
-                    <span>Não: ${no}</span>
+                    <span>Sim: ${sim}</span>
+                    <span>Não: ${nao}</span>
                 </div>
             `;
         }
@@ -1022,7 +1022,7 @@
                         <div style="text-align: center; padding: 50px;">
                             <h2>Erro ao carregar dados</h2>
                             <p>${error.message}</p>
-                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar Novamente</button>
+                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: naone; border-radius: 4px; cursor: pointer;">Tentar naovamente</button>
                         </div>
                     </div>
                 `;
@@ -1031,15 +1031,15 @@
 
         // Função para renderizar todos os componentes
         function renderAllComponents(data) {
-            renderSentimentTransitionChart(data.sentimentTransitions);
-            renderSentimentDistributionChart(data.finalSentiment);
-            renderObjectionsChart(data.topObjections);
-            renderProductsChart(data.topProducts);
-            renderAttendantAnalysisChart(data.attendantAnalysis);
-            renderPopularProducts(data.popularProducts);
-            renderObjections(data.objections);
-            renderConversations(data.conversations);
-            renderPagination(data.pagination);
+            renderSentimentTransitionChart(data.transicoesSentimento);
+            renderSentimentDistributionChart(data.sentimentoFinal);
+            renderObjectionsChart(data.principaisObjecoes);
+            renderProductsChart(data.principaisProdutos);
+            renderAttendantAnalysisChart(data.analiseAtendentes);
+            renderPopularProducts(data.produtosPopulares);
+            renderObjections(data.objecoes);
+            renderConversations(data.conversas);
+            renderPagination(data.paginaticao);
             populateFilters(data);
         }
 
