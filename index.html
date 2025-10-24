@@ -252,11 +252,11 @@
             font-weight: 500;
         }
         
-        .percentage-sim {
+        .percentage-yes {
             background-color: var(--success-color);
         }
         
-        .percentage-nao {
+        .percentage-no {
             background-color: #dadce0;
         }
         
@@ -417,11 +417,11 @@
                 
                 <select class="filter-select" id="objection-filter">
                     <option value="">Todas as Objeções</option>
-                    <option value="precoAlto">Preço Elevado</option>
-                    <option value="prazoEntrega">Prazo de Entrega</option>
-                    <option value="qualidadeProduto">Qualidade do Produto</option>
-                    <option value="disponibilidade">Disponibilidade</option>
-                    <option value="suporteTecnico">Suporte Técnico</option>
+                    <option value="highPrice">Preço Elevado</option>
+                    <option value="deliveryTime">Prazo de Entrega</option>
+                    <option value="productQuality">Qualidade do Produto</option>
+                    <option value="availability">availability</option>
+                    <option value="technicalSupport">Suporte Técnico</option>
                 </select>
                 
                 <select class="filter-select" id="attendant-filter">
@@ -547,8 +547,8 @@
                     </div>
                 </div>
                 <div>
-                    <div class="card-title">Disponibilidade</div>
-                    <div id="disponibilidade">
+                    <div class="card-title">availability</div>
+                    <div id="availability">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
@@ -879,49 +879,49 @@
             }
             
             // Preço Elevado
-            const precoAlto = document.getElementById('high-price');
-            if (objections.precoAlto) {
-                precoAlto.innerHTML = createPercentageBar(objections.precoAlto.sim, objections.precoAlto.nao);
+            const highPrice = document.getElementById('high-price');
+            if (objections.highPrice) {
+                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
             }
             
             // Prazo de Entrega
-            const prazoEntrega = document.getElementById('delivery-time');
-            if (objections.prazoEntrega) {
-                prazoEntrega.innerHTML = createPercentageBar(objections.prazoEntrega.sim, objections.prazoEntrega.nao);
+            const deliveryTime = document.getElementById('delivery-time');
+            if (objections.deliveryTime) {
+                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
             }
             
             // Qualidade do Produto
-            const qualidadeProduto = document.getElementById('product-quality');
-            if (objections.qualidadeProduto) {
-                qualidadeProduto.innerHTML = createPercentageBar(objections.qualidadeProduto.sim, objections.qualidadeProduto.nao);
+            const productQuality = document.getElementById('product-quality');
+            if (objections.productQuality) {
+                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
             }
             
-            // Disponibilidade
-            const disponibilidade = document.getElementById('disponibilidade');
-            if (objections.disponibilidade) {
-                disponibilidade.innerHTML = createPercentageBar(objections.disponibilidade.sim, objections.disponibilidade.nao);
+            // availability
+            const availability = document.getElementById('availability');
+            if (objections.availability) {
+                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
             }
             
             // Suporte Técnico
-            const suporteTecnico = document.getElementById('technical-support');
-            if (objections.suporteTecnico) {
-                suporteTecnico.innerHTML = createPercentageBar(objections.suporteTecnico.sim, objections.suporteTecnico.nao);
+            const technicalSupport = document.getElementById('technical-support');
+            if (objections.technicalSupport) {
+                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no);
             }
         }
 
-        function createPercentageBar(sim, nao) {
-            const total = sim + nao;
-            const simPercentage = Math.round((sim / total) * 100);
-            const naoPercentage = 100 - simPercentage;
+        function createPercentageBar(yes, no) {
+            const total = yes + no;
+            const yesPercentage = Math.round((yes / total) * 100);
+            const noPercentage = 100 - yesPercentage;
             
             return `
                 <div class="percentage-bar">
-                    <div class="percentage-fill percentage-sim" style="width: ${simPercentage}%">${simPercentage}%</div>
-                    <div class="percentage-fill percentage-nao" style="width: ${naoPercentage}%">${naoPercentage}%</div>
+                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">${yesPercentage}%</div>
+                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">${noPercentage}%</div>
                 </div>
                 <div class="percentage-label">
-                    <span>Sim: ${sim}</span>
-                    <span>Não: ${nao}</span>
+                    <span>yes: ${yes}</span>
+                    <span>Não: ${no}</span>
                 </div>
             `;
         }
@@ -1031,15 +1031,15 @@
 
         // Função para renderizar todos os componentes
         function renderAllComponents(data) {
-            renderSentimentTransitionChart(data.transicoesSentimento);
-            renderSentimentDistributionChart(data.sentimentoFinal);
-            renderObjectionsChart(data.principaisObjecoes);
-            renderProductsChart(data.principaisProdutos);
-            renderAttendantAnalysisChart(data.analiseAtendentes);
+            renderSentimentTransitionChart(data.sentimentTransitions);
+            renderSentimentDistributionChart(data.finalSentiment);
+            renderObjectionsChart(data.topObjections);
+            renderProductsChart(data.topProducts);
+            renderAttendantAnalysisChart(data.attendantAnalysis);
             renderPopularProducts(data.produtosPopulares);
-            renderObjections(data.objecoes);
-            renderConversations(data.conversas);
-            renderPagination(data.paginacao);
+            renderObjections(data.objections);
+            renderConversations(data.conversations);
+            renderPagination(data.pagination);
             populateFilters(data);
         }
 
@@ -1096,20 +1096,20 @@
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    if (currentData && currentData.conversas) {
-                        renderConversations(currentData.conversas);
-                        renderPagination(currentData.paginacao);
+                    if (currentData && currentdata.conversations) {
+                        renderConversations(currentdata.conversations);
+                        renderPagination(currentdata.pagination);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
-                if (currentData && currentData.paginacao) {
-                    const totalPages = currentData.paginacao.totalPages || 1;
+                if (currentData && currentdata.pagination) {
+                    const totalPages = currentdata.pagination.totalPages || 1;
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(currentData.conversas);
-                        renderPagination(currentData.paginacao);
+                        renderConversations(currentdata.conversations);
+                        renderPagination(currentdata.pagination);
                     }
                 }
             });
