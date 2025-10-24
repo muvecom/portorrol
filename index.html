@@ -281,25 +281,25 @@
             font-size: 14px;
         }
         
-        .conversations-table {
+        .conversas-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
         }
         
-        .conversations-table th, .conversations-table td {
+        .conversas-table th, .conversas-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
         }
         
-        .conversations-table th {
+        .conversas-table th {
             font-weight: 500;
             color: #5f6368;
             background-color: var(--neutral-color);
         }
         
-        .pagination {
+        .paginacao {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -308,17 +308,17 @@
             border-top: 1px solid var(--border-color);
         }
         
-        .pagination-info {
+        .paginacao-info {
             font-size: 14px;
             color: #5f6368;
         }
         
-        .pagination-controls {
+        .paginacao-controls {
             display: flex;
             gap: 10px;
         }
         
-        .pagination-btn {
+        .paginacao-btn {
             background-color: white;
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -1039,7 +1039,7 @@
             renderPopularProducts(data.produtosPopulares);
             renderObjections(data.objecoes);
             renderConversations(data.conversas);
-            renderPagination(data.paginaticao);
+            renderPagination(data.paginacao);
             populateFilters(data);
         }
 
@@ -1096,20 +1096,20 @@
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    if (currentData && currentData.conversations) {
-                        renderConversations(currentData.conversations);
-                        renderPagination(currentData.pagination);
+                    if (currentData && currentData.conversas) {
+                        renderConversations(currentData.conversas);
+                        renderPagination(currentData.paginacao);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
-                if (currentData && currentData.pagination) {
-                    const totalPages = currentData.pagination.totalPages || 1;
+                if (currentData && currentData.paginacao) {
+                    const totalPages = currentData.paginacao.totalPages || 1;
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(currentData.conversations);
-                        renderPagination(currentData.pagination);
+                        renderConversations(currentData.conversas);
+                        renderPagination(currentData.paginacao);
                     }
                 }
             });
