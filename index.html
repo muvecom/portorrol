@@ -363,6 +363,25 @@
             background-color: white;
         }
         
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .filter-btn:hover {
+            background-color: #0d62c9;
+        }
+        
+        .filter-btn:disabled {
+            background-color: #9aa0a6;
+            cursor: not-allowed;
+        }
+        
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -436,6 +455,9 @@
                 <select class="filter-select" id="product-filter">
                     <option value="">Todos os Produtos</option>
                 </select>
+                
+                <button class="filter-btn" id="apply-filters">Aplicar Filtros</button>
+                <button class="filter-btn" id="clear-filters" style="background-color: #5f6368;">Limpar Filtros</button>
             </div>
         </div>
         
@@ -806,7 +828,7 @@
                 return;
             }
             
-            const labels = data.map(item => item.attendant);
+            const labels = data.map(item => item.attendantName);
             const technicalData = data.map(item => item.technical);
             const persuasionData = data.map(item => item.persuasion);
             
@@ -996,10 +1018,22 @@
         }
 
         // Função para carregar dados do webhook
-        async function loadDataFromWebhook() {
+        async function loadDataFromWebhook(filters = {}) {
             try {
-                // URL do webhook que recebe os dados do n8n
-                const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
+                // Construir URL com parâmetros
+                let url = 'https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b';
+                const params = new URLSearchParams();
+                
+                if (filters.sentiment) params.append('sentiment', filters.sentiment);
+                if (filters.objection) params.append('objection', filters.objection);
+                if (filters.attendant) params.append('attendant', filters.attendant);
+                if (filters.product) params.append('product', filters.product);
+                
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+                
+                const response = await fetch(url);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -1020,275 +1054,81 @@
                 
             } catch (error) {
                 console.error('Erro ao carregar dados do webhook:', error);
-                
-                // Carregar dados de exemplo para demonstração
-                loadSampleData();
+                document.body.innerHTML = `
+                    <div class="container">
+                        <div style="text-align: center; padding: 50px;">
+                            <h2>Erro ao carregar dados</h2>
+                            <p>${error.message}</p>
+                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar novamente</button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
-        // Função para carregar dados de exemplo
-        function loadSampleData() {
-            console.log('Carregando dados de exemplo...');
-            
-            // Dados de exemplo para demonstração
-            const sampleData = {
-                sentimentTransitions: [
-                    { from: 'neutro', to: 'positivo', count: 25 },
-                    { from: 'neutro', to: 'neutro', count: 15 },
-                    { from: 'neutro', to: 'negativo', count: 5 },
-                    { from: 'positivo', to: 'positivo', count: 30 },
-                    { from: 'negativo', to: 'positivo', count: 10 }
-                ],
-                finalSentiment: {
-                    positivo: 65,
-                    neutro: 20,
-                    negativo: 15
-                },
-                topObjections: [
-                    { objection: 'Preço Elevado', count: 45 },
-                    { objection: 'Prazo de Entrega', count: 30 },
-                    { objection: 'Qualidade do Produto', count: 25 }
-                ],
-                topProducts: [
-                    { product: 'Produto A', count: 120 },
-                    { product: 'Produto B', count: 85 },
-                    { product: 'Produto C', count: 60 }
-                ],
-                attendantAnalysis: [
-                    { attendant: 'João Silva', technical: 85, persuasion: 78 },
-                    { attendant: 'Maria Santos', technical: 92, persuasion: 88 },
-                    { attendant: 'Pedro Oliveira', technical: 76, persuasion: 82 },
-                    { attendant: 'Ana Costa', technical: 88, persuasion: 90 }
-                ],
-                popularProducts: [
-                    { product: 'Produto A', count: 120 },
-                    { product: 'Produto B', count: 85 },
-                    { product: 'Produto C', count: 60 },
-                    { product: 'Produto D', count: 45 },
-                    { product: 'Produto E', count: 30 }
-                ],
-                objections: {
-                    highPrice: { yes: 35, no: 65 },
-                    deliveryTime: { yes: 25, no: 75 },
-                    productQuality: { yes: 15, no: 85 },
-                    availability: { yes: 20, no: 80 },
-                    technicalSupport: { yes: 10, no: 90 }
-                },
-                conversations: [
-                    { 
-                        date: '2023-10-15', 
-                        session: 'SESS001', 
-                        summary: 'Cliente interessado no Produto A, dúvidas sobre preço', 
-                        sentiment: { from: 'neutro', to: 'positivo' },
-                        attendantName: 'João Silva'
-                    },
-                    { 
-                        date: '2023-10-14', 
-                        session: 'SESS002', 
-                        summary: 'Cliente reclamando sobre prazo de entrega', 
-                        sentiment: { from: 'negativo', to: 'neutro' },
-                        attendantName: 'Maria Santos'
-                    },
-                    { 
-                        date: '2023-10-13', 
-                        session: 'SESS003', 
-                        summary: 'Cliente satisfeito com atendimento', 
-                        sentiment: { from: 'positivo', to: 'positivo' },
-                        attendantName: 'Pedro Oliveira'
-                    },
-                    { 
-                        date: '2023-10-12', 
-                        session: 'SESS004', 
-                        summary: 'Cliente com dúvidas técnicas sobre produto', 
-                        sentiment: { from: 'neutro', to: 'neutro' },
-                        attendantName: 'Ana Costa'
-                    },
-                    { 
-                        date: '2023-10-11', 
-                        session: 'SESS005', 
-                        summary: 'Cliente insatisfeito com suporte', 
-                        sentiment: { from: 'neutro', to: 'negativo' },
-                        attendantName: 'João Silva'
-                    },
-                    { 
-                        date: '2023-10-10', 
-                        session: 'SESS006', 
-                        summary: 'Cliente interessado em promoção', 
-                        sentiment: { from: 'positivo', to: 'positivo' },
-                        attendantName: 'Maria Santos'
-                    },
-                    { 
-                        date: '2023-10-09', 
-                        session: 'SESS007', 
-                        summary: 'Cliente reclamando de qualidade', 
-                        sentiment: { from: 'negativo', to: 'positivo' },
-                        attendantName: 'Pedro Oliveira'
-                    },
-                    { 
-                        date: '2023-10-08', 
-                        session: 'SESS008', 
-                        summary: 'Cliente com dúvidas sobre garantia', 
-                        sentiment: { from: 'neutro', to: 'neutro' },
-                        attendantName: 'Ana Costa'
-                    },
-                    { 
-                        date: '2023-10-07', 
-                        session: 'SESS009', 
-                        summary: 'Cliente satisfeito com entrega rápida', 
-                        sentiment: { from: 'positivo', to: 'positivo' },
-                        attendantName: 'João Silva'
-                    },
-                    { 
-                        date: '2023-10-06', 
-                        session: 'SESS010', 
-                        summary: 'Cliente com problemas de disponibilidade', 
-                        sentiment: { from: 'neutro', to: 'negativo' },
-                        attendantName: 'Maria Santos'
-                    },
-                    { 
-                        date: '2023-10-05', 
-                        session: 'SESS011', 
-                        summary: 'Cliente interessado em novos produtos', 
-                        sentiment: { from: 'neutro', to: 'positivo' },
-                        attendantName: 'Pedro Oliveira'
-                    },
-                    { 
-                        date: '2023-10-04', 
-                        session: 'SESS012', 
-                        summary: 'Cliente com dúvidas sobre instalação', 
-                        sentiment: { from: 'neutro', to: 'neutro' },
-                        attendantName: 'Ana Costa'
-                    }
-                ],
-                attendants: [
-                    { id: '1', name: 'João Silva' },
-                    { id: '2', name: 'Maria Santos' },
-                    { id: '3', name: 'Pedro Oliveira' },
-                    { id: '4', name: 'Ana Costa' }
-                ],
-                pagination: {
-                    totalItems: 12,
-                    totalPages: 2,
-                    itemsPerPage: 10
-                }
-            };
-            
-            currentData = sampleData;
-            filteredData = sampleData;
-            
-            // Renderizar todos os componentes com os dados de exemplo
-            renderAllComponents(sampleData);
-        }
-
         // Função para aplicar filtros
-        function applyFilters() {
-            if (!currentData) return;
-            
+        async function applyFilters() {
             const sentimentFilter = document.getElementById('sentiment-filter').value;
             const objectionFilter = document.getElementById('objection-filter').value;
             const attendantFilter = document.getElementById('attendant-filter').value;
             const productFilter = document.getElementById('product-filter').value;
             
-            // Resetar para dados originais
-            filteredData = JSON.parse(JSON.stringify(currentData));
+            // Mostrar loading
+            showLoadingState();
             
-            // Aplicar filtro de sentimento
-            if (sentimentFilter) {
-                filteredData.conversations = currentData.conversations.filter(
-                    conversation => conversation.sentiment && conversation.sentiment.to === sentimentFilter
-                );
-                
-                // Atualizar dados de transição de sentimento
-                filteredData.sentimentTransitions = currentData.sentimentTransitions.filter(
-                    transition => transition.to === sentimentFilter || transition.from === sentimentFilter
-                );
-                
-                // Atualizar distribuição de sentimento
-                if (currentData.finalSentiment[sentimentFilter]) {
-                    filteredData.finalSentiment = {
-                        [sentimentFilter]: currentData.finalSentiment[sentimentFilter]
-                    };
-                }
-            }
+            // Carregar dados com filtros
+            await loadDataFromWebhook({
+                sentiment: sentimentFilter,
+                objection: objectionFilter,
+                attendant: attendantFilter,
+                product: productFilter
+            });
+        }
+
+        // Função para limpar filtros
+        function clearFilters() {
+            document.getElementById('sentiment-filter').value = '';
+            document.getElementById('objection-filter').value = '';
+            document.getElementById('attendant-filter').value = '';
+            document.getElementById('product-filter').value = '';
             
-            // Aplicar filtro de objeção
-            if (objectionFilter) {
-                // Filtrar top objeções
-                filteredData.topObjections = currentData.topObjections.filter(
-                    objection => objection.objection.toLowerCase().includes(objectionFilter.toLowerCase())
-                );
-                
-                // Filtrar dados de objeções
-                if (currentData.objections[objectionFilter]) {
-                    filteredData.objections = {
-                        [objectionFilter]: currentData.objections[objectionFilter]
-                    };
-                }
-            }
-            
-            // Aplicar filtro de atendente
-            if (attendantFilter) {
-                filteredData.conversations = filteredData.conversations.filter(
-                    conversation => conversation.attendantName === attendantFilter
-                );
-                
-                // Filtrar análise de atendentes
-                filteredData.attendantAnalysis = currentData.attendantAnalysis.filter(
-                    attendant => attendant.attendant === attendantFilter
-                );
-            }
-            
-            // Aplicar filtro de produto
-            if (productFilter) {
-                filteredData.topProducts = currentData.topProducts.filter(
-                    product => product.product === productFilter
-                );
-                
-                filteredData.popularProducts = currentData.popularProducts.filter(
-                    product => product.product === productFilter
-                );
-                
-                filteredData.conversations = filteredData.conversations.filter(
-                    conversation => conversation.summary && conversation.summary.toLowerCase().includes(productFilter.toLowerCase())
-                );
-            }
-            
-            // Atualizar paginação
-            filteredData.pagination = {
-                totalItems: filteredData.conversations.length,
-                totalPages: Math.ceil(filteredData.conversations.length / itemsPerPage),
-                itemsPerPage: itemsPerPage
-            };
-            
-            // Resetar página atual
-            currentPage = 1;
-            
-            // Renderizar componentes com dados filtrados
-            renderAllComponents(filteredData);
+            // Recarregar dados sem filtros
+            loadDataFromWebhook();
+        }
+
+        function showLoadingState() {
+            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Aplicando filtros...</td></tr>';
+            // Você pode adicionar mais indicadores de loading se quiser
         }
 
         // Função para renderizar todos os componentes
         function renderAllComponents(data) {
-            renderSentimentTransitionChart(data.sentimentTransitions);
-            renderSentimentDistributionChart(data.finalSentiment);
-            renderObjectionsChart(data.topObjections);
-            renderProductsChart(data.topProducts);
-            renderAttendantAnalysisChart(data.attendantAnalysis);
-            renderPopularProducts(data.popularProducts);
-            renderObjections(data.objections);
-            renderConversations(data.conversations);
-            renderPagination(data.pagination);
-            populateFilters(data);
+            // Verificar se é um array e pegar o primeiro item se for
+            const dashboardData = Array.isArray(data) ? data[0] : data;
+            
+            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
+            renderSentimentDistributionChart(dashboardData.finalSentiment);
+            renderObjectionsChart(dashboardData.topObjections);
+            renderProductsChart(dashboardData.topProducts);
+            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
+            renderPopularProducts(dashboardData.popularProducts);
+            renderObjections(dashboardData.objections);
+            renderConversations(dashboardData.conversations);
+            renderPagination(dashboardData.pagination);
+            populateFilters(dashboardData);
         }
 
         // Função para popular filtros
         function populateFilters(data) {
+            // Verificar se é um array e pegar o primeiro item se for
+            const dashboardData = Array.isArray(data) ? data[0] : data;
+            
             // Popular filtro de atendentes
             const attendantFilter = document.getElementById('attendant-filter');
             attendantFilter.innerHTML = '<option value="">Todos os Atendentes</option>';
             
-            if (data.attendants && Array.isArray(data.attendants)) {
-                data.attendants.forEach(attendant => {
+            if (dashboardData.attendants && Array.isArray(dashboardData.attendants)) {
+                dashboardData.attendants.forEach(attendant => {
                     const option = document.createElement('option');
                     option.value = attendant.name;
                     option.textContent = attendant.name;
@@ -1300,8 +1140,8 @@
             const productFilter = document.getElementById('product-filter');
             productFilter.innerHTML = '<option value="">Todos os Produtos</option>';
             
-            if (data.popularProducts && Array.isArray(data.popularProducts)) {
-                data.popularProducts.forEach(product => {
+            if (dashboardData.popularProducts && Array.isArray(dashboardData.popularProducts)) {
+                dashboardData.popularProducts.forEach(product => {
                     const option = document.createElement('option');
                     if (typeof product === 'object' && product.product) {
                         option.value = product.product;
@@ -1325,28 +1165,28 @@
                 if (currentPage > 1) {
                     currentPage--;
                     if (filteredData && filteredData.conversations) {
-                        renderConversations(filteredData.conversations);
-                        renderPagination(filteredData.pagination);
+                        const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
+                        renderConversations(data.conversations);
+                        renderPagination(data.pagination);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
-                if (filteredData && filteredData.pagination) {
-                    const totalPages = filteredData.pagination.totalPages || 1;
+                if (filteredData) {
+                    const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
+                    const totalPages = data.pagination?.totalPages || 1;
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(filteredData.conversations);
-                        renderPagination(filteredData.pagination);
+                        renderConversations(data.conversations);
+                        renderPagination(data.pagination);
                     }
                 }
             });
 
             // Configurar eventos de filtro
-            document.getElementById('sentiment-filter').addEventListener('change', applyFilters);
-            document.getElementById('objection-filter').addEventListener('change', applyFilters);
-            document.getElementById('attendant-filter').addEventListener('change', applyFilters);
-            document.getElementById('product-filter').addEventListener('change', applyFilters);
+            document.getElementById('apply-filters').addEventListener('click', applyFilters);
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
         });
     </script>
 </body>
