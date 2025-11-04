@@ -326,6 +326,11 @@
             cursor: pointer;
         }
         
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
         .loading {
             display: flex;
             justify-content: center;
@@ -420,7 +425,7 @@
                     <option value="highPrice">Preço Elevado</option>
                     <option value="deliveryTime">Prazo de Entrega</option>
                     <option value="productQuality">Qualidade do Produto</option>
-                    <option value="availability">availability</option>
+                    <option value="availability">Disponibilidade</option>
                     <option value="technicalSupport">Suporte Técnico</option>
                 </select>
                 
@@ -547,7 +552,7 @@
                     </div>
                 </div>
                 <div>
-                    <div class="card-title">availability</div>
+                    <div class="card-title">Disponibilidade</div>
                     <div id="availability">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
@@ -593,8 +598,22 @@
     <script>
         // Variáveis globais para armazenar dados e estado
         let currentData = null;
+        let filteredData = null;
         let currentPage = 1;
         let itemsPerPage = 10;
+
+        // Paleta de cores contrastantes para gráficos
+        const CONTRASTING_COLORS = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+            '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
+            '#00BBF9', '#00F5D4', '#FF006E', '#8338EC', '#3A86FF',
+            '#FB5607', '#FFBE0B', '#9B5DE5', '#F15BB5', '#00F5D4'
+        ];
+
+        // Função para obter cores contrastantes
+        function getContrastingColors(count) {
+            return CONTRASTING_COLORS.slice(0, count);
+        }
 
         // Função para renderizar o gráfico de transição de sentimento
         function renderSentimentTransitionChart(data) {
@@ -611,22 +630,8 @@
             const labels = data.map(item => `${item.from} → ${item.to}`);
             const counts = data.map(item => item.count);
             
-            // Cores para diferentes transições
-            const backgroundColors = data.map(item => {
-                if (item.from === 'positivo' && item.to === 'positivo') {
-                    return '#34a853'; // Verde
-                } else if (item.from === 'neutro' && item.to === 'neutro') {
-                    return '#f9ab00'; // Amarelo
-                } else if (item.from === 'negativo' && item.to === 'negativo') {
-                    return '#ea4335'; // Vermelho
-                } else if (item.from === 'positivo' && item.to === 'negativo') {
-                    return '#ff6b6b'; // Vermelho claro
-                } else if (item.from === 'negativo' && item.to === 'positivo') {
-                    return '#51cf66'; // Verde claro
-                } else {
-                    return '#9aa0a6'; // Cinza
-                }
-            });
+            // Usar cores contrastantes
+            const backgroundColors = getContrastingColors(data.length);
             
             new Chart(ctx, {
                 type: 'pie',
@@ -687,17 +692,16 @@
             
             const counts = Object.values(data);
             
+            // Usar cores contrastantes
+            const backgroundColors = getContrastingColors(labels.length);
+            
             new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: [
-                            '#34a853', // Verde para positivo
-                            '#f9ab00', // Amarelo para neutro
-                            '#ea4335'  // Vermelho para negativo
-                        ],
+                        backgroundColor: backgroundColors,
                         borderWidth: 1
                     }]
                 },
@@ -727,17 +731,16 @@
             const labels = data.map(item => item.objection);
             const counts = data.map(item => item.count);
             
+            // Usar cores contrastantes
+            const backgroundColors = getContrastingColors(data.length);
+            
             new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: [
-                            '#ff6b6b',
-                            '#ffa8a8',
-                            '#ffc9c9'
-                        ],
+                        backgroundColor: backgroundColors,
                         borderWidth: 1
                     }]
                 },
@@ -767,17 +770,16 @@
             const labels = data.map(item => item.product);
             const counts = data.map(item => item.count);
             
+            // Usar cores contrastantes
+            const backgroundColors = getContrastingColors(data.length);
+            
             new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
                         data: counts,
-                        backgroundColor: [
-                            '#4dabf7',
-                            '#339af0',
-                            '#1c7ed6'
-                        ],
+                        backgroundColor: backgroundColors,
                         borderWidth: 1
                     }]
                 },
@@ -896,7 +898,7 @@
                 productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
             }
             
-            // availability
+            // Disponibilidade
             const availability = document.getElementById('availability');
             if (objections.availability) {
                 availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
@@ -1011,22 +1013,258 @@
                 }
                 
                 currentData = data;
+                filteredData = data;
                 
                 // Renderizar todos os componentes com os dados
                 renderAllComponents(data);
                 
             } catch (error) {
                 console.error('Erro ao carregar dados do webhook:', error);
-                document.body.innerHTML = `
-                    <div class="container">
-                        <div style="text-align: center; padding: 50px;">
-                            <h2>Erro ao carregar dados</h2>
-                            <p>${error.message}</p>
-                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar novamente</button>
-                        </div>
-                    </div>
-                `;
+                
+                // Carregar dados de exemplo para demonstração
+                loadSampleData();
             }
+        }
+
+        // Função para carregar dados de exemplo
+        function loadSampleData() {
+            console.log('Carregando dados de exemplo...');
+            
+            // Dados de exemplo para demonstração
+            const sampleData = {
+                sentimentTransitions: [
+                    { from: 'neutro', to: 'positivo', count: 25 },
+                    { from: 'neutro', to: 'neutro', count: 15 },
+                    { from: 'neutro', to: 'negativo', count: 5 },
+                    { from: 'positivo', to: 'positivo', count: 30 },
+                    { from: 'negativo', to: 'positivo', count: 10 }
+                ],
+                finalSentiment: {
+                    positivo: 65,
+                    neutro: 20,
+                    negativo: 15
+                },
+                topObjections: [
+                    { objection: 'Preço Elevado', count: 45 },
+                    { objection: 'Prazo de Entrega', count: 30 },
+                    { objection: 'Qualidade do Produto', count: 25 }
+                ],
+                topProducts: [
+                    { product: 'Produto A', count: 120 },
+                    { product: 'Produto B', count: 85 },
+                    { product: 'Produto C', count: 60 }
+                ],
+                attendantAnalysis: [
+                    { attendant: 'João Silva', technical: 85, persuasion: 78 },
+                    { attendant: 'Maria Santos', technical: 92, persuasion: 88 },
+                    { attendant: 'Pedro Oliveira', technical: 76, persuasion: 82 },
+                    { attendant: 'Ana Costa', technical: 88, persuasion: 90 }
+                ],
+                popularProducts: [
+                    { product: 'Produto A', count: 120 },
+                    { product: 'Produto B', count: 85 },
+                    { product: 'Produto C', count: 60 },
+                    { product: 'Produto D', count: 45 },
+                    { product: 'Produto E', count: 30 }
+                ],
+                objections: {
+                    highPrice: { yes: 35, no: 65 },
+                    deliveryTime: { yes: 25, no: 75 },
+                    productQuality: { yes: 15, no: 85 },
+                    availability: { yes: 20, no: 80 },
+                    technicalSupport: { yes: 10, no: 90 }
+                },
+                conversations: [
+                    { 
+                        date: '2023-10-15', 
+                        session: 'SESS001', 
+                        summary: 'Cliente interessado no Produto A, dúvidas sobre preço', 
+                        sentiment: { from: 'neutro', to: 'positivo' },
+                        attendantName: 'João Silva'
+                    },
+                    { 
+                        date: '2023-10-14', 
+                        session: 'SESS002', 
+                        summary: 'Cliente reclamando sobre prazo de entrega', 
+                        sentiment: { from: 'negativo', to: 'neutro' },
+                        attendantName: 'Maria Santos'
+                    },
+                    { 
+                        date: '2023-10-13', 
+                        session: 'SESS003', 
+                        summary: 'Cliente satisfeito com atendimento', 
+                        sentiment: { from: 'positivo', to: 'positivo' },
+                        attendantName: 'Pedro Oliveira'
+                    },
+                    { 
+                        date: '2023-10-12', 
+                        session: 'SESS004', 
+                        summary: 'Cliente com dúvidas técnicas sobre produto', 
+                        sentiment: { from: 'neutro', to: 'neutro' },
+                        attendantName: 'Ana Costa'
+                    },
+                    { 
+                        date: '2023-10-11', 
+                        session: 'SESS005', 
+                        summary: 'Cliente insatisfeito com suporte', 
+                        sentiment: { from: 'neutro', to: 'negativo' },
+                        attendantName: 'João Silva'
+                    },
+                    { 
+                        date: '2023-10-10', 
+                        session: 'SESS006', 
+                        summary: 'Cliente interessado em promoção', 
+                        sentiment: { from: 'positivo', to: 'positivo' },
+                        attendantName: 'Maria Santos'
+                    },
+                    { 
+                        date: '2023-10-09', 
+                        session: 'SESS007', 
+                        summary: 'Cliente reclamando de qualidade', 
+                        sentiment: { from: 'negativo', to: 'positivo' },
+                        attendantName: 'Pedro Oliveira'
+                    },
+                    { 
+                        date: '2023-10-08', 
+                        session: 'SESS008', 
+                        summary: 'Cliente com dúvidas sobre garantia', 
+                        sentiment: { from: 'neutro', to: 'neutro' },
+                        attendantName: 'Ana Costa'
+                    },
+                    { 
+                        date: '2023-10-07', 
+                        session: 'SESS009', 
+                        summary: 'Cliente satisfeito com entrega rápida', 
+                        sentiment: { from: 'positivo', to: 'positivo' },
+                        attendantName: 'João Silva'
+                    },
+                    { 
+                        date: '2023-10-06', 
+                        session: 'SESS010', 
+                        summary: 'Cliente com problemas de disponibilidade', 
+                        sentiment: { from: 'neutro', to: 'negativo' },
+                        attendantName: 'Maria Santos'
+                    },
+                    { 
+                        date: '2023-10-05', 
+                        session: 'SESS011', 
+                        summary: 'Cliente interessado em novos produtos', 
+                        sentiment: { from: 'neutro', to: 'positivo' },
+                        attendantName: 'Pedro Oliveira'
+                    },
+                    { 
+                        date: '2023-10-04', 
+                        session: 'SESS012', 
+                        summary: 'Cliente com dúvidas sobre instalação', 
+                        sentiment: { from: 'neutro', to: 'neutro' },
+                        attendantName: 'Ana Costa'
+                    }
+                ],
+                attendants: [
+                    { id: '1', name: 'João Silva' },
+                    { id: '2', name: 'Maria Santos' },
+                    { id: '3', name: 'Pedro Oliveira' },
+                    { id: '4', name: 'Ana Costa' }
+                ],
+                pagination: {
+                    totalItems: 12,
+                    totalPages: 2,
+                    itemsPerPage: 10
+                }
+            };
+            
+            currentData = sampleData;
+            filteredData = sampleData;
+            
+            // Renderizar todos os componentes com os dados de exemplo
+            renderAllComponents(sampleData);
+        }
+
+        // Função para aplicar filtros
+        function applyFilters() {
+            if (!currentData) return;
+            
+            const sentimentFilter = document.getElementById('sentiment-filter').value;
+            const objectionFilter = document.getElementById('objection-filter').value;
+            const attendantFilter = document.getElementById('attendant-filter').value;
+            const productFilter = document.getElementById('product-filter').value;
+            
+            // Resetar para dados originais
+            filteredData = JSON.parse(JSON.stringify(currentData));
+            
+            // Aplicar filtro de sentimento
+            if (sentimentFilter) {
+                filteredData.conversations = currentData.conversations.filter(
+                    conversation => conversation.sentiment && conversation.sentiment.to === sentimentFilter
+                );
+                
+                // Atualizar dados de transição de sentimento
+                filteredData.sentimentTransitions = currentData.sentimentTransitions.filter(
+                    transition => transition.to === sentimentFilter || transition.from === sentimentFilter
+                );
+                
+                // Atualizar distribuição de sentimento
+                if (currentData.finalSentiment[sentimentFilter]) {
+                    filteredData.finalSentiment = {
+                        [sentimentFilter]: currentData.finalSentiment[sentimentFilter]
+                    };
+                }
+            }
+            
+            // Aplicar filtro de objeção
+            if (objectionFilter) {
+                // Filtrar top objeções
+                filteredData.topObjections = currentData.topObjections.filter(
+                    objection => objection.objection.toLowerCase().includes(objectionFilter.toLowerCase())
+                );
+                
+                // Filtrar dados de objeções
+                if (currentData.objections[objectionFilter]) {
+                    filteredData.objections = {
+                        [objectionFilter]: currentData.objections[objectionFilter]
+                    };
+                }
+            }
+            
+            // Aplicar filtro de atendente
+            if (attendantFilter) {
+                filteredData.conversations = filteredData.conversations.filter(
+                    conversation => conversation.attendantName === attendantFilter
+                );
+                
+                // Filtrar análise de atendentes
+                filteredData.attendantAnalysis = currentData.attendantAnalysis.filter(
+                    attendant => attendant.attendant === attendantFilter
+                );
+            }
+            
+            // Aplicar filtro de produto
+            if (productFilter) {
+                filteredData.topProducts = currentData.topProducts.filter(
+                    product => product.product === productFilter
+                );
+                
+                filteredData.popularProducts = currentData.popularProducts.filter(
+                    product => product.product === productFilter
+                );
+                
+                filteredData.conversations = filteredData.conversations.filter(
+                    conversation => conversation.summary && conversation.summary.toLowerCase().includes(productFilter.toLowerCase())
+                );
+            }
+            
+            // Atualizar paginação
+            filteredData.pagination = {
+                totalItems: filteredData.conversations.length,
+                totalPages: Math.ceil(filteredData.conversations.length / itemsPerPage),
+                itemsPerPage: itemsPerPage
+            };
+            
+            // Resetar página atual
+            currentPage = 1;
+            
+            // Renderizar componentes com dados filtrados
+            renderAllComponents(filteredData);
         }
 
         // Função para renderizar todos os componentes
@@ -1047,10 +1285,12 @@
         function populateFilters(data) {
             // Popular filtro de atendentes
             const attendantFilter = document.getElementById('attendant-filter');
+            attendantFilter.innerHTML = '<option value="">Todos os Atendentes</option>';
+            
             if (data.attendants && Array.isArray(data.attendants)) {
                 data.attendants.forEach(attendant => {
                     const option = document.createElement('option');
-                    option.value = attendant.id;
+                    option.value = attendant.name;
                     option.textContent = attendant.name;
                     attendantFilter.appendChild(option);
                 });
@@ -1058,6 +1298,8 @@
 
             // Popular filtro de produtos
             const productFilter = document.getElementById('product-filter');
+            productFilter.innerHTML = '<option value="">Todos os Produtos</option>';
+            
             if (data.popularProducts && Array.isArray(data.popularProducts)) {
                 data.popularProducts.forEach(product => {
                     const option = document.createElement('option');
@@ -1073,20 +1315,6 @@
             }
         }
 
-        // Função para aplicar filtros
-        function applyFilters() {
-            if (!currentData) return;
-            
-            const sentimentFilter = document.getElementById('sentiment-filter').value;
-            const objectionFilter = document.getElementById('objection-filter').value;
-            const attendantFilter = document.getElementById('attendant-filter').value;
-            const productFilter = document.getElementById('product-filter').value;
-            
-            // Aqui você implementaria a lógica de filtragem
-            // Por enquanto, apenas recarregamos os dados originais
-            renderAllComponents(currentData);
-        }
-
         // Inicializar a página
         document.addEventListener('DOMContentLoaded', function() {
             // Carregar dados do webhook
@@ -1096,20 +1324,20 @@
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    if (currentData && currentData.conversations) {
-                        renderConversations(currentData.conversations);
-                        renderPagination(currentData.pagination);
+                    if (filteredData && filteredData.conversations) {
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.pagination);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
-                if (currentData && currentData.pagination) {
-                    const totalPages = currentData.pagination.totalPages || 1;
+                if (filteredData && filteredData.pagination) {
+                    const totalPages = filteredData.pagination.totalPages || 1;
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(currentData.conversations);
-                        renderPagination(currentData.pagination);
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.pagination);
                     }
                 }
             });
