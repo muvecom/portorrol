@@ -621,11 +621,20 @@
     </div>
 
     <script>
-        // Variáveis globais para armazenar dados e estado
+                // Variáveis globais para armazenar dados e estado
         let currentData = null;
         let filteredData = null;
         let currentPage = 1;
         let itemsPerPage = 10;
+
+        // Instâncias dos gráficos
+        let chartInstances = {
+            sentimentTransition: null,
+            sentimentDistribution: null,
+            objections: null,
+            products: null,
+            attendantAnalysis: null
+        };
 
         // Paleta de cores contrastantes para gráficos
         const CONTRASTING_COLORS = [
@@ -638,6 +647,13 @@
         // Função para obter cores contrastantes
         function getContrastingColors(count) {
             return CONTRASTING_COLORS.slice(0, count);
+        }
+
+        // Função para destruir gráfico se existir
+        function destroyChart(chartInstance) {
+            if (chartInstance && typeof chartInstance.destroy === 'function') {
+                chartInstance.destroy();
+            }
         }
 
         // Função para atualizar informações dos dados
@@ -657,7 +673,6 @@
                 📊 <strong>${totalConversations}</strong> conversas analisadas | 
                 👥 <strong>${totalAttendants}</strong> atendentes | 
                 📦 <strong>${totalProducts}</strong> produtos mencionados
-                ${dashboardData.debug ? `| 🔍 Dados carregados: ${dashboardData.debug.ticketsFound} tickets, ${dashboardData.debug.messagesFound} mensagens` : ''}
             `;
         }
 
@@ -672,6 +687,9 @@
                 return;
             }
             
+            // Destruir gráfico anterior se existir
+            destroyChart(chartInstances.sentimentTransition);
+            
             // Preparar dados para o gráfico de pizza
             const labels = data.map(item => `${item.from} → ${item.to}`);
             const counts = data.map(item => item.count);
@@ -679,12 +697,7 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            // Destruir gráfico anterior se existir
-            if (window.sentimentTransitionChart) {
-                window.sentimentTransitionChart.destroy();
-            }
-            
-            window.sentimentTransitionChart = new Chart(ctx, {
+            chartInstances.sentimentTransition = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -734,6 +747,9 @@
                 return;
             }
             
+            // Destruir gráfico anterior se existir
+            destroyChart(chartInstances.sentimentDistribution);
+            
             const labels = Object.keys(data).map(key => {
                 if (key === 'positivo') return 'Positivo';
                 if (key === 'neutro') return 'Neutro';
@@ -746,12 +762,7 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(labels.length);
             
-            // Destruir gráfico anterior se existir
-            if (window.sentimentDistributionChart) {
-                window.sentimentDistributionChart.destroy();
-            }
-            
-            window.sentimentDistributionChart = new Chart(ctx, {
+            chartInstances.sentimentDistribution = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -784,18 +795,16 @@
                 return;
             }
             
+            // Destruir gráfico anterior se existir
+            destroyChart(chartInstances.objections);
+            
             const labels = data.map(item => item.objection);
             const counts = data.map(item => item.count);
             
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            // Destruir gráfico anterior se existir
-            if (window.objectionsChart) {
-                window.objectionsChart.destroy();
-            }
-            
-            window.objectionsChart = new Chart(ctx, {
+            chartInstances.objections = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -828,18 +837,16 @@
                 return;
             }
             
+            // Destruir gráfico anterior se existir
+            destroyChart(chartInstances.products);
+            
             const labels = data.map(item => item.product);
             const counts = data.map(item => item.count);
             
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            // Destruir gráfico anterior se existir
-            if (window.productsChart) {
-                window.productsChart.destroy();
-            }
-            
-            window.productsChart = new Chart(ctx, {
+            chartInstances.products = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -872,16 +879,14 @@
                 return;
             }
             
+            // Destruir gráfico anterior se existir
+            destroyChart(chartInstances.attendantAnalysis);
+            
             const labels = data.map(item => item.attendantName);
             const technicalData = data.map(item => item.technical);
             const persuasionData = data.map(item => item.persuasion);
             
-            // Destruir gráfico anterior se existir
-            if (window.attendantAnalysisChart) {
-                window.attendantAnalysisChart.destroy();
-            }
-            
-            window.attendantAnalysisChart = new Chart(ctx, {
+            chartInstances.attendantAnalysis = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -952,8 +957,6 @@
                 return;
             }
             
-            console.log('📊 Dados de objeções recebidos:', objections);
-            
             // Preço Elevado
             const highPrice = document.getElementById('high-price');
             if (objections.highPrice && typeof objections.highPrice === 'object') {
@@ -1005,8 +1008,6 @@
             // Evitar divisão por zero
             const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
             const noPercentage = total > 0 ? 100 - yesPercentage : 0;
-            
-            console.log(`📊 ${type}: Sim=${yes}, Não=${no}, Total=${total}, %Sim=${yesPercentage}%`);
             
             return `
                 <div class="percentage-bar">
@@ -1126,8 +1127,6 @@
                     throw new Error('Resposta vazia do servidor');
                 }
                 
-                console.log('📦 Dados recebidos do backend:', data);
-                
                 currentData = data;
                 filteredData = data;
                 
@@ -1136,15 +1135,8 @@
                 
             } catch (error) {
                 console.error('Erro ao carregar dados do webhook:', error);
-                document.body.innerHTML = `
-                    <div class="container">
-                        <div style="text-align: center; padding: 50px;">
-                            <h2>Erro ao carregar dados</h2>
-                            <p>${error.message}</p>
-                            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; background-color: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer;">Tentar novamente</button>
-                        </div>
-                    </div>
-                `;
+                document.getElementById('data-info').innerHTML = '❌ Erro ao carregar dados';
+                document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Erro ao carregar dados</td></tr>';
             }
         }
 
@@ -1182,15 +1174,12 @@
         function showLoadingState() {
             document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
             document.getElementById('data-info').innerHTML = '📊 Carregando dados...';
-            // Você pode adicionar mais indicadores de loading se quiser
         }
 
         // Função para renderizar todos os componentes
         function renderAllComponents(data) {
             // Verificar se é um array e pegar o primeiro item se for
             const dashboardData = Array.isArray(data) ? data[0] : data;
-            
-            console.log('🎯 Renderizando componentes com dados:', dashboardData);
             
             // Atualizar informações dos dados
             updateDataInfo(data);
