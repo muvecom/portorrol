@@ -258,12 +258,14 @@
         
         .percentage-no {
             background-color: #dadce0;
+            color: #5f6368;
         }
         
         .percentage-label {
             display: flex;
             justify-content: space-between;
             font-size: 14px;
+            margin-top: 5px;
         }
         
         .products-grid {
@@ -382,6 +384,15 @@
             cursor: not-allowed;
         }
         
+        .data-info {
+            background-color: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -414,6 +425,11 @@
             </div>
             
         </header>
+
+        <!-- Informações dos dados -->
+        <div class="data-info" id="data-info">
+            📊 Carregando dados...
+        </div>
 
         <!-- Filtros -->
         <div class="filter-section">
@@ -624,6 +640,27 @@
             return CONTRASTING_COLORS.slice(0, count);
         }
 
+        // Função para atualizar informações dos dados
+        function updateDataInfo(data) {
+            const infoElement = document.getElementById('data-info');
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                infoElement.innerHTML = '📊 Nenhum dado disponível';
+                return;
+            }
+            
+            const dashboardData = data[0];
+            const totalConversations = dashboardData.totalConversations || 0;
+            const totalAttendants = (dashboardData.attendants && dashboardData.attendants.length) || 0;
+            const totalProducts = (dashboardData.popularProducts && dashboardData.popularProducts.length) || 0;
+            
+            infoElement.innerHTML = `
+                📊 <strong>${totalConversations}</strong> conversas analisadas | 
+                👥 <strong>${totalAttendants}</strong> atendentes | 
+                📦 <strong>${totalProducts}</strong> produtos mencionados
+                ${dashboardData.debug ? `| 🔍 Dados carregados: ${dashboardData.debug.ticketsFound} tickets, ${dashboardData.debug.messagesFound} mensagens` : ''}
+            `;
+        }
+
         // Função para renderizar o gráfico de transição de sentimento
         function renderSentimentTransitionChart(data) {
             const ctx = document.getElementById('sentimentTransitionChart').getContext('2d');
@@ -642,7 +679,12 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            new Chart(ctx, {
+            // Destruir gráfico anterior se existir
+            if (window.sentimentTransitionChart) {
+                window.sentimentTransitionChart.destroy();
+            }
+            
+            window.sentimentTransitionChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -704,7 +746,12 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(labels.length);
             
-            new Chart(ctx, {
+            // Destruir gráfico anterior se existir
+            if (window.sentimentDistributionChart) {
+                window.sentimentDistributionChart.destroy();
+            }
+            
+            window.sentimentDistributionChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -743,7 +790,12 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            new Chart(ctx, {
+            // Destruir gráfico anterior se existir
+            if (window.objectionsChart) {
+                window.objectionsChart.destroy();
+            }
+            
+            window.objectionsChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -782,7 +834,12 @@
             // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
-            new Chart(ctx, {
+            // Destruir gráfico anterior se existir
+            if (window.productsChart) {
+                window.productsChart.destroy();
+            }
+            
+            window.productsChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
                     labels: labels,
@@ -819,7 +876,12 @@
             const technicalData = data.map(item => item.technical);
             const persuasionData = data.map(item => item.persuasion);
             
-            new Chart(ctx, {
+            // Destruir gráfico anterior se existir
+            if (window.attendantAnalysisChart) {
+                window.attendantAnalysisChart.destroy();
+            }
+            
+            window.attendantAnalysisChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
@@ -886,53 +948,81 @@
         // Função para renderizar objeções
         function renderObjections(objections) {
             if (!objections || typeof objections !== 'object') {
+                console.warn('Dados de objeções inválidos');
                 return;
             }
             
+            console.log('📊 Dados de objeções recebidos:', objections);
+            
             // Preço Elevado
             const highPrice = document.getElementById('high-price');
-            if (objections.highPrice) {
-                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
+            if (objections.highPrice && typeof objections.highPrice === 'object') {
+                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no, 'highPrice');
+            } else {
+                highPrice.innerHTML = '<div class="loading">Dados indisponíveis</div>';
             }
             
             // Prazo de Entrega
             const deliveryTime = document.getElementById('delivery-time');
-            if (objections.deliveryTime) {
-                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
+            if (objections.deliveryTime && typeof objections.deliveryTime === 'object') {
+                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no, 'deliveryTime');
+            } else {
+                deliveryTime.innerHTML = '<div class="loading">Dados indisponíveis</div>';
             }
             
             // Qualidade do Produto
             const productQuality = document.getElementById('product-quality');
-            if (objections.productQuality) {
-                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
+            if (objections.productQuality && typeof objections.productQuality === 'object') {
+                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no, 'productQuality');
+            } else {
+                productQuality.innerHTML = '<div class="loading">Dados indisponíveis</div>';
             }
             
             // Disponibilidade
             const availability = document.getElementById('availability');
-            if (objections.availability) {
-                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
+            if (objections.availability && typeof objections.availability === 'object') {
+                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no, 'availability');
+            } else {
+                availability.innerHTML = '<div class="loading">Dados indisponíveis</div>';
             }
             
             // Suporte Técnico
             const technicalSupport = document.getElementById('technical-support');
-            if (objections.technicalSupport) {
-                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no);
+            if (objections.technicalSupport && typeof objections.technicalSupport === 'object') {
+                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no, 'technicalSupport');
+            } else {
+                technicalSupport.innerHTML = '<div class="loading">Dados indisponíveis</div>';
             }
         }
 
-        function createPercentageBar(yes, no) {
+        function createPercentageBar(yes, no, type) {
+            // Garantir que os valores são números
+            yes = Number(yes) || 0;
+            no = Number(no) || 0;
+            
             const total = yes + no;
-            const yesPercentage = Math.round((yes / total) * 100);
-            const noPercentage = 100 - yesPercentage;
+            
+            // Evitar divisão por zero
+            const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
+            const noPercentage = total > 0 ? 100 - yesPercentage : 0;
+            
+            console.log(`📊 ${type}: Sim=${yes}, Não=${no}, Total=${total}, %Sim=${yesPercentage}%`);
             
             return `
                 <div class="percentage-bar">
-                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">${yesPercentage}%</div>
-                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">${noPercentage}%</div>
+                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">
+                        ${yesPercentage}%
+                    </div>
+                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">
+                        ${noPercentage}%
+                    </div>
                 </div>
                 <div class="percentage-label">
                     <span>Sim: ${yes}</span>
                     <span>Não: ${no}</span>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                    Total: ${total} menções
                 </div>
             `;
         }
@@ -1007,6 +1097,9 @@
         // Função para carregar dados do webhook
         async function loadDataFromWebhook(filters = {}) {
             try {
+                // Mostrar loading
+                showLoadingState();
+                
                 // Construir URL com parâmetros
                 let url = 'https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b';
                 const params = new URLSearchParams();
@@ -1032,6 +1125,8 @@
                 if (!data) {
                     throw new Error('Resposta vazia do servidor');
                 }
+                
+                console.log('📦 Dados recebidos do backend:', data);
                 
                 currentData = data;
                 filteredData = data;
@@ -1080,11 +1175,13 @@
             document.getElementById('product-filter').value = '';
             
             // Recarregar dados sem filtros
+            currentPage = 1;
             loadDataFromWebhook();
         }
 
         function showLoadingState() {
-            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Aplicando filtros...</td></tr>';
+            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
+            document.getElementById('data-info').innerHTML = '📊 Carregando dados...';
             // Você pode adicionar mais indicadores de loading se quiser
         }
 
@@ -1093,6 +1190,12 @@
             // Verificar se é um array e pegar o primeiro item se for
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
+            console.log('🎯 Renderizando componentes com dados:', dashboardData);
+            
+            // Atualizar informações dos dados
+            updateDataInfo(data);
+            
+            // Renderizar gráficos e componentes
             renderSentimentTransitionChart(dashboardData.sentimentTransitions);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
             renderObjectionsChart(dashboardData.topObjections);
@@ -1117,7 +1220,7 @@
             if (dashboardData.attendants && Array.isArray(dashboardData.attendants)) {
                 dashboardData.attendants.forEach(attendant => {
                     const option = document.createElement('option');
-                    option.value = attendant.name;
+                    option.value = attendant.id;
                     option.textContent = attendant.name;
                     attendantFilter.appendChild(option);
                 });
@@ -1151,7 +1254,7 @@
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
-                    if (filteredData && filteredData.conversations) {
+                    if (filteredData) {
                         const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
                         renderConversations(data.conversations);
                         renderPagination(data.pagination);
