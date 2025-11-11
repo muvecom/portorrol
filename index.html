@@ -393,7 +393,7 @@
             font-size: 14px;
         }
 
-        /* Tooltip styles */
+        /* Tooltip styles - CORRIGIDO SEM SCROLLBAR */
         .tooltip {
             position: relative;
             cursor: pointer;
@@ -401,13 +401,13 @@
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 500px;
-            max-width: 90vw;
+            width: 800px;
+            max-width: 95vw;
             background-color: #333;
             color: #fff;
             text-align: left;
             border-radius: 6px;
-            padding: 15px;
+            padding: 20px;
             position: absolute;
             z-index: 1000;
             bottom: 125%;
@@ -415,13 +415,12 @@
             transform: translateX(-50%);
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 12px;
-            line-height: 1.4;
-            white-space: pre-line;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            max-height: 400px;
-            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
             word-wrap: break-word;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            /* REMOVIDO: max-height, overflow-y, scrollbar */
         }
 
         .tooltip:hover .tooltiptext {
@@ -471,9 +470,9 @@
             }
 
             .tooltip .tooltiptext {
-                width: 300px;
-                font-size: 11px;
-                max-height: 300px;
+                width: 350px;
+                font-size: 12px;
+                padding: 15px;
             }
         }
     </style>
@@ -1142,7 +1141,7 @@
                     }
                 }
                 
-                // Adicionar tooltip para o resumo - AGORA MOSTRA CONVERSA COMPLETA
+                // Adicionar tooltip para o resumo - AGORA MOSTRA CONVERSA COMPLETA SEM SCROLLBAR
                 const summaryCell = document.createElement('td');
                 summaryCell.className = 'tooltip';
                 
@@ -1151,7 +1150,6 @@
                 const displayText = summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText;
                 
                 // Texto completo para o tooltip (conversa completa)
-                // Se não tiver fullConversation, usa o summary como fallback
                 const fullConversationText = conversation.fullConversation || summaryText;
                 
                 summaryCell.innerHTML = `
