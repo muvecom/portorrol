@@ -301,6 +301,13 @@
             background-color: var(--neutral-color);
         }
         
+        .conversations-table td:nth-child(3) {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
         .pagination {
             display: flex;
             justify-content: space-between;
@@ -393,7 +400,7 @@
             font-size: 14px;
         }
 
-        /* Tooltip styles - CORRIGIDO SEM SCROLLBAR */
+        /* Tooltip styles - CORRIGIDO: EXIBE CONVERSA COMPLETA SEM CORTAR */
         .tooltip {
             position: relative;
             cursor: pointer;
@@ -420,7 +427,7 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            /* REMOVIDO: max-height, overflow-y, scrollbar */
+            /* REMOVIDO: max-height, overflow, scrollbar */
         }
 
         .tooltip:hover .tooltiptext {
@@ -473,6 +480,10 @@
                 width: 350px;
                 font-size: 12px;
                 padding: 15px;
+            }
+
+            .conversations-table td:nth-child(3) {
+                max-width: 150px;
             }
         }
     </style>
@@ -733,7 +744,7 @@
         function updateDataInfo(data) {
             const infoElement = document.getElementById('data-info');
             if (!data || !Array.isArray(data) || data.length === 0) {
-                infoElement.innerHTML = '📊 Nenhum dado disponível';
+                infoElement.innerHTML = '📊 Feito!';
                 return;
             }
             
@@ -1145,11 +1156,11 @@
                 const summaryCell = document.createElement('td');
                 summaryCell.className = 'tooltip';
                 
-                // Texto curto para exibir na célula (resumo)
+                // Texto curto para exibir na célula (resumo) - AQUI MANTÉM O CORTE
                 const summaryText = conversation.summary || 'Sem resumo disponível';
                 const displayText = summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText;
                 
-                // Texto completo para o tooltip (conversa completa)
+                // Texto completo para o tooltip (conversa completa) - AQUI MOSTRA TUDO SEM CORTE
                 const fullConversationText = conversation.fullConversation || summaryText;
                 
                 summaryCell.innerHTML = `
