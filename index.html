@@ -700,7 +700,7 @@
                     <tr>
                         <th>Data</th>
                         <th>Sessão</th>
-                        <th>Resumo</th>
+                        <th>Histórico</th> <!-- Alterado de "Resumo" para "Histórico" -->
                         <th>Sentimento</th>
                         <th>Atendente</th>
                     </tr>
@@ -1207,7 +1207,7 @@
                 // Célula do resumo - agora é clicável
                 const summaryCell = document.createElement('td');
                 summaryCell.textContent = displayText;
-                summaryCell.title = "Clique para ver a conversa completa";
+                summaryCell.title = "Clique para ver o histórico completo"; // Alterado o tooltip
                 summaryCell.addEventListener('click', function() {
                     showFullConversation(fullConversationText);
                 });
