@@ -392,6 +392,60 @@
             margin-bottom: 15px;
             font-size: 14px;
         }
+
+        /* Tooltip styles */
+        .tooltip {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 300px;
+            background-color: #333;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: pre-line;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .no-data-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
         
         @media (max-width: 768px) {
             .stats-grid {
@@ -411,6 +465,11 @@
             .filter-grid {
                 grid-template-columns: 1fr;
             }
+
+            .tooltip .tooltiptext {
+                width: 200px;
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -423,7 +482,9 @@
                 </div>
                 <h1>Monitor IA - Portorrol</h1>
             </div>
-            
+            <div class="period-selector">
+                <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
+            </div>
         </header>
 
         <!-- Informações dos dados -->
@@ -470,7 +531,7 @@
                 <div class="card-header">
                     <div class="card-title">Transição de Sentimento dos Clientes</div>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" id="sentiment-transition-container">
                     <canvas id="sentimentTransitionChart"></canvas>
                 </div>
                 <div class="sentiment-legend">
@@ -506,7 +567,7 @@
                 <div class="card-header">
                     <div class="card-title">Sentimento do Cliente ao Final do Atendimento</div>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" id="sentiment-distribution-container">
                     <canvas id="sentimentDistributionChart"></canvas>
                 </div>
             </div>
@@ -516,7 +577,7 @@
                 <div class="card-header">
                     <div class="card-title">Top 3 Objeções dos Clientes</div>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" id="objections-container">
                     <canvas id="objectionsChart"></canvas>
                 </div>
             </div>
@@ -526,7 +587,7 @@
                 <div class="card-header">
                     <div class="card-title">Top 3 Produtos Mais Buscados</div>
                 </div>
-                <div class="chart-container">
+                <div class="chart-container" id="products-container">
                     <canvas id="productsChart"></canvas>
                 </div>
             </div>
@@ -537,7 +598,7 @@
             <div class="card-header">
                 <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
             </div>
-            <div class="chart-container">
+            <div class="chart-container" id="attendant-analysis-container">
                 <canvas id="attendantAnalysisChart"></canvas>
             </div>
         </div>
@@ -621,7 +682,7 @@
     </div>
 
     <script>
-                // Variáveis globais para armazenar dados e estado
+        // Variáveis globais para armazenar dados e estado
         let currentData = null;
         let filteredData = null;
         let currentPage = 1;
@@ -656,6 +717,14 @@
             }
         }
 
+        // Função para mostrar mensagem de sem dados
+        function showNoDataMessage(containerId, message = "Sem dados disponíveis") {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `<div class="no-data-message">${message}</div>`;
+            }
+        }
+
         // Função para atualizar informações dos dados
         function updateDataInfo(data) {
             const infoElement = document.getElementById('data-info');
@@ -678,12 +747,12 @@
 
         // Função para renderizar o gráfico de transição de sentimento
         function renderSentimentTransitionChart(data) {
-            const ctx = document.getElementById('sentimentTransitionChart').getContext('2d');
+            const ctx = document.getElementById('sentimentTransitionChart');
+            const container = document.getElementById('sentiment-transition-container');
             
             // Verificar se os dados existem e têm a estrutura esperada
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de transição de sentimento inválidos');
-                document.getElementById('sentimentTransitionChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('sentiment-transition-container', 'Sem dados de transição de sentimento');
                 return;
             }
             
@@ -738,12 +807,12 @@
         
         // Função para renderizar o gráfico de distribuição de sentimento
         function renderSentimentDistributionChart(data) {
-            const ctx = document.getElementById('sentimentDistributionChart').getContext('2d');
+            const ctx = document.getElementById('sentimentDistributionChart');
+            const container = document.getElementById('sentiment-distribution-container');
             
             // Verificar se os dados existem
-            if (!data || typeof data !== 'object') {
-                console.warn('Dados de distribuição de sentimento inválidos');
-                document.getElementById('sentimentDistributionChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+            if (!data || typeof data !== 'object' || Object.values(data).every(val => val === 0)) {
+                showNoDataMessage('sentiment-distribution-container', 'Sem dados de distribuição de sentimento');
                 return;
             }
             
@@ -786,12 +855,12 @@
         
         // Função para renderizar o gráfico de objeções
         function renderObjectionsChart(data) {
-            const ctx = document.getElementById('objectionsChart').getContext('2d');
+            const ctx = document.getElementById('objectionsChart');
+            const container = document.getElementById('objections-container');
             
             // Verificar se os dados existem
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de objeções inválidos');
-                document.getElementById('objectionsChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('objections-container', 'Sem dados de objeções');
                 return;
             }
             
@@ -828,12 +897,12 @@
         
         // Função para renderizar o gráfico de produtos
         function renderProductsChart(data) {
-            const ctx = document.getElementById('productsChart').getContext('2d');
+            const ctx = document.getElementById('productsChart');
+            const container = document.getElementById('products-container');
             
             // Verificar se os dados existem
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de produtos inválidos');
-                document.getElementById('productsChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('products-container', 'Sem dados de produtos');
                 return;
             }
             
@@ -870,12 +939,12 @@
         
         // Função para renderizar a análise de atendentes
         function renderAttendantAnalysisChart(data) {
-            const ctx = document.getElementById('attendantAnalysisChart').getContext('2d');
+            const ctx = document.getElementById('attendantAnalysisChart');
+            const container = document.getElementById('attendant-analysis-container');
             
             // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0) {
-                console.warn('Dados de análise de atendentes inválidos');
-                document.getElementById('attendantAnalysisChart').parentElement.innerHTML = '<div class="loading">Sem dados disponíveis</div>';
+                showNoDataMessage('attendant-analysis-container', 'Sem dados de análise de atendentes');
                 return;
             }
             
@@ -930,7 +999,7 @@
             container.innerHTML = '';
             
             if (!products || !Array.isArray(products) || products.length === 0) {
-                container.innerHTML = '<div class="loading">Sem produtos disponíveis</div>';
+                container.innerHTML = '<div class="no-data-message">Sem produtos disponíveis</div>';
                 return;
             }
             
@@ -962,7 +1031,7 @@
             if (objections.highPrice && typeof objections.highPrice === 'object') {
                 highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no, 'highPrice');
             } else {
-                highPrice.innerHTML = '<div class="loading">Dados indisponíveis</div>';
+                highPrice.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
             
             // Prazo de Entrega
@@ -970,7 +1039,7 @@
             if (objections.deliveryTime && typeof objections.deliveryTime === 'object') {
                 deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no, 'deliveryTime');
             } else {
-                deliveryTime.innerHTML = '<div class="loading">Dados indisponíveis</div>';
+                deliveryTime.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
             
             // Qualidade do Produto
@@ -978,7 +1047,7 @@
             if (objections.productQuality && typeof objections.productQuality === 'object') {
                 productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no, 'productQuality');
             } else {
-                productQuality.innerHTML = '<div class="loading">Dados indisponíveis</div>';
+                productQuality.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
             
             // Disponibilidade
@@ -986,7 +1055,7 @@
             if (objections.availability && typeof objections.availability === 'object') {
                 availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no, 'availability');
             } else {
-                availability.innerHTML = '<div class="loading">Dados indisponíveis</div>';
+                availability.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
             
             // Suporte Técnico
@@ -994,7 +1063,7 @@
             if (objections.technicalSupport && typeof objections.technicalSupport === 'object') {
                 technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no, 'technicalSupport');
             } else {
-                technicalSupport.innerHTML = '<div class="loading">Dados indisponíveis</div>';
+                technicalSupport.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
         }
 
@@ -1004,6 +1073,10 @@
             no = Number(no) || 0;
             
             const total = yes + no;
+            
+            if (total === 0) {
+                return '<div class="no-data-message">Sem dados</div>';
+            }
             
             // Evitar divisão por zero
             const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
@@ -1034,7 +1107,7 @@
             container.innerHTML = '';
             
             if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
-                container.innerHTML = '<tr><td colspan="5" style="text-align: center;">Nenhuma conversa disponível</td></tr>';
+                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhuma conversa disponível</td></tr>';
                 return;
             }
             
@@ -1064,10 +1137,20 @@
                     }
                 }
                 
+                // Adicionar tooltip para o resumo
+                const summaryCell = document.createElement('td');
+                summaryCell.className = 'tooltip';
+                summaryCell.innerHTML = `
+                    ${conversation.summary || 'N/A'}
+                    <span class="tooltiptext">${conversation.summary || 'Sem resumo disponível'}</span>
+                `;
+                
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
                     <td>${conversation.session || 'N/A'}</td>
-                    <td>${conversation.summary || 'N/A'}</td>
+                `;
+                row.appendChild(summaryCell);
+                row.innerHTML += `
                     <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
                     <td>${conversation.attendantName || 'N/A'}</td>
                 `;
@@ -1096,7 +1179,7 @@
         }
 
         // Função para carregar dados do webhook
-        async function loadDataFromWebhook(filters = {}) {
+        async function loadDataFromWebhook() {
             try {
                 // Mostrar loading
                 showLoadingState();
@@ -1129,26 +1212,28 @@
                     '<tr><td colspan="5" style="text-align: center; color: #ea4335;">Erro ao carregar dados do servidor</td></tr>';
                 
                 // Mostrar mensagem de erro nos gráficos
-                const errorMessage = '<div class="loading" style="color: #ea4335;">Erro ao carregar dados</div>';
+                const errorMessage = '<div class="no-data-message" style="color: #ea4335;">Erro ao carregar dados</div>';
                 const chartContainers = [
-                    'sentimentTransitionChart', 
-                    'sentimentDistributionChart', 
-                    'objectionsChart', 
-                    'productsChart',
-                    'attendantAnalysisChart'
+                    'sentiment-transition-container', 
+                    'sentiment-distribution-container', 
+                    'objections-container', 
+                    'products-container',
+                    'attendant-analysis-container'
                 ];
                 
                 chartContainers.forEach(container => {
                     const element = document.getElementById(container);
                     if (element) {
-                        element.parentElement.innerHTML = errorMessage;
+                        element.innerHTML = errorMessage;
                     }
                 });
             }
         }
 
-        // Função para aplicar filtros
-        async function applyFilters() {
+        // Função para aplicar filtros aos dados já carregados
+        function applyFilters() {
+            if (!currentData) return;
+            
             const sentimentFilter = document.getElementById('sentiment-filter').value;
             const objectionFilter = document.getElementById('objection-filter').value;
             const attendantFilter = document.getElementById('attendant-filter').value;
@@ -1157,13 +1242,35 @@
             // Mostrar loading
             showLoadingState();
             
-            // Carregar dados com filtros
-            await loadDataFromWebhook({
-                sentiment: sentimentFilter,
-                objection: objectionFilter,
-                attendant: attendantFilter,
-                product: productFilter
-            });
+            // Filtrar dados localmente
+            const filtered = JSON.parse(JSON.stringify(currentData));
+            
+            if (filtered && filtered.length > 0) {
+                const dashboardData = filtered[0];
+                
+                // Aplicar filtro de sentimento nas conversas
+                if (sentimentFilter && dashboardData.conversations) {
+                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
+                        conv.sentiment && conv.sentiment.to === sentimentFilter
+                    );
+                }
+                
+                // Aplicar filtro de atendente nas conversas
+                if (attendantFilter && dashboardData.conversations) {
+                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
+                        conv.attendantId === attendantFilter
+                    );
+                }
+                
+                // Atualizar contagens totais
+                dashboardData.totalConversations = dashboardData.conversations ? dashboardData.conversations.length : 0;
+                
+                filteredData = filtered;
+                currentPage = 1;
+                
+                // Renderizar com dados filtrados
+                renderAllComponents(filteredData);
+            }
         }
 
         // Função para limpar filtros
@@ -1173,9 +1280,13 @@
             document.getElementById('attendant-filter').value = '';
             document.getElementById('product-filter').value = '';
             
-            // Recarregar dados sem filtros
+            // Restaurar dados originais
+            filteredData = currentData;
             currentPage = 1;
-            loadDataFromWebhook();
+            
+            if (filteredData) {
+                renderAllComponents(filteredData);
+            }
         }
 
         function showLoadingState() {
@@ -1273,6 +1384,7 @@
             // Configurar eventos de filtro
             document.getElementById('apply-filters').addEventListener('click', applyFilters);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('refresh-data').addEventListener('click', loadDataFromWebhook);
         });
     </script>
 </body>
