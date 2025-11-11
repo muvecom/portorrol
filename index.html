@@ -301,43 +301,62 @@
             background-color: var(--neutral-color);
         }
         
-        .conversations-table td:nth-child(3) {
-            max-width: 400px;
-            max-height: 60px;
-            overflow: hidden;
+        .conversation-row {
             cursor: pointer;
-            position: relative;
-            line-height: 1.4;
+            transition: background-color 0.2s;
         }
         
-        .conversations-table td:nth-child(3):hover {
+        .conversation-row:hover {
             background-color: #f8f9fa;
         }
         
-        .history-preview {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .conversation-row.expanded {
+            background-color: #f0f7ff;
+        }
+        
+        .conversation-preview {
+            max-width: 400px;
             max-height: 60px;
+            overflow: hidden;
             font-size: 13px;
             line-height: 1.4;
             color: #5f6368;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
         }
         
-        .view-full-link {
+        .conversation-full {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-size: 13px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .conversation-full::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .conversation-full::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        
+        .conversation-full::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .expand-icon {
             color: #1a73e8;
-            font-size: 12px;
-            font-weight: 500;
-            margin-top: 4px;
-            display: inline-block;
-            cursor: pointer;
-        }
-        
-        .view-full-link:hover {
-            color: #0d62c9;
-            text-decoration: underline;
+            font-weight: bold;
+            margin-left: 5px;
         }
         
         .pagination {
@@ -432,88 +451,6 @@
             font-size: 14px;
         }
 
-        /* Modal para exibir conversa completa */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background-color: white;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            padding: 20px;
-            position: relative;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #5f6368;
-        }
-
-        .close-modal:hover {
-            color: var(--text-color);
-        }
-
-        .conversation-full {
-            white-space: pre-wrap;
-            line-height: 1.5;
-            font-size: 14px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 4px;
-            max-height: 60vh;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-        }
-
-        .conversation-full::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .conversation-full::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .conversation-full::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        .conversation-full::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
         .no-data-message {
             display: flex;
             justify-content: center;
@@ -544,13 +481,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .conversations-table td:nth-child(3) {
+            .conversation-preview {
                 max-width: 200px;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 15px;
             }
         }
     </style>
@@ -759,19 +691,6 @@
                     <button class="pagination-btn" id="prev-page">Anterior</button>
                     <button class="pagination-btn" id="next-page">Próxima</button>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para exibir conversa completa -->
-    <div class="modal" id="conversation-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Histórico Completo do Atendimento</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="conversation-full" id="conversation-full-text">
-                <!-- Conteúdo da conversa será inserido aqui -->
             </div>
         </div>
     </div>
@@ -1196,16 +1115,7 @@
             `;
         }
 
-        // Função para mostrar conversa completa no modal
-        function showFullConversation(conversationText) {
-            const modal = document.getElementById('conversation-modal');
-            const textElement = document.getElementById('conversation-full-text');
-            textElement.textContent = conversationText;
-            modal.style.display = 'flex';
-        }
-
-        // Função para renderizar conversas
-        // Função para renderizar conversas - VERSÃO CORRIGIDA
+        // Função para renderizar conversas COM GAVETA EXPANSÍVEL
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
@@ -1215,37 +1125,79 @@
                 return;
             }
             
+            // Aplicar paginação
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const paginatedConversations = conversations.slice(startIndex, endIndex);
             
             paginatedConversations.forEach(conversation => {
                 const row = document.createElement('tr');
+                row.className = 'conversation-row';
                 
+                // Determinar cor do sentimento
                 let sentimentColor = '#9aa0a6';
                 let sentimentText = 'N/A';
                 
                 if (conversation.sentiment && conversation.sentiment.to) {
                     sentimentText = conversation.sentiment.to;
-                    if (conversation.sentiment.to === 'positivo') sentimentColor = '#34a853';
-                    else if (conversation.sentiment.to === 'neutro') sentimentColor = '#f9ab00';
-                    else if (conversation.sentiment.to === 'negativo') sentimentColor = '#ea4335';
+                    if (conversation.sentiment.to === 'positivo') {
+                        sentimentColor = '#34a853';
+                        sentimentText = 'Positivo';
+                    } else if (conversation.sentiment.to === 'neutro') {
+                        sentimentColor = '#f9ab00';
+                        sentimentText = 'Neutro';
+                    } else if (conversation.sentiment.to === 'negativo') {
+                        sentimentColor = '#ea4335';
+                        sentimentText = 'Negativo';
+                    }
                 }
                 
-                const historyText = conversation.summary || 'Sem histórico';
-                const fullText = conversation.fullConversation || historyText;
+                // Texto para exibir na célula
+                const historyText = conversation.summary || 'Sem histórico disponível';
+                const fullConversationText = conversation.fullConversation || historyText;
                 
+                // Converter barras em quebras de linha para visualização
+                const formattedFullText = fullConversationText.replace(/\s*\|\s*/g, '\n');
+                
+                // Célula do histórico com gaveta expansível
                 const historyCell = document.createElement('td');
-                historyCell.innerHTML = `<div class="history-preview">${historyText}</div><span class="view-full-link">📋 Ver histórico</span>`;
+                historyCell.colSpan = 1;
+                historyCell.innerHTML = `
+                    <div class="conversation-preview">
+                        ${historyText} <span class="expand-icon">[+]</span>
+                    </div>
+                    <div class="conversation-full" style="display: none;">
+                        ${formattedFullText}
+                    </div>
+                `;
                 
-                row.innerHTML = `<td>${conversation.date || 'N/A'}</td><td>${conversation.session || 'N/A'}</td>`;
-                row.appendChild(historyCell);
-                row.innerHTML += `<td style="color: ${sentimentColor}">${sentimentText}</td><td>${conversation.attendantName || 'N/A'}</td>`;
-
+                // Evento de clique para expandir/recolher
                 row.addEventListener('click', function() {
-                    document.getElementById('conversation-full-text').textContent = fullConversationText;
-                    document.getElementById('conversation-modal').style.display = 'flex';
+                    const fullDiv = this.querySelector('.conversation-full');
+                    const previewDiv = this.querySelector('.conversation-preview');
+                    const expandIcon = this.querySelector('.expand-icon');
+                    
+                    if (fullDiv.style.display === 'none') {
+                        fullDiv.style.display = 'block';
+                        expandIcon.textContent = '[-]';
+                        this.classList.add('expanded');
+                    } else {
+                        fullDiv.style.display = 'none';
+                        expandIcon.textContent = '[+]';
+                        this.classList.remove('expanded');
+                    }
                 });
+                
+                row.innerHTML = `
+                    <td>${conversation.date || 'N/A'}</td>
+                    <td>${conversation.session || 'N/A'}</td>
+                `;
+                row.appendChild(historyCell);
+                row.innerHTML += `
+                    <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
+                    <td>${conversation.attendantName || 'N/A'}</td>
+                `;
+                
                 container.appendChild(row);
             });
         }
@@ -1594,20 +1546,6 @@
         // Inicializar a página
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inicializando dashboard...');
-            
-            // Configurar modal
-            const modal = document.getElementById('conversation-modal');
-            const closeModal = document.querySelector('.close-modal');
-            
-            closeModal.addEventListener('click', function() {
-                modal.style.display = 'none';
-            });
-            
-            window.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
             
             // Carregar dados do webhook
             loadDataFromWebhook();
