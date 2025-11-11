@@ -306,6 +306,13 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            cursor: pointer;
+            color: #1a73e8;
+            text-decoration: underline;
+        }
+        
+        .conversations-table td:nth-child(3):hover {
+            background-color: #f0f6ff;
         }
         
         .pagination {
@@ -400,50 +407,67 @@
             font-size: 14px;
         }
 
-        /* Tooltip styles - CORRIGIDO: EXIBE CONVERSA COMPLETA SEM CORTAR */
-        .tooltip {
-            position: relative;
-            cursor: pointer;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 800px;
-            max-width: 95vw;
-            background-color: #333;
-            color: #fff;
-            text-align: left;
-            border-radius: 6px;
-            padding: 20px;
-            position: absolute;
+        /* Modal para exibir conversa completa */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
             z-index: 1000;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 13px;
-            line-height: 1.5;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #5f6368;
+        }
+
+        .close-modal:hover {
+            color: var(--text-color);
+        }
+
+        .conversation-full {
             white-space: pre-wrap;
-            word-wrap: break-word;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            /* REMOVIDO: max-height, overflow, scrollbar */
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .tooltip .tooltiptext::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #333 transparent transparent transparent;
+            line-height: 1.5;
+            font-size: 14px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            max-height: 60vh;
+            overflow-y: auto;
         }
 
         .no-data-message {
@@ -476,14 +500,13 @@
                 grid-template-columns: 1fr;
             }
 
-            .tooltip .tooltiptext {
-                width: 350px;
-                font-size: 12px;
-                padding: 15px;
-            }
-
             .conversations-table td:nth-child(3) {
                 max-width: 150px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 15px;
             }
         }
     </style>
@@ -692,6 +715,19 @@
                     <button class="pagination-btn" id="prev-page">Anterior</button>
                     <button class="pagination-btn" id="next-page">Próxima</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para exibir conversa completa -->
+    <div class="modal" id="conversation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Conversa Completa</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="conversation-full" id="conversation-full-text">
+                <!-- Conteúdo da conversa será inserido aqui -->
             </div>
         </div>
     </div>
@@ -1116,6 +1152,15 @@
             `;
         }
 
+        // Função para mostrar conversa completa no modal
+        function showFullConversation(conversationText) {
+            const modal = document.getElementById('conversation-modal');
+            const conversationTextElement = document.getElementById('conversation-full-text');
+            
+            conversationTextElement.textContent = conversationText;
+            modal.style.display = 'flex';
+        }
+
         // Função para renderizar conversas
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
@@ -1152,21 +1197,20 @@
                     }
                 }
                 
-                // Adicionar tooltip para o resumo - AGORA MOSTRA CONVERSA COMPLETA SEM SCROLLBAR
-                const summaryCell = document.createElement('td');
-                summaryCell.className = 'tooltip';
-                
-                // Texto curto para exibir na célula (resumo) - AQUI MANTÉM O CORTE
+                // Texto curto para exibir na célula (resumo)
                 const summaryText = conversation.summary || 'Sem resumo disponível';
                 const displayText = summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText;
                 
-                // Texto completo para o tooltip (conversa completa) - AQUI MOSTRA TUDO SEM CORTE
+                // Texto completo para o modal (conversa completa)
                 const fullConversationText = conversation.fullConversation || summaryText;
                 
-                summaryCell.innerHTML = `
-                    ${displayText}
-                    <span class="tooltiptext">${fullConversationText}</span>
-                `;
+                // Célula do resumo - agora é clicável
+                const summaryCell = document.createElement('td');
+                summaryCell.textContent = displayText;
+                summaryCell.title = "Clique para ver a conversa completa";
+                summaryCell.addEventListener('click', function() {
+                    showFullConversation(fullConversationText);
+                });
                 
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
@@ -1201,7 +1245,7 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Função para carregar dados do webhook (APENAS UMA VEZ)
+        // Função para carregar dados do webhook
         async function loadDataFromWebhook() {
             try {
                 // Mostrar loading
@@ -1527,7 +1571,21 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inicializando dashboard...');
             
-            // Carregar dados do webhook (APENAS UMA VEZ)
+            // Configurar modal
+            const modal = document.getElementById('conversation-modal');
+            const closeModal = document.querySelector('.close-modal');
+            
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Carregar dados do webhook
             loadDataFromWebhook();
             
             // Configurar eventos de paginação
@@ -1554,7 +1612,7 @@
                 }
             });
 
-            // Configurar eventos de filtro (100% LOCAIS)
+            // Configurar eventos de filtro
             document.getElementById('apply-filters').addEventListener('click', applyFilters);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
             document.getElementById('refresh-data').addEventListener('click', function() {
