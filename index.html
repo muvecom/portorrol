@@ -1238,16 +1238,14 @@
                 const historyCell = document.createElement('td');
                 historyCell.innerHTML = `<div class="history-preview">${historyText}</div><span class="view-full-link">📋 Ver histórico</span>`;
                 
-                // CLIQUE FUNCIONANDO
-                historyCell.addEventListener('click', function() {
-                    document.getElementById('conversation-full-text').textContent = fullText;
-                    document.getElementById('conversation-modal').style.display = 'flex';
-                });
-                
                 row.innerHTML = `<td>${conversation.date || 'N/A'}</td><td>${conversation.session || 'N/A'}</td>`;
                 row.appendChild(historyCell);
                 row.innerHTML += `<td style="color: ${sentimentColor}">${sentimentText}</td><td>${conversation.attendantName || 'N/A'}</td>`;
-                
+
+                row.addEventListener('click', function() {
+                    document.getElementById('conversation-full-text').textContent = fullConversationText;
+                    document.getElementById('conversation-modal').style.display = 'flex';
+                });
                 container.appendChild(row);
             });
         }
