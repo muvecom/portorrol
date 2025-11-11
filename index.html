@@ -1207,6 +1207,7 @@
         }
 
         // Função para renderizar conversas
+        // Função para renderizar conversas - VERSÃO CORRIGIDA
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
@@ -1216,7 +1217,6 @@
                 return;
             }
             
-            // Aplicar paginação
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const paginatedConversations = conversations.slice(startIndex, endIndex);
@@ -1242,34 +1242,20 @@
                     }
                 }
                 
-                // Texto para exibir na célula (histórico)
+                // Texto para exibir na célula
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
                 
-                // Célula do histórico - agora com preview e link clicável
+                // Célula do histórico CORRIGIDA
                 const historyCell = document.createElement('td');
                 historyCell.innerHTML = `
-                    <div class="history-preview" title="${historyText.replace(/"/g, '&quot;')}">
-                        ${historyText}
-                    </div>
-                    <span class="view-full-link">
-                        📋 Ver histórico completo
-                    </span>
+                    <div class="history-preview">${historyText}</div>
+                    <span class="view-full-link">📋 Ver histórico completo</span>
                 `;
                 
-                // Adicionar evento de clique ao link - CORRIGIDO
-                const viewLink = historyCell.querySelector('.view-full-link');
-                viewLink.addEventListener('click', function(e) {
-                    e.stopPropagation();
+                // Evento de clique CORRIGIDO
+                historyCell.addEventListener('click', function() {
                     showFullConversation(fullConversationText);
-                });
-                
-                // Também permitir clique em toda a célula
-                historyCell.addEventListener('click', function(e) {
-                    // Só abrir se não foi clique no link específico
-                    if (e.target !== viewLink) {
-                        showFullConversation(fullConversationText);
-                    }
                 });
                 
                 row.innerHTML = `
