@@ -401,12 +401,13 @@
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 300px;
+            width: 500px;
+            max-width: 90vw;
             background-color: #333;
             color: #fff;
             text-align: left;
             border-radius: 6px;
-            padding: 10px;
+            padding: 15px;
             position: absolute;
             z-index: 1000;
             bottom: 125%;
@@ -418,6 +419,9 @@
             line-height: 1.4;
             white-space: pre-line;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            max-height: 400px;
+            overflow-y: auto;
+            word-wrap: break-word;
         }
 
         .tooltip:hover .tooltiptext {
@@ -467,8 +471,9 @@
             }
 
             .tooltip .tooltiptext {
-                width: 200px;
+                width: 300px;
                 font-size: 11px;
+                max-height: 300px;
             }
         }
     </style>
@@ -729,7 +734,7 @@
         function updateDataInfo(data) {
             const infoElement = document.getElementById('data-info');
             if (!data || !Array.isArray(data) || data.length === 0) {
-                infoElement.innerHTML = '📊 Feito!';
+                infoElement.innerHTML = '📊 Nenhum dado disponível';
                 return;
             }
             
@@ -1137,13 +1142,21 @@
                     }
                 }
                 
-                // Adicionar tooltip para o resumo
+                // Adicionar tooltip para o resumo - AGORA MOSTRA CONVERSA COMPLETA
                 const summaryCell = document.createElement('td');
                 summaryCell.className = 'tooltip';
+                
+                // Texto curto para exibir na célula (resumo)
                 const summaryText = conversation.summary || 'Sem resumo disponível';
+                const displayText = summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText;
+                
+                // Texto completo para o tooltip (conversa completa)
+                // Se não tiver fullConversation, usa o summary como fallback
+                const fullConversationText = conversation.fullConversation || summaryText;
+                
                 summaryCell.innerHTML = `
-                    ${summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText}
-                    <span class="tooltiptext">${summaryText}</span>
+                    ${displayText}
+                    <span class="tooltiptext">${fullConversationText}</span>
                 `;
                 
                 row.innerHTML = `
@@ -1281,7 +1294,7 @@
                     console.log(`📦 Filtro produto: ${dashboardData.conversations.length} conversas`);
                 }
                 
-                // Recalcular métricas baseadas nas conversas filtradas
+                // Recalcular TODAS as métricas baseadas nas conversas filtradas
                 recalculateMetrics(dashboardData);
                 
                 filteredData = filtered;
@@ -1294,7 +1307,7 @@
             }
         }
 
-        // Função para recalcular métricas após filtragem
+        // Função para recalcular TODAS as métricas após filtragem
         function recalculateMetrics(dashboardData) {
             if (!dashboardData.conversations) return;
             
