@@ -302,17 +302,41 @@
         }
         
         .conversations-table td:nth-child(3) {
-            max-width: 300px;
+            max-width: 400px;
+            max-height: 60px;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
             cursor: pointer;
-            color: #1a73e8;
-            text-decoration: underline;
+            position: relative;
+            line-height: 1.4;
         }
         
         .conversations-table td:nth-child(3):hover {
-            background-color: #f0f6ff;
+            background-color: #f8f9fa;
+        }
+        
+        .history-preview {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-height: 60px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #5f6368;
+        }
+        
+        .view-full-link {
+            color: #1a73e8;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 4px;
+            display: inline-block;
+            text-decoration: underline;
+        }
+        
+        .view-full-link:hover {
+            color: #0d62c9;
         }
         
         .pagination {
@@ -463,11 +487,30 @@
             white-space: pre-wrap;
             line-height: 1.5;
             font-size: 14px;
-            padding: 10px;
+            padding: 15px;
             background-color: #f8f9fa;
             border-radius: 4px;
             max-height: 60vh;
             overflow-y: auto;
+            border: 1px solid #e0e0e0;
+        }
+
+        .conversation-full::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .conversation-full::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .conversation-full::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+        .conversation-full::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
 
         .no-data-message {
@@ -501,7 +544,7 @@
             }
 
             .conversations-table td:nth-child(3) {
-                max-width: 150px;
+                max-width: 200px;
             }
 
             .modal-content {
@@ -690,17 +733,17 @@
             </div>
         </div>
         
-        <!-- Seção de Resumo das Conversas -->
+        <!-- Seção de Histórico das Conversas -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Resumo das Conversas</div>
+                <div class="card-title">Histórico de Atendimentos</div>
             </div>
             <table class="conversations-table" id="conversations-table">
                 <thead>
                     <tr>
                         <th>Data</th>
                         <th>Sessão</th>
-                        <th>Histórico</th> <!-- Alterado de "Resumo" para "Histórico" -->
+                        <th>Histórico</th>
                         <th>Sentimento</th>
                         <th>Atendente</th>
                     </tr>
@@ -723,7 +766,7 @@
     <div class="modal" id="conversation-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">Conversa Completa</h3>
+                <h3 class="modal-title">Histórico Completo do Atendimento</h3>
                 <button class="close-modal">&times;</button>
             </div>
             <div class="conversation-full" id="conversation-full-text">
@@ -1157,7 +1200,7 @@
             const modal = document.getElementById('conversation-modal');
             const conversationTextElement = document.getElementById('conversation-full-text');
             
-            conversationTextElement.textContent = conversationText;
+            conversationTextElement.textContent = conversationText || 'Nenhum histórico disponível';
             modal.style.display = 'flex';
         }
 
@@ -1167,7 +1210,7 @@
             container.innerHTML = '';
             
             if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
-                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhuma conversa disponível</td></tr>';
+                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
                 return;
             }
             
@@ -1197,26 +1240,40 @@
                     }
                 }
                 
-                // Texto curto para exibir na célula (resumo)
-                const summaryText = conversation.summary || 'Sem resumo disponível';
-                const displayText = summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText;
+                // Texto para exibir na célula (histórico)
+                const historyText = conversation.summary || 'Sem histórico disponível';
+                const fullConversationText = conversation.fullConversation || historyText;
                 
-                // Texto completo para o modal (conversa completa)
-                const fullConversationText = conversation.fullConversation || summaryText;
+                // Célula do histórico - agora com preview e link clicável
+                const historyCell = document.createElement('td');
+                historyCell.innerHTML = `
+                    <div class="history-preview" title="${historyText}">
+                        ${historyText}
+                    </div>
+                    <span class="view-full-link" data-conversation="${fullConversationText.replace(/"/g, '&quot;')}">
+                        📋 Ver histórico completo
+                    </span>
+                `;
                 
-                // Célula do resumo - agora é clicável
-                const summaryCell = document.createElement('td');
-                summaryCell.textContent = displayText;
-                summaryCell.title = "Clique para ver o histórico completo"; // Alterado o tooltip
-                summaryCell.addEventListener('click', function() {
-                    showFullConversation(fullConversationText);
+                // Adicionar evento de clique ao link
+                const viewLink = historyCell.querySelector('.view-full-link');
+                viewLink.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const fullText = this.getAttribute('data-conversation');
+                    showFullConversation(fullText);
+                });
+                
+                // Também permitir clique em toda a célula
+                historyCell.addEventListener('click', function() {
+                    const fullText = viewLink.getAttribute('data-conversation');
+                    showFullConversation(fullText);
                 });
                 
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
                     <td>${conversation.session || 'N/A'}</td>
                 `;
-                row.appendChild(summaryCell);
+                row.appendChild(historyCell);
                 row.innerHTML += `
                     <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
                     <td>${conversation.attendantName || 'N/A'}</td>
