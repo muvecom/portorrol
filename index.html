@@ -1140,9 +1140,10 @@
                 // Adicionar tooltip para o resumo
                 const summaryCell = document.createElement('td');
                 summaryCell.className = 'tooltip';
+                const summaryText = conversation.summary || 'Sem resumo disponível';
                 summaryCell.innerHTML = `
-                    ${conversation.summary || 'N/A'}
-                    <span class="tooltiptext">${conversation.summary || 'Sem resumo disponível'}</span>
+                    ${summaryText.length > 50 ? summaryText.substring(0, 47) + '...' : summaryText}
+                    <span class="tooltiptext">${summaryText}</span>
                 `;
                 
                 row.innerHTML = `
@@ -1178,12 +1179,13 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Função para carregar dados do webhook
+        // Função para carregar dados do webhook (APENAS UMA VEZ)
         async function loadDataFromWebhook() {
             try {
                 // Mostrar loading
                 showLoadingState();
                 
+                console.log('🔄 Carregando dados do backend...');
                 const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
                 
                 if (!response.ok) {
@@ -1198,10 +1200,10 @@
                 }
                 
                 currentData = data;
-                filteredData = data;
+                filteredData = JSON.parse(JSON.stringify(data)); // Cópia para filtros
                 
                 // Renderizar todos os componentes
-                renderAllComponents(data);
+                renderAllComponents(filteredData);
                 
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
@@ -1230,19 +1232,26 @@
             }
         }
 
-        // Função para aplicar filtros aos dados já carregados
+        // Função para aplicar filtros LOCAIS (SEM REQUISIÇÃO)
         function applyFilters() {
-            if (!currentData) return;
+            if (!currentData) {
+                console.log('⚠️ Nenhum dado carregado ainda');
+                return;
+            }
             
             const sentimentFilter = document.getElementById('sentiment-filter').value;
             const objectionFilter = document.getElementById('objection-filter').value;
             const attendantFilter = document.getElementById('attendant-filter').value;
             const productFilter = document.getElementById('product-filter').value;
             
-            // Mostrar loading
-            showLoadingState();
+            console.log('🎯 Aplicando filtros locais:', {
+                sentimentFilter,
+                objectionFilter, 
+                attendantFilter,
+                productFilter
+            });
             
-            // Filtrar dados localmente
+            // Criar cópia profunda dos dados originais
             const filtered = JSON.parse(JSON.stringify(currentData));
             
             if (filtered && filtered.length > 0) {
@@ -1253,6 +1262,7 @@
                     dashboardData.conversations = dashboardData.conversations.filter(conv => 
                         conv.sentiment && conv.sentiment.to === sentimentFilter
                     );
+                    console.log(`📊 Filtro sentimento: ${dashboardData.conversations.length} conversas`);
                 }
                 
                 // Aplicar filtro de atendente nas conversas
@@ -1260,32 +1270,171 @@
                     dashboardData.conversations = dashboardData.conversations.filter(conv => 
                         conv.attendantId === attendantFilter
                     );
+                    console.log(`👥 Filtro atendente: ${dashboardData.conversations.length} conversas`);
                 }
                 
-                // Atualizar contagens totais
-                dashboardData.totalConversations = dashboardData.conversations ? dashboardData.conversations.length : 0;
+                // Aplicar filtro de produto (filtrar conversas que mencionam o produto)
+                if (productFilter && dashboardData.conversations) {
+                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
+                        conv.summary && conv.summary.toUpperCase().includes(productFilter.toUpperCase())
+                    );
+                    console.log(`📦 Filtro produto: ${dashboardData.conversations.length} conversas`);
+                }
+                
+                // Recalcular métricas baseadas nas conversas filtradas
+                recalculateMetrics(dashboardData);
                 
                 filteredData = filtered;
                 currentPage = 1;
                 
                 // Renderizar com dados filtrados
                 renderAllComponents(filteredData);
+                
+                console.log('✅ Filtros aplicados localmente com sucesso!');
             }
+        }
+
+        // Função para recalcular métricas após filtragem
+        function recalculateMetrics(dashboardData) {
+            if (!dashboardData.conversations) return;
+            
+            const conversations = dashboardData.conversations;
+            
+            // Recalcular totais
+            dashboardData.totalConversations = conversations.length;
+            dashboardData.pagination = {
+                currentPage: 1,
+                totalPages: Math.max(Math.ceil(conversations.length / 10), 1),
+                itemsPerPage: 10,
+                totalItems: conversations.length
+            };
+            
+            // Recalcular sentimentos
+            const sentimentCount = { positivo: 0, neutro: 0, negativo: 0 };
+            conversations.forEach(conv => {
+                if (conv.sentiment && conv.sentiment.to) {
+                    sentimentCount[conv.sentiment.to] = (sentimentCount[conv.sentiment.to] || 0) + 1;
+                }
+            });
+            
+            dashboardData.finalSentiment = sentimentCount;
+            dashboardData.sentimentTransitions = [
+                { from: 'neutro', to: 'positivo', count: sentimentCount.positivo },
+                { from: 'neutro', to: 'neutro', count: sentimentCount.neutro },
+                { from: 'neutro', to: 'negativo', count: sentimentCount.negativo }
+            ];
+            
+            // Recalcular produtos
+            const productCount = {};
+            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO'];
+            
+            conversations.forEach(conv => {
+                const textToAnalyze = (conv.summary || '').toUpperCase();
+                productWords.forEach(w => { 
+                    if (textToAnalyze.includes(w)) productCount[w] = (productCount[w] || 0) + 1; 
+                });
+            });
+            
+            dashboardData.topProducts = Object.entries(productCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
+                
+            dashboardData.popularProducts = Object.entries(productCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,15);
+            
+            // Recalcular objeções
+            const objectionCount = {
+                highPrice: { yes: 0, no: 0 },
+                deliveryTime: { yes: 0, no: 0 },
+                productQuality: { yes: 0, no: 0 },
+                availability: { yes: 0, no: 0 },
+                technicalSupport: { yes: 0, no: 0 }
+            };
+            
+            conversations.forEach(conv => {
+                const textLower = (conv.summary || '').toLowerCase();
+                if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
+                if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
+                if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
+                if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
+                if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
+            });
+            
+            dashboardData.objections = objectionCount;
+            dashboardData.topObjections = [
+                { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
+                { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
+                { objection: 'Disponibilidade', count: objectionCount.availability.yes },
+                { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
+                { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
+            ].sort((a,b) => b.count - a.count).slice(0,5);
+            
+            // Recalcular análise de atendentes
+            const attendantStats = {};
+            conversations.forEach(conv => {
+                const aid = conv.attendantId || '';
+                const aname = conv.attendantName || 'Atendente Desconhecido';
+                
+                if (aid) {
+                    if (!attendantStats[aid]) {
+                        attendantStats[aid] = { 
+                            attendantId: aid, 
+                            attendantName: aname, 
+                            totalConversations: 0, 
+                            positivo: 0, 
+                            neutro: 0, 
+                            negativo: 0 
+                        };
+                    }
+                    attendantStats[aid].totalConversations++;
+                    const sentiment = conv.sentiment.to;
+                    attendantStats[aid][sentiment] = (attendantStats[aid][sentiment] || 0) + 1;
+                }
+            });
+            
+            const attendantAnalysis = [];
+            Object.values(attendantStats).forEach(att => {
+                const total = att.totalConversations || 1;
+                const positiveRate = total > 0 ? (att.positivo || 0) / total : 0;
+                
+                attendantAnalysis.push({
+                    attendantId: att.attendantId,
+                    attendantName: att.attendantName,
+                    totalConversations: att.totalConversations,
+                    positivo: att.positivo || 0,
+                    neutro: att.neutro || 0,
+                    negativo: att.negativo || 0,
+                    technical: Math.min(100, Math.floor(60 + (positiveRate * 40))),
+                    persuasion: Math.min(100, Math.floor(65 + (positiveRate * 35)))
+                });
+            });
+            
+            dashboardData.attendantAnalysis = attendantAnalysis;
+            dashboardData.attendants = Object.values(attendantStats).map(a => ({ 
+                id: a.attendantId, 
+                name: a.attendantName 
+            }));
         }
 
         // Função para limpar filtros
         function clearFilters() {
+            console.log('🧹 Limpando filtros...');
+            
             document.getElementById('sentiment-filter').value = '';
             document.getElementById('objection-filter').value = '';
             document.getElementById('attendant-filter').value = '';
             document.getElementById('product-filter').value = '';
             
             // Restaurar dados originais
-            filteredData = currentData;
+            filteredData = JSON.parse(JSON.stringify(currentData));
             currentPage = 1;
             
             if (filteredData) {
                 renderAllComponents(filteredData);
+                console.log('✅ Filtros limpos - dados restaurados');
             }
         }
 
@@ -1354,7 +1503,9 @@
 
         // Inicializar a página
         document.addEventListener('DOMContentLoaded', function() {
-            // Carregar dados do webhook
+            console.log('🚀 Inicializando dashboard...');
+            
+            // Carregar dados do webhook (APENAS UMA VEZ)
             loadDataFromWebhook();
             
             // Configurar eventos de paginação
@@ -1381,10 +1532,13 @@
                 }
             });
 
-            // Configurar eventos de filtro
+            // Configurar eventos de filtro (100% LOCAIS)
             document.getElementById('apply-filters').addEventListener('click', applyFilters);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
-            document.getElementById('refresh-data').addEventListener('click', loadDataFromWebhook);
+            document.getElementById('refresh-data').addEventListener('click', function() {
+                console.log('🔄 Recarregando dados do servidor...');
+                loadDataFromWebhook();
+            });
         });
     </script>
 </body>
