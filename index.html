@@ -1199,10 +1199,8 @@
         // Função para mostrar conversa completa no modal
         function showFullConversation(conversationText) {
             const modal = document.getElementById('conversation-modal');
-            const conversationTextElement = document.getElementById('conversation-full-text');
-            
-            // Usar o texto completo diretamente do backend
-            conversationTextElement.textContent = conversationText || 'Nenhum histórico disponível';
+            const textElement = document.getElementById('conversation-full-text');
+            textElement.textContent = conversationText;
             modal.style.display = 'flex';
         }
 
@@ -1224,49 +1222,31 @@
             paginatedConversations.forEach(conversation => {
                 const row = document.createElement('tr');
                 
-                // Determinar cor do sentimento
                 let sentimentColor = '#9aa0a6';
                 let sentimentText = 'N/A';
                 
                 if (conversation.sentiment && conversation.sentiment.to) {
                     sentimentText = conversation.sentiment.to;
-                    if (conversation.sentiment.to === 'positivo') {
-                        sentimentColor = '#34a853';
-                        sentimentText = 'Positivo';
-                    } else if (conversation.sentiment.to === 'neutro') {
-                        sentimentColor = '#f9ab00';
-                        sentimentText = 'Neutro';
-                    } else if (conversation.sentiment.to === 'negativo') {
-                        sentimentColor = '#ea4335';
-                        sentimentText = 'Negativo';
-                    }
+                    if (conversation.sentiment.to === 'positivo') sentimentColor = '#34a853';
+                    else if (conversation.sentiment.to === 'neutro') sentimentColor = '#f9ab00';
+                    else if (conversation.sentiment.to === 'negativo') sentimentColor = '#ea4335';
                 }
                 
-                // Texto para exibir na célula
-                const historyText = conversation.summary || 'Sem histórico disponível';
-                const fullConversationText = conversation.fullConversation || historyText;
+                const historyText = conversation.summary || 'Sem histórico';
+                const fullText = conversation.fullConversation || historyText;
                 
-                // Célula do histórico CORRIGIDA
                 const historyCell = document.createElement('td');
-                historyCell.innerHTML = `
-                    <div class="history-preview">${historyText}</div>
-                    <span class="view-full-link">📋 Ver histórico completo</span>
-                `;
+                historyCell.innerHTML = `<div class="history-preview">${historyText}</div><span class="view-full-link">📋 Ver histórico</span>`;
                 
-                // Evento de clique CORRIGIDO
+                // CLIQUE FUNCIONANDO
                 historyCell.addEventListener('click', function() {
-                    showFullConversation(fullConversationText);
+                    document.getElementById('conversation-full-text').textContent = fullText;
+                    document.getElementById('conversation-modal').style.display = 'flex';
                 });
                 
-                row.innerHTML = `
-                    <td>${conversation.date || 'N/A'}</td>
-                    <td>${conversation.session || 'N/A'}</td>
-                `;
+                row.innerHTML = `<td>${conversation.date || 'N/A'}</td><td>${conversation.session || 'N/A'}</td>`;
                 row.appendChild(historyCell);
-                row.innerHTML += `
-                    <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
-                    <td>${conversation.attendantName || 'N/A'}</td>
-                `;
+                row.innerHTML += `<td style="color: ${sentimentColor}">${sentimentText}</td><td>${conversation.attendantName || 'N/A'}</td>`;
                 
                 container.appendChild(row);
             });
