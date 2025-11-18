@@ -30,7 +30,7 @@
         }
         
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         
@@ -335,7 +335,7 @@
             border-radius: 4px;
             margin-top: 10px;
             border: 1px solid #e0e0e0;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
         }
         
@@ -461,6 +461,106 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* NOVOS ESTILOS PARA EXPLICAÇÕES HUMANIZADAS */
+        .explanation-bubble {
+            background-color: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .explanation-bubble strong {
+            color: #1a73e8;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .indicators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .indicator-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .indicator-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .indicator-positive {
+            background-color: #34a853;
+        }
+
+        .indicator-negative {
+            background-color: #ea4335;
+        }
+
+        .indicator-neutral {
+            background-color: #f9ab00;
+        }
+
+        .date-filter-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .date-input {
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .explanation-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+            background-color: #1a73e8;
+            color: white;
+        }
+
+        .explanation-type.positivo_resolvido {
+            background-color: #34a853;
+        }
+
+        .explanation-type.problema_resolvido {
+            background-color: #f9ab00;
+        }
+
+        .explanation-type.objeção_preço {
+            background-color: #ea4335;
+        }
+
+        .explanation-type.urgente {
+            background-color: #ff6d00;
+        }
+
+        .chart-clickable {
+            cursor: pointer;
+        }
+
+        .chart-clickable:hover {
+            opacity: 0.9;
+        }
         
         @media (max-width: 768px) {
             .stats-grid {
@@ -483,6 +583,11 @@
 
             .conversation-preview {
                 max-width: 200px;
+            }
+
+            .date-filter-section {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
@@ -508,7 +613,7 @@
 
         <!-- Filtros -->
         <div class="filter-section">
-            <div class="card-title">Filtros</div>
+            <div class="card-title">Filtros Avançados</div>
             <div class="filter-grid">
                 <select class="filter-select" id="sentiment-filter">
                     <option value="">Todos os Sentimentos</option>
@@ -536,6 +641,14 @@
                 
                 <button class="filter-btn" id="apply-filters">Aplicar Filtros</button>
                 <button class="filter-btn" id="clear-filters" style="background-color: #5f6368;">Limpar Filtros</button>
+            </div>
+
+            <!-- Filtros de Data -->
+            <div class="date-filter-section">
+                <input type="date" id="start-date" class="date-input" placeholder="Data inicial">
+                <span>até</span>
+                <input type="date" id="end-date" class="date-input" placeholder="Data final">
+                <button class="filter-btn" id="apply-date-filter">Filtrar por Data</button>
             </div>
         </div>
         
@@ -669,7 +782,7 @@
         <!-- Seção de Histórico das Conversas -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Histórico de Atendimentos</div>
+                <div class="card-title">Histórico de Atendimentos com Análise IA</div>
             </div>
             <table class="conversations-table" id="conversations-table">
                 <thead>
@@ -679,6 +792,7 @@
                         <th>Histórico</th>
                         <th>Sentimento</th>
                         <th>Atendente</th>
+                        <th>Protocolo</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body">
@@ -743,7 +857,7 @@
         function updateDataInfo(data) {
             const infoElement = document.getElementById('data-info');
             if (!data || !Array.isArray(data) || data.length === 0) {
-                infoElement.innerHTML = '📊 Feito!';
+                infoElement.innerHTML = '📊 Nenhum dado disponível';
                 return;
             }
             
@@ -751,11 +865,17 @@
             const totalConversations = dashboardData.totalConversations || 0;
             const totalAttendants = (dashboardData.attendants && dashboardData.attendants.length) || 0;
             const totalProducts = (dashboardData.popularProducts && dashboardData.popularProducts.length) || 0;
+            const positiveCount = dashboardData.finalSentiment?.positivo || 0;
+            const neutralCount = dashboardData.finalSentiment?.neutro || 0;
+            const negativeCount = dashboardData.finalSentiment?.negativo || 0;
             
             infoElement.innerHTML = `
                 📊 <strong>${totalConversations}</strong> conversas analisadas | 
                 👥 <strong>${totalAttendants}</strong> atendentes | 
-                📦 <strong>${totalProducts}</strong> produtos mencionados
+                📦 <strong>${totalProducts}</strong> produtos |
+                ✅ <strong>${positiveCount}</strong> positivas |
+                ⚠️ <strong>${neutralCount}</strong> neutras |
+                ❌ <strong>${negativeCount}</strong> negativas
             `;
         }
 
@@ -764,20 +884,15 @@
             const ctx = document.getElementById('sentimentTransitionChart');
             const container = document.getElementById('sentiment-transition-container');
             
-            // Verificar se os dados existem e têm a estrutura esperada
             if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
                 showNoDataMessage('sentiment-transition-container', 'Sem dados de transição de sentimento');
                 return;
             }
             
-            // Destruir gráfico anterior se existir
             destroyChart(chartInstances.sentimentTransition);
             
-            // Preparar dados para o gráfico de pizza
             const labels = data.map(item => `${item.from} → ${item.to}`);
             const counts = data.map(item => item.count);
-            
-            // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
             chartInstances.sentimentTransition = new Chart(ctx, {
@@ -814,9 +929,26 @@
                                 }
                             }
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            if (label.includes('positivo')) {
+                                document.getElementById('sentiment-filter').value = 'positivo';
+                            } else if (label.includes('neutro')) {
+                                document.getElementById('sentiment-filter').value = 'neutro';
+                            } else if (label.includes('negativo')) {
+                                document.getElementById('sentiment-filter').value = 'negativo';
+                            }
+                            applyFilters();
+                        }
                     }
                 }
             });
+
+            // Tornar o canvas clicável
+            ctx.style.cursor = 'pointer';
         }
         
         // Função para renderizar o gráfico de distribuição de sentimento
@@ -824,13 +956,11 @@
             const ctx = document.getElementById('sentimentDistributionChart');
             const container = document.getElementById('sentiment-distribution-container');
             
-            // Verificar se os dados existem
             if (!data || typeof data !== 'object' || Object.values(data).every(val => val === 0)) {
                 showNoDataMessage('sentiment-distribution-container', 'Sem dados de distribuição de sentimento');
                 return;
             }
             
-            // Destruir gráfico anterior se existir
             destroyChart(chartInstances.sentimentDistribution);
             
             const labels = Object.keys(data).map(key => {
@@ -841,8 +971,6 @@
             });
             
             const counts = Object.values(data);
-            
-            // Usar cores contrastantes
             const backgroundColors = getContrastingColors(labels.length);
             
             chartInstances.sentimentDistribution = new Chart(ctx, {
@@ -862,9 +990,24 @@
                         legend: {
                             position: 'right'
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            const sentimentMap = {
+                                'Positivo': 'positivo',
+                                'Neutro': 'neutro', 
+                                'Negativo': 'negativo'
+                            };
+                            document.getElementById('sentiment-filter').value = sentimentMap[label] || '';
+                            applyFilters();
+                        }
                     }
                 }
             });
+
+            ctx.style.cursor = 'pointer';
         }
         
         // Função para renderizar o gráfico de objeções
@@ -872,19 +1015,15 @@
             const ctx = document.getElementById('objectionsChart');
             const container = document.getElementById('objections-container');
             
-            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
                 showNoDataMessage('objections-container', 'Sem dados de objeções');
                 return;
             }
             
-            // Destruir gráfico anterior se existir
             destroyChart(chartInstances.objections);
             
             const labels = data.map(item => item.objection);
             const counts = data.map(item => item.count);
-            
-            // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
             chartInstances.objections = new Chart(ctx, {
@@ -904,9 +1043,26 @@
                         legend: {
                             position: 'right'
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            const objectionMap = {
+                                'Preço Elevado': 'highPrice',
+                                'Prazo de Entrega': 'deliveryTime',
+                                'Qualidade do Produto': 'productQuality',
+                                'Disponibilidade': 'availability',
+                                'Suporte Técnico': 'technicalSupport'
+                            };
+                            document.getElementById('objection-filter').value = objectionMap[label] || '';
+                            applyFilters();
+                        }
                     }
                 }
             });
+
+            ctx.style.cursor = 'pointer';
         }
         
         // Função para renderizar o gráfico de produtos
@@ -914,19 +1070,15 @@
             const ctx = document.getElementById('productsChart');
             const container = document.getElementById('products-container');
             
-            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
                 showNoDataMessage('products-container', 'Sem dados de produtos');
                 return;
             }
             
-            // Destruir gráfico anterior se existir
             destroyChart(chartInstances.products);
             
             const labels = data.map(item => item.product);
             const counts = data.map(item => item.count);
-            
-            // Usar cores contrastantes
             const backgroundColors = getContrastingColors(data.length);
             
             chartInstances.products = new Chart(ctx, {
@@ -946,9 +1098,19 @@
                         legend: {
                             position: 'right'
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = this.data.labels[index];
+                            document.getElementById('product-filter').value = label;
+                            applyFilters();
+                        }
                     }
                 }
             });
+
+            ctx.style.cursor = 'pointer';
         }
         
         // Função para renderizar a análise de atendentes
@@ -956,13 +1118,11 @@
             const ctx = document.getElementById('attendantAnalysisChart');
             const container = document.getElementById('attendant-analysis-container');
             
-            // Verificar se os dados existem
             if (!data || !Array.isArray(data) || data.length === 0) {
                 showNoDataMessage('attendant-analysis-container', 'Sem dados de análise de atendentes');
                 return;
             }
             
-            // Destruir gráfico anterior se existir
             destroyChart(chartInstances.attendantAnalysis);
             
             const labels = data.map(item => item.attendantName);
@@ -1002,9 +1162,21 @@
                                 text: 'Pontuação (%)'
                             }
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const attendantId = data[index]?.attendantId;
+                            if (attendantId) {
+                                document.getElementById('attendant-filter').value = attendantId;
+                                applyFilters();
+                            }
+                        }
                     }
                 }
             });
+
+            ctx.style.cursor = 'pointer';
         }
 
         // Função para renderizar produtos populares
@@ -1020,11 +1192,20 @@
             products.forEach(product => {
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
+                productItem.style.cursor = 'pointer';
                 
                 if (typeof product === 'object' && product.product && product.count) {
                     productItem.textContent = `${product.product} (${product.count})`;
+                    productItem.addEventListener('click', () => {
+                        document.getElementById('product-filter').value = product.product;
+                        applyFilters();
+                    });
                 } else if (typeof product === 'string') {
                     productItem.textContent = product;
+                    productItem.addEventListener('click', () => {
+                        document.getElementById('product-filter').value = product;
+                        applyFilters();
+                    });
                 } else {
                     productItem.textContent = 'Produto não especificado';
                 }
@@ -1040,10 +1221,46 @@
                 return;
             }
             
+            const createPercentageBar = (yes, no, type) => {
+                yes = Number(yes) || 0;
+                no = Number(no) || 0;
+                const total = yes + no;
+                
+                if (total === 0) {
+                    return '<div class="no-data-message">Sem dados</div>';
+                }
+                
+                const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
+                const noPercentage = total > 0 ? 100 - yesPercentage : 0;
+                
+                return `
+                    <div class="percentage-bar">
+                        <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">
+                            ${yesPercentage}%
+                        </div>
+                        <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">
+                            ${noPercentage}%
+                        </div>
+                    </div>
+                    <div class="percentage-label">
+                        <span>Sim: ${yes}</span>
+                        <span>Não: ${no}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        Total: ${total} menções
+                    </div>
+                `;
+            };
+            
             // Preço Elevado
             const highPrice = document.getElementById('high-price');
             if (objections.highPrice && typeof objections.highPrice === 'object') {
                 highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no, 'highPrice');
+                highPrice.style.cursor = 'pointer';
+                highPrice.addEventListener('click', () => {
+                    document.getElementById('objection-filter').value = 'highPrice';
+                    applyFilters();
+                });
             } else {
                 highPrice.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
@@ -1052,6 +1269,11 @@
             const deliveryTime = document.getElementById('delivery-time');
             if (objections.deliveryTime && typeof objections.deliveryTime === 'object') {
                 deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no, 'deliveryTime');
+                deliveryTime.style.cursor = 'pointer';
+                deliveryTime.addEventListener('click', () => {
+                    document.getElementById('objection-filter').value = 'deliveryTime';
+                    applyFilters();
+                });
             } else {
                 deliveryTime.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
@@ -1060,6 +1282,11 @@
             const productQuality = document.getElementById('product-quality');
             if (objections.productQuality && typeof objections.productQuality === 'object') {
                 productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no, 'productQuality');
+                productQuality.style.cursor = 'pointer';
+                productQuality.addEventListener('click', () => {
+                    document.getElementById('objection-filter').value = 'productQuality';
+                    applyFilters();
+                });
             } else {
                 productQuality.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
@@ -1068,6 +1295,11 @@
             const availability = document.getElementById('availability');
             if (objections.availability && typeof objections.availability === 'object') {
                 availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no, 'availability');
+                availability.style.cursor = 'pointer';
+                availability.addEventListener('click', () => {
+                    document.getElementById('objection-filter').value = 'availability';
+                    applyFilters();
+                });
             } else {
                 availability.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
@@ -1076,56 +1308,36 @@
             const technicalSupport = document.getElementById('technical-support');
             if (objections.technicalSupport && typeof objections.technicalSupport === 'object') {
                 technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no, 'technicalSupport');
+                technicalSupport.style.cursor = 'pointer';
+                technicalSupport.addEventListener('click', () => {
+                    document.getElementById('objection-filter').value = 'technicalSupport';
+                    applyFilters();
+                });
             } else {
                 technicalSupport.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
             }
         }
 
-        function createPercentageBar(yes, no, type) {
-            // Garantir que os valores são números
-            yes = Number(yes) || 0;
-            no = Number(no) || 0;
-            
-            const total = yes + no;
-            
-            if (total === 0) {
-                return '<div class="no-data-message">Sem dados</div>';
+        // Função para converter datas do formato brasileiro para Date object
+        function parseBrazilianDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
             }
-            
-            // Evitar divisão por zero
-            const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
-            const noPercentage = total > 0 ? 100 - yesPercentage : 0;
-            
-            return `
-                <div class="percentage-bar">
-                    <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">
-                        ${yesPercentage}%
-                    </div>
-                    <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">
-                        ${noPercentage}%
-                    </div>
-                </div>
-                <div class="percentage-label">
-                    <span>Sim: ${yes}</span>
-                    <span>Não: ${no}</span>
-                </div>
-                <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                    Total: ${total} menções
-                </div>
-            `;
+            return null;
         }
 
-        // Função para renderizar conversas COM GAVETA EXPANSÍVEL
+        // Função para renderizar conversas COM EXPLICAÇÕES HUMANIZADAS
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
             
             if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
-                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
+                container.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
                 return;
             }
             
-            // Aplicar paginação
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const paginatedConversations = conversations.slice(startIndex, endIndex);
@@ -1155,9 +1367,16 @@
                 // Texto para exibir na célula
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
-                
-                // Converter barras em quebras de linha para visualização
                 const formattedFullText = fullConversationText.replace(/\s*\|\s*/g, '\n');
+                
+                // Explicação humanizada (se disponível)
+                const explanation = conversation.explanation ? 
+                    conversation.explanation.humanized : 
+                    "Análise baseada no conteúdo da conversa e padrões de comunicação.";
+                
+                const explanationType = conversation.explanation?.type || 'padrao';
+                const explanationTypeClass = `explanation-type ${explanationType}`;
+                const explanationTypeText = explanationType.replace('_', ' ').toUpperCase();
                 
                 // Célula do histórico com gaveta expansível
                 const historyCell = document.createElement('td');
@@ -1167,24 +1386,33 @@
                         ${historyText} <span class="expand-icon">[+]</span>
                     </div>
                     <div class="conversation-full" style="display: none;">
+                        <div class="explanation-bubble">
+                            <strong>📝 Análise da Conversa <span class="${explanationTypeClass}">${explanationTypeText}</span></strong>
+                            ${explanation}
+                        </div>
+                        <hr style="margin: 10px 0;">
+                        <strong>💬 Histórico Completo:</strong><br>
                         ${formattedFullText}
                     </div>
                 `;
                 
                 // Evento de clique para expandir/recolher
-                row.addEventListener('click', function() {
-                    const fullDiv = this.querySelector('.conversation-full');
-                    const previewDiv = this.querySelector('.conversation-preview');
-                    const expandIcon = this.querySelector('.expand-icon');
-                    
-                    if (fullDiv.style.display === 'none') {
-                        fullDiv.style.display = 'block';
-                        expandIcon.textContent = '[-]';
-                        this.classList.add('expanded');
-                    } else {
-                        fullDiv.style.display = 'none';
-                        expandIcon.textContent = '[+]';
-                        this.classList.remove('expanded');
+                row.addEventListener('click', function(e) {
+                    // Impedir que o clique no ícone de expandir propague
+                    if (e.target.classList.contains('expand-icon')) {
+                        const fullDiv = this.querySelector('.conversation-full');
+                        const previewDiv = this.querySelector('.conversation-preview');
+                        const expandIcon = this.querySelector('.expand-icon');
+                        
+                        if (fullDiv.style.display === 'none') {
+                            fullDiv.style.display = 'block';
+                            expandIcon.textContent = '[-]';
+                            this.classList.add('expanded');
+                        } else {
+                            fullDiv.style.display = 'none';
+                            expandIcon.textContent = '[+]';
+                            this.classList.remove('expanded');
+                        }
                     }
                 });
                 
@@ -1196,6 +1424,11 @@
                 row.innerHTML += `
                     <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
                     <td>${conversation.attendantName || 'N/A'}</td>
+                    <td>
+                        <div style="font-size: 12px; color: #666; max-width: 200px;">
+                            ${conversation.protocol || 'N/A'}
+                        </div>
+                    </td>
                 `;
                 
                 container.appendChild(row);
@@ -1216,7 +1449,6 @@
             
             info.textContent = `${startItem} - ${endItem} / ${totalItems}`;
             
-            // Atualizar estado dos botões
             document.getElementById('prev-page').disabled = currentPage <= 1;
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
@@ -1224,7 +1456,6 @@
         // Função para carregar dados do webhook
         async function loadDataFromWebhook() {
             try {
-                // Mostrar loading
                 showLoadingState();
                 
                 console.log('🔄 Carregando dados do backend...');
@@ -1242,20 +1473,17 @@
                 }
                 
                 currentData = data;
-                filteredData = JSON.parse(JSON.stringify(data)); // Cópia para filtros
+                filteredData = JSON.parse(JSON.stringify(data));
                 
-                // Renderizar todos os componentes
                 renderAllComponents(filteredData);
                 
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
                 
-                // Mostrar erro de forma mais amigável
                 document.getElementById('data-info').innerHTML = '❌ Erro ao carregar dados';
                 document.getElementById('conversations-body').innerHTML = 
-                    '<tr><td colspan="5" style="text-align: center; color: #ea4335;">Erro ao carregar dados do servidor</td></tr>';
+                    '<tr><td colspan="6" style="text-align: center; color: #ea4335;">Erro ao carregar dados do servidor</td></tr>';
                 
-                // Mostrar mensagem de erro nos gráficos
                 const errorMessage = '<div class="no-data-message" style="color: #ea4335;">Erro ao carregar dados</div>';
                 const chartContainers = [
                     'sentiment-transition-container', 
@@ -1274,7 +1502,7 @@
             }
         }
 
-        // Função para aplicar filtros LOCAIS (SEM REQUISIÇÃO)
+        // Função para aplicar filtros LOCAIS
         function applyFilters() {
             if (!currentData) {
                 console.log('⚠️ Nenhum dado carregado ainda');
@@ -1285,15 +1513,18 @@
             const objectionFilter = document.getElementById('objection-filter').value;
             const attendantFilter = document.getElementById('attendant-filter').value;
             const productFilter = document.getElementById('product-filter').value;
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
             
             console.log('🎯 Aplicando filtros locais:', {
                 sentimentFilter,
                 objectionFilter, 
                 attendantFilter,
-                productFilter
+                productFilter,
+                startDate,
+                endDate
             });
             
-            // Criar cópia profunda dos dados originais
             const filtered = JSON.parse(JSON.stringify(currentData));
             
             if (filtered && filtered.length > 0) {
@@ -1304,7 +1535,6 @@
                     dashboardData.conversations = dashboardData.conversations.filter(conv => 
                         conv.sentiment && conv.sentiment.to === sentimentFilter
                     );
-                    console.log(`📊 Filtro sentimento: ${dashboardData.conversations.length} conversas`);
                 }
                 
                 // Aplicar filtro de atendente nas conversas
@@ -1312,15 +1542,63 @@
                     dashboardData.conversations = dashboardData.conversations.filter(conv => 
                         conv.attendantId === attendantFilter
                     );
-                    console.log(`👥 Filtro atendente: ${dashboardData.conversations.length} conversas`);
                 }
                 
-                // Aplicar filtro de produto (filtrar conversas que mencionam o produto)
+                // Aplicar filtro de produto
                 if (productFilter && dashboardData.conversations) {
                     dashboardData.conversations = dashboardData.conversations.filter(conv => 
                         conv.summary && conv.summary.toUpperCase().includes(productFilter.toUpperCase())
                     );
-                    console.log(`📦 Filtro produto: ${dashboardData.conversations.length} conversas`);
+                }
+                
+                // Aplicar filtro de data
+                if ((startDate || endDate) && dashboardData.conversations) {
+                    const start = startDate ? new Date(startDate) : null;
+                    const end = endDate ? new Date(endDate) : null;
+                    
+                    if (start || end) {
+                        dashboardData.conversations = dashboardData.conversations.filter(conv => {
+                            const convDate = parseBrazilianDate(conv.date);
+                            if (!convDate) return true;
+                            
+                            let passStart = true;
+                            let passEnd = true;
+                            
+                            if (start) {
+                                passStart = convDate >= start;
+                            }
+                            if (end) {
+                                const endDateWithTime = new Date(end);
+                                endDateWithTime.setHours(23, 59, 59, 999);
+                                passEnd = convDate <= endDateWithTime;
+                            }
+                            
+                            return passStart && passEnd;
+                        });
+                    }
+                }
+                
+                // Aplicar filtro de objeção (recalcular baseado nas conversas filtradas)
+                if (objectionFilter && dashboardData.conversations) {
+                    // Recalcular objeções baseado nas conversas filtradas
+                    const objectionCount = {
+                        highPrice: { yes: 0, no: 0 },
+                        deliveryTime: { yes: 0, no: 0 },
+                        productQuality: { yes: 0, no: 0 },
+                        availability: { yes: 0, no: 0 },
+                        technicalSupport: { yes: 0, no: 0 }
+                    };
+                    
+                    dashboardData.conversations.forEach(conv => {
+                        const textLower = (conv.summary || '').toLowerCase();
+                        if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
+                        if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
+                        if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
+                        if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
+                        if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
+                    });
+                    
+                    dashboardData.objections = objectionCount;
                 }
                 
                 // Recalcular TODAS as métricas baseadas nas conversas filtradas
@@ -1329,7 +1607,6 @@
                 filteredData = filtered;
                 currentPage = 1;
                 
-                // Renderizar com dados filtrados
                 renderAllComponents(filteredData);
                 
                 console.log('✅ Filtros aplicados localmente com sucesso!');
@@ -1368,7 +1645,7 @@
             
             // Recalcular produtos
             const productCount = {};
-            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO'];
+            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB'];
             
             conversations.forEach(conv => {
                 const textToAnalyze = (conv.summary || '').toUpperCase();
@@ -1387,32 +1664,34 @@
                 .sort((a,b) => b.count - a.count)
                 .slice(0,15);
             
-            // Recalcular objeções
-            const objectionCount = {
-                highPrice: { yes: 0, no: 0 },
-                deliveryTime: { yes: 0, no: 0 },
-                productQuality: { yes: 0, no: 0 },
-                availability: { yes: 0, no: 0 },
-                technicalSupport: { yes: 0, no: 0 }
-            };
-            
-            conversations.forEach(conv => {
-                const textLower = (conv.summary || '').toLowerCase();
-                if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
-                if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
-                if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
-                if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
-                if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
-            });
-            
-            dashboardData.objections = objectionCount;
-            dashboardData.topObjections = [
-                { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
-                { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
-                { objection: 'Disponibilidade', count: objectionCount.availability.yes },
-                { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
-                { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
-            ].sort((a,b) => b.count - a.count).slice(0,5);
+            // Recalcular objeções (se não foi filtrado por objeção específica)
+            if (!document.getElementById('objection-filter').value) {
+                const objectionCount = {
+                    highPrice: { yes: 0, no: 0 },
+                    deliveryTime: { yes: 0, no: 0 },
+                    productQuality: { yes: 0, no: 0 },
+                    availability: { yes: 0, no: 0 },
+                    technicalSupport: { yes: 0, no: 0 }
+                };
+                
+                conversations.forEach(conv => {
+                    const textLower = (conv.summary || '').toLowerCase();
+                    if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
+                    if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
+                    if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
+                    if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
+                    if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
+                });
+                
+                dashboardData.objections = objectionCount;
+                dashboardData.topObjections = [
+                    { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
+                    { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
+                    { objection: 'Disponibilidade', count: objectionCount.availability.yes },
+                    { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
+                    { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
+                ].sort((a,b) => b.count - a.count).slice(0,5);
+            }
             
             // Recalcular análise de atendentes
             const attendantStats = {};
@@ -1469,8 +1748,9 @@
             document.getElementById('objection-filter').value = '';
             document.getElementById('attendant-filter').value = '';
             document.getElementById('product-filter').value = '';
+            document.getElementById('start-date').value = '';
+            document.getElementById('end-date').value = '';
             
-            // Restaurar dados originais
             filteredData = JSON.parse(JSON.stringify(currentData));
             currentPage = 1;
             
@@ -1481,19 +1761,15 @@
         }
 
         function showLoadingState() {
-            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
+            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="6" style="text-align: center;">Carregando dados...</td></tr>';
             document.getElementById('data-info').innerHTML = '📊 Carregando dados...';
         }
 
         // Função para renderizar todos os componentes
         function renderAllComponents(data) {
-            // Verificar se é um array e pegar o primeiro item se for
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
-            // Atualizar informações dos dados
             updateDataInfo(data);
-            
-            // Renderizar gráficos e componentes
             renderSentimentTransitionChart(dashboardData.sentimentTransitions);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
             renderObjectionsChart(dashboardData.topObjections);
@@ -1508,7 +1784,6 @@
 
         // Função para popular filtros
         function populateFilters(data) {
-            // Verificar se é um array e pegar o primeiro item se for
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             // Popular filtro de atendentes
@@ -1547,10 +1822,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inicializando dashboard...');
             
-            // Carregar dados do webhook
             loadDataFromWebhook();
             
-            // Configurar eventos de paginação
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
@@ -1574,12 +1847,21 @@
                 }
             });
 
-            // Configurar eventos de filtro
             document.getElementById('apply-filters').addEventListener('click', applyFilters);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
+            document.getElementById('apply-date-filter').addEventListener('click', applyFilters);
             document.getElementById('refresh-data').addEventListener('click', function() {
                 console.log('🔄 Recarregando dados do servidor...');
                 loadDataFromWebhook();
+            });
+
+            // Permitir Enter nos filtros de data
+            ['start-date', 'end-date'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        applyFilters();
+                    }
+                });
             });
         });
     </script>
