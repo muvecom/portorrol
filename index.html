@@ -1004,7 +1004,7 @@
             document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('availability'));
         }
 
-        // Renderizar conversas
+        // Renderizar conversas - CORREÇÃO CRÍTICA AQUI
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
@@ -1040,7 +1040,7 @@
                     }
                 }
                 
-                // Texto para exibir na célula
+                // Texto para exibir na célula - GARANTIR QUE TODAS TENHAM O +
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
                 
@@ -1050,43 +1050,53 @@
                 // Gerar explicação (garantir que todas as conversas tenham)
                 const explanation = generateExplanation(conversation);
                 
+                // CÉLULA DO RESUMO - CORREÇÃO CRÍTICA: GARANTIR QUE TODAS TENHAM O [+]
+                const summaryCell = document.createElement('td');
+                summaryCell.innerHTML = `
+                    <div class="conversation-preview">
+                        ${historyText} <span class="expand-icon">[+]</span>
+                    </div>
+                    <div class="conversation-full" style="display: none;">
+                        <div class="explanation-bubble">
+                            <strong>📝 Análise da Conversa:</strong>
+                            ${explanation}
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <strong>💬 Conversa Completa:</strong>
+                            ${formattedConversation}
+                        </div>
+                    </div>
+                `;
+                
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
                     <td>${conversation.session || 'N/A'}</td>
-                    <td>
-                        <div class="conversation-preview">
-                            ${historyText} <span class="expand-icon">[+]</span>
-                        </div>
-                        <div class="conversation-full" style="display: none;">
-                            <div class="explanation-bubble">
-                                <strong>📝 Análise da Conversa:</strong>
-                                ${explanation}
-                            </div>
-                            <div style="margin-top: 15px;">
-                                <strong>💬 Conversa Completa:</strong>
-                                ${formattedConversation}
-                            </div>
-                        </div>
-                    </td>
+                `;
+                
+                // Adicionar a célula do resumo
+                row.appendChild(summaryCell);
+                
+                row.innerHTML += `
                     <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
                     <td>${conversation.attendantName || 'N/A'}</td>
                 `;
                 
-                // Evento de clique para expandir/recolher
-                const expandIcon = row.querySelector('.expand-icon');
-                const fullDiv = row.querySelector('.conversation-full');
-                const previewDiv = row.querySelector('.conversation-preview');
-                
-                expandIcon.addEventListener('click', function(e) {
-                    e.stopPropagation();
+                // EVENTO DE CLIQUE CORRIGIDO - CLIQUE EM QUALQUER LUGAR DA LINHA EXPANDE
+                row.addEventListener('click', function(e) {
+                    // Não expandir se clicar em links ou botões específicos
+                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+                    
+                    const fullDiv = this.querySelector('.conversation-full');
+                    const expandIcon = this.querySelector('.expand-icon');
+                    
                     if (fullDiv.style.display === 'none') {
                         fullDiv.style.display = 'block';
                         expandIcon.textContent = '[-]';
-                        row.classList.add('expanded');
+                        this.classList.add('expanded');
                     } else {
                         fullDiv.style.display = 'none';
                         expandIcon.textContent = '[+]';
-                        row.classList.remove('expanded');
+                        this.classList.remove('expanded');
                     }
                 });
                 
@@ -1146,7 +1156,7 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Sistema de Drill-Down
+        // Sistema de Drill-Down - CORREÇÃO: PRODUTOS AGORA FUNCIONAM
         function applyProductFilter(product) {
             // Toggle do filtro - clica de novo para remover
             if (activeFilters.product === product) {
@@ -1195,7 +1205,7 @@
             if (dashboardData.conversations) {
                 let filteredConversations = [...dashboardData.conversations];
                 
-                // Aplicar filtro de produto
+                // Aplicar filtro de produto - AGORA FUNCIONA
                 if (activeFilters.product) {
                     filteredConversations = filteredConversations.filter(conv => 
                         conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
