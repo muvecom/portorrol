@@ -215,11 +215,18 @@
             text-align: center;
             font-size: 14px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            border: 2px solid transparent;
         }
 
         .product-item:hover {
             background-color: #e8f0fe;
+        }
+
+        .product-item.active {
+            background-color: #1a73e8;
+            color: white;
+            border-color: #0d62c9;
         }
         
         .conversations-table {
@@ -273,6 +280,22 @@
             border-radius: 4px;
             margin-top: 10px;
             border: 1px solid #e0e0e0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .conversation-full::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .conversation-full::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .conversation-full::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
         }
 
         .conversation-message {
@@ -377,17 +400,28 @@
             margin-bottom: 5px;
         }
 
-        .active-filter {
-            background-color: #1a73e8 !important;
-            color: white !important;
-        }
-
         .clickable {
             cursor: pointer;
         }
 
         .clickable:hover {
             opacity: 0.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         @media (max-width: 768px) {
@@ -422,7 +456,7 @@
 
         <!-- Informações dos dados -->
         <div class="data-info" id="data-info">
-            📊 Feito!
+            <div class="loading"></div>Carregando dados...
         </div>
 
         <!-- Filtros de Data -->
@@ -438,13 +472,13 @@
         </div>
         
         <div class="stats-grid">
-            <!-- Card de Distribuição do Sentimento -->
+            <!-- Card de Transição de Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Sentimento Final</div>
+                    <div class="card-title">Transição de Sentimento</div>
                 </div>
-                <div class="chart-container" id="sentiment-distribution-container">
-                    <canvas id="sentimentDistributionChart"></canvas>
+                <div class="chart-container" id="sentiment-transition-container">
+                    <canvas id="sentimentTransitionChart"></canvas>
                 </div>
                 <div class="sentiment-legend">
                     <div class="legend-item">
@@ -459,6 +493,16 @@
                         <div class="sentiment-dot sentiment-negativo"></div>
                         <span>Negativo</span>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Card de Distribuição do Sentimento -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Sentimento Final</div>
+                </div>
+                <div class="chart-container" id="sentiment-distribution-container">
+                    <canvas id="sentimentDistributionChart"></canvas>
                 </div>
             </div>
             
@@ -570,6 +614,7 @@
 
         // Instâncias dos gráficos
         let chartInstances = {
+            sentimentTransition: null,
             sentimentDistribution: null,
             objections: null,
             products: null
@@ -599,8 +644,14 @@
         }
 
         // Atualizar informações dos dados
-        function updateDataInfo(data) {
+        function updateDataInfo(data, isLoading = false) {
             const infoElement = document.getElementById('data-info');
+            
+            if (isLoading) {
+                infoElement.innerHTML = '<div class="loading"></div>Carregando dados...';
+                return;
+            }
+            
             if (!data || !Array.isArray(data) || data.length === 0) {
                 infoElement.innerHTML = '📊 Feito!';
                 return;
@@ -618,6 +669,93 @@
                 ⚠️ <strong>${neutralCount}</strong> neutras |
                 ❌ <strong>${negativeCount}</strong> negativas
             `;
+        }
+
+        // Gerar explicação baseada no sentimento
+        function generateExplanation(conversation) {
+            if (conversation.explanation && conversation.explanation.humanized) {
+                return conversation.explanation.humanized;
+            }
+            
+            const sentiment = conversation.sentiment?.to || 'neutro';
+            
+            switch(sentiment) {
+                case 'positivo':
+                    return "✅ A maioria das questões desta conversa foram tratadas e resolvidas com sucesso. O cliente demonstrou satisfação com o atendimento e as soluções apresentadas.";
+                case 'negativo':
+                    return "❌ Restaram várias pendências e questões não resolvidas nesta conversa. O cliente pode ter demonstrado insatisfação ou frustração com algum aspecto do atendimento.";
+                case 'neutro':
+                default:
+                    return "📋 Conversa sem grandes conclusões ou resoluções definitivas. O atendimento seguiu um fluxo padrão sem manifestações significativas de satisfação ou insatisfação.";
+            }
+        }
+
+        // Renderizar gráfico de transição de sentimento
+        function renderSentimentTransitionChart(data) {
+            const ctx = document.getElementById('sentimentTransitionChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('sentiment-transition-container', 'Sem dados de transição');
+                return;
+            }
+            
+            destroyChart(chartInstances.sentimentTransition);
+            
+            const labels = data.map(item => `${item.from} → ${item.to}`);
+            const counts = data.map(item => item.count);
+            const backgroundColors = data.map(item => {
+                if (item.to === 'positivo') return CHART_COLORS.positivo;
+                if (item.to === 'neutro') return CHART_COLORS.neutro;
+                if (item.to === 'negativo') return CHART_COLORS.negativo;
+                return '#9aa0a6';
+            });
+            
+            chartInstances.sentimentTransition = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const sentiment = data[index]?.to;
+                            if (sentiment) {
+                                applySentimentFilter(sentiment);
+                            }
+                        }
+                    }
+                }
+            });
+
+            ctx.style.cursor = 'pointer';
         }
 
         // Renderizar gráfico de distribuição de sentimento
@@ -791,6 +929,11 @@
                     productItem.addEventListener('click', () => {
                         applyProductFilter(product.product);
                     });
+                    
+                    // Marcar como ativo se estiver filtrado
+                    if (activeFilters.product === product.product) {
+                        productItem.classList.add('active');
+                    }
                 }
                 
                 container.appendChild(productItem);
@@ -904,10 +1047,8 @@
                 // Processar conversa para exibição formatada
                 const formattedConversation = formatConversation(fullConversationText);
                 
-                // Explicação humanizada
-                const explanation = conversation.explanation ? 
-                    conversation.explanation.humanized : 
-                    "Análise baseada no conteúdo e padrões da conversa.";
+                // Gerar explicação (garantir que todas as conversas tenham)
+                const explanation = generateExplanation(conversation);
                 
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
@@ -1007,37 +1148,42 @@
 
         // Sistema de Drill-Down
         function applyProductFilter(product) {
-            activeFilters.product = product;
+            // Toggle do filtro - clica de novo para remover
+            if (activeFilters.product === product) {
+                activeFilters.product = null;
+            } else {
+                activeFilters.product = product;
+            }
             applyAllFilters();
-            highlightActiveFilter('product', product);
+            updateProductHighlights();
         }
 
         function applyObjectionFilter(objection) {
-            activeFilters.objection = objection;
+            if (activeFilters.objection === objection) {
+                activeFilters.objection = null;
+            } else {
+                activeFilters.objection = objection;
+            }
             applyAllFilters();
-            highlightActiveFilter('objection', objection);
         }
 
         function applySentimentFilter(sentiment) {
-            activeFilters.sentiment = sentiment;
+            if (activeFilters.sentiment === sentiment) {
+                activeFilters.sentiment = null;
+            } else {
+                activeFilters.sentiment = sentiment;
+            }
             applyAllFilters();
-            highlightActiveFilter('sentiment', sentiment);
         }
 
-        function highlightActiveFilter(type, value) {
-            // Remover highlights anteriores
-            document.querySelectorAll('.active-filter').forEach(el => {
-                el.classList.remove('active-filter');
+        function updateProductHighlights() {
+            // Atualizar highlights dos produtos
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.classList.remove('active');
+                if (activeFilters.product && item.textContent.includes(activeFilters.product)) {
+                    item.classList.add('active');
+                }
             });
-            
-            // Aplicar novo highlight baseado no tipo
-            if (type === 'product' && value) {
-                document.querySelectorAll('.product-item').forEach(item => {
-                    if (item.textContent.includes(value)) {
-                        item.classList.add('active-filter');
-                    }
-                });
-            }
         }
 
         function applyAllFilters() {
@@ -1126,6 +1272,11 @@
             });
             
             dashboardData.finalSentiment = sentimentCount;
+            dashboardData.sentimentTransitions = [
+                { from: 'neutro', to: 'positivo', count: sentimentCount.positivo },
+                { from: 'neutro', to: 'neutro', count: sentimentCount.neutro },
+                { from: 'neutro', to: 'negativo', count: sentimentCount.negativo }
+            ];
             
             // Recalcular produtos
             const productCount = {};
@@ -1180,6 +1331,7 @@
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             updateDataInfo(data);
+            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
             renderObjectionsChart(dashboardData.topObjections);
             renderProductsChart(dashboardData.topProducts);
@@ -1192,6 +1344,7 @@
         // Carregar dados
         async function loadDataFromWebhook() {
             try {
+                updateDataInfo(null, true);
                 document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
                 
                 const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
@@ -1219,6 +1372,7 @@
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             updateDataInfo(data);
+            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
             renderObjectionsChart(dashboardData.topObjections);
             renderProductsChart(dashboardData.topProducts);
@@ -1286,8 +1440,8 @@
                 document.getElementById('start-date').value = '';
                 document.getElementById('end-date').value = '';
                 
-                document.querySelectorAll('.active-filter').forEach(el => {
-                    el.classList.remove('active-filter');
+                document.querySelectorAll('.active').forEach(el => {
+                    el.classList.remove('active');
                 });
                 
                 filteredData = JSON.parse(JSON.stringify(currentData));
