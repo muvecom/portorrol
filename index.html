@@ -56,11 +56,9 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-        }
-        
-        .logo img {
-            max-width: 100%;
-            max-height: 100%;
+            background-color: #1a73e8;
+            color: white;
+            font-weight: bold;
         }
         
         h1 {
@@ -445,7 +443,7 @@
         <header>
             <div class="logo-container">
                 <div class="logo">
-                    <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol">
+                    PORTO<span style="color: #ffd700;">RROL</span>
                 </div>
                 <h1>Monitor IA - Portorrol</h1>
             </div>
@@ -600,6 +598,133 @@
     </div>
 
     <script>
+        // DADOS DE EXEMPLO PARA TESTE ENQUANTO A API NÃO FUNCIONA
+        const sampleData = [{
+            totalConversations: 8,
+            sentimentTransitions: [
+                { from: 'neutro', to: 'positivo', count: 5 },
+                { from: 'neutro', to: 'neutro', count: 2 },
+                { from: 'neutro', to: 'negativo', count: 1 }
+            ],
+            finalSentiment: { 
+                positivo: 5, 
+                neutro: 2, 
+                negativo: 1 
+            },
+            topObjections: [
+                { objection: 'Preço Elevado', count: 4 },
+                { objection: 'Prazo de Entrega', count: 2 },
+                { objection: 'Disponibilidade', count: 1 },
+                { objection: 'Qualidade do Produto', count: 1 },
+                { objection: 'Suporte Técnico', count: 0 }
+            ],
+            topProducts: [
+                { product: 'ROLAMENTO', count: 8 },
+                { product: 'NSK', count: 5 },
+                { product: 'TIMKEN', count: 3 },
+                { product: 'MANCAL', count: 2 },
+                { product: 'SKF', count: 2 }
+            ],
+            popularProducts: [
+                { product: 'ROLAMENTO', count: 8 },
+                { product: 'NSK', count: 5 },
+                { product: 'TIMKEN', count: 3 },
+                { product: 'MANCAL', count: 2 },
+                { product: 'SKF', count: 2 },
+                { product: 'VEDAÇÃO', count: 1 },
+                { product: 'FAG', count: 1 }
+            ],
+            objections: {
+                highPrice: { yes: 4, no: 4 },
+                deliveryTime: { yes: 2, no: 6 },
+                productQuality: { yes: 1, no: 7 },
+                availability: { yes: 1, no: 7 },
+                technicalSupport: { yes: 0, no: 8 }
+            },
+            conversations: [
+                {
+                    date: "17/11/2025",
+                    session: "7066c4d5",
+                    summary: "Cliente solicitou cotação de rolamentos NSK. Atendente Yasmim encaminhou para vendedor especializado.",
+                    fullConversation: "[16:28] Yasmim: Boa tarde! Obrigado por seu contato, como posso ajudar?\n[16:34] Cliente: Gostaria de cotação para rolamentos NSK\n[16:35] Yasmim: Já estou lhe transferindo para nosso vendedor especializado",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Yasmim"
+                },
+                {
+                    date: "17/11/2025", 
+                    session: "fa1eecef",
+                    summary: "Cliente reclamou do preço dos rolamentos TIMKEN. Kauan tentou negociar condições.",
+                    fullConversation: "[15:53] Cliente: O preço está muito acima do mercado\n[15:54] Kauan: Posso verificar condições especiais de pagamento\n[15:55] Cliente: Mesmo assim ficou caro",
+                    sentiment: { from: 'neutro', to: 'negativo' },
+                    attendantName: "Kauan"
+                },
+                {
+                    date: "17/11/2025",
+                    session: "a58738c6", 
+                    summary: "Teresa atendeu consulta técnica sobre mancais e conseguiu fechar pedido.",
+                    fullConversation: "[16:35] Teresa: Boa tarde, precisa de ajuda com mancais?\n[16:36] Cliente: Sim, preciso de especificações técnicas\n[16:40] Teresa: Aqui estão as medidas e posso fechar o pedido",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Teresa"
+                },
+                {
+                    date: "16/11/2025",
+                    session: "8de21465",
+                    summary: "Consulta sobre disponibilidade de rolamentos SKF. Isabel verificou estoque.",
+                    fullConversation: "[14:34] Isabel: Boa tarde, tudo bem?\n[14:35] Cliente: Tem rolamento SKF 6314 em estoque?\n[14:36] Isabel: Vou verificar disponibilidade",
+                    sentiment: { from: 'neutro', to: 'neutro' },
+                    attendantName: "Isabel"
+                },
+                {
+                    date: "16/11/2025",
+                    session: "46309a35",
+                    summary: "Andressa atendeu pedido urgente de correias industriais.",
+                    fullConversation: "[09:06] Cliente: Preciso de correias industriais urgente\n[09:07] Andressa: Temos em estoque, posso enviar hoje\n[09:08] Cliente: Perfeito, obrigado!",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Andressa"
+                },
+                {
+                    date: "15/11/2025",
+                    session: "a186e053",
+                    summary: "Roberto explicou diferenças entre rolamentos de primeira e segunda linha.",
+                    fullConversation: "[16:58] Roberto: Boa tarde! Precisa de ajuda com rolamentos?\n[16:59] Cliente: Qual a diferença entre primeira e segunda linha?\n[17:00] Roberto: Primeira linha tem melhor acabamento e tolerância",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Roberto"
+                },
+                {
+                    date: "15/11/2025",
+                    session: "97ddb390",
+                    summary: "Cliente reclamou do prazo de entrega. Matheus explicou processo logístico.",
+                    fullConversation: "[17:53] Matheus: Boa tarde, posso ajudar?\n[17:54] Cliente: O prazo de entrega está muito longo\n[17:55] Matheus: É nosso tempo padrão de logística",
+                    sentiment: { from: 'neutro', to: 'neutro' },
+                    attendantName: "Matheus"
+                },
+                {
+                    date: "14/11/2025",
+                    session: "5ddfc13f",
+                    summary: "Vanessa atendeu reclamação sobre qualidade de produto.",
+                    fullConversation: "[16:35] Cliente: Recebi um rolamento com defeito\n[16:36] Vanessa: Lamento pelo ocorrido, vou acionar a garantia\n[16:37] Cliente: Preciso de uma solução rápida",
+                    sentiment: { from: 'neutro', to: 'negativo' },
+                    attendantName: "Vanessa"
+                }
+            ],
+            attendants: [
+                { id: "7066c4d5-6655-4f66-95c5-6c9a5d7e2840", name: "Yasmim" },
+                { id: "fa1eecef-571d-4653-9688-abf9d7e64f96", name: "Kauan" },
+                { id: "a58738c6-3f3a-45dd-aa1e-0dbd5f2c392e", name: "Teresa" },
+                { id: "8de21465-ba15-4a5a-a81d-9315448170aa", name: "Isabel" },
+                { id: "46309a35-a011-4485-9e15-06965195c62b", name: "Andressa" },
+                { id: "a186e053-6ba3-4d4b-88e8-46f7fba109ff", name: "Roberto" },
+                { id: "97ddb390-16a6-4050-adc1-3463cf6ed25f", name: "Matheus" },
+                { id: "5ddfc13f-2c7f-4e8c-b9d1-55ece9147cbb", name: "Vanessa" }
+            ],
+            pagination: { 
+                currentPage: 1, 
+                totalPages: 1, 
+                itemsPerPage: 10, 
+                totalItems: 8 
+            }
+        }];
+
         // Variáveis globais
         let currentData = null;
         let filteredData = null;
@@ -673,10 +798,6 @@
 
         // Gerar explicação baseada no sentimento
         function generateExplanation(conversation) {
-            if (conversation.explanation && conversation.explanation.humanized) {
-                return conversation.explanation.humanized;
-            }
-            
             const sentiment = conversation.sentiment?.to || 'neutro';
             
             switch(sentiment) {
@@ -1004,7 +1125,7 @@
             document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('availability'));
         }
 
-        // Renderizar conversas - CORREÇÃO CRÍTICA AQUI
+        // Renderizar conversas - CORREÇÃO CRÍTICA: TODAS CONVERSAS EXPANDEM
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
@@ -1044,13 +1165,10 @@
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
                 
-                // Processar conversa para exibição formatada
-                const formattedConversation = formatConversation(fullConversationText);
-                
                 // Gerar explicação (garantir que todas as conversas tenham)
                 const explanation = generateExplanation(conversation);
                 
-                // CÉLULA DO RESUMO - CORREÇÃO CRÍTICA: GARANTIR QUE TODAS TENHAM O [+]
+                // CÉLULA DO RESUMO - GARANTIR QUE TODAS TENHAM O [+]
                 const summaryCell = document.createElement('td');
                 summaryCell.innerHTML = `
                     <div class="conversation-preview">
@@ -1062,8 +1180,10 @@
                             ${explanation}
                         </div>
                         <div style="margin-top: 15px;">
-                            <strong>💬 Conversa Completa:</strong>
-                            ${formattedConversation}
+                            <strong>💬 Conversa Completa:</strong><br>
+                            <div style="white-space: pre-wrap; font-family: monospace; background: white; padding: 10px; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                ${fullConversationText}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1083,9 +1203,6 @@
                 
                 // EVENTO DE CLIQUE CORRIGIDO - CLIQUE EM QUALQUER LUGAR DA LINHA EXPANDE
                 row.addEventListener('click', function(e) {
-                    // Não expandir se clicar em links ou botões específicos
-                    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
-                    
                     const fullDiv = this.querySelector('.conversation-full');
                     const expandIcon = this.querySelector('.expand-icon');
                     
@@ -1104,44 +1221,6 @@
             });
         }
 
-        // Formatador de conversa
-        function formatConversation(conversationText) {
-            if (!conversationText) return '<div class="no-data-message">Conversa não disponível</div>';
-            
-            // Separar por linhas e processar cada mensagem
-            const lines = conversationText.split('\n').filter(line => line.trim().length > 0);
-            let formattedHTML = '';
-            
-            lines.forEach(line => {
-                // Detectar se é cliente ou atendente
-                const isClient = line.includes('Cliente:') || line.includes('cliente:') || 
-                               (line.includes(':') && !line.includes('Atendente') && !line.includes('atendente'));
-                const isAttendant = line.includes('Atendente:') || line.includes('atendente:') || 
-                                  line.includes('Yasmim:') || line.includes('Kauan:') || 
-                                  line.includes('Teresa:') || line.includes('Isabel:') ||
-                                  line.includes('Andressa:') || line.includes('Roberto:') ||
-                                  line.includes('Vanessa:') || line.includes('Juliana:') ||
-                                  line.includes('Financeiro:') || line.includes('Luis:') ||
-                                  line.includes('Jonathan:') || line.includes('Jessica:') ||
-                                  line.includes('Katlhen:') || line.includes('Michele:') ||
-                                  line.includes('Victor:') || line.includes('Thales:') ||
-                                  line.includes('Faturamento:') || line.includes('Julia:') ||
-                                  line.includes('Kamila:') || line.includes('Esther:');
-                
-                const messageClass = isClient ? 'client' : (isAttendant ? 'attendant' : '');
-                const senderName = isClient ? 'Cliente' : (isAttendant ? 'Atendente' : 'Sistema');
-                
-                formattedHTML += `
-                    <div class="conversation-message ${messageClass}">
-                        <div class="message-sender ${messageClass}">${senderName}</div>
-                        <div>${line.replace(/^[^:]+:\s*/, '')}</div>
-                    </div>
-                `;
-            });
-            
-            return formattedHTML || '<div class="no-data-message">Formato de conversa não reconhecido</div>';
-        }
-
         // Renderizar paginação
         function renderPagination(totalItems) {
             const info = document.getElementById('pagination-info');
@@ -1156,7 +1235,7 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Sistema de Drill-Down - CORREÇÃO: PRODUTOS AGORA FUNCIONAM
+        // Sistema de Drill-Down - PRODUTOS AGORA FUNCIONAM
         function applyProductFilter(product) {
             // Toggle do filtro - clica de novo para remover
             if (activeFilters.product === product) {
@@ -1351,30 +1430,50 @@
             renderPagination(dashboardData.conversations?.length || 0);
         }
 
-        // Carregar dados
+        // Carregar dados - CORREÇÃO: USA DADOS DE EXEMPLO SE API FALHAR
         async function loadDataFromWebhook() {
             try {
                 updateDataInfo(null, true);
                 document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
                 
+                console.log('🔄 Tentando carregar dados da API...');
                 const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
                 
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
                 
-                const data = await response.json();
+                const text = await response.text();
+                console.log('📦 Resposta da API:', text);
                 
-                if (!data || data.length === 0) throw new Error('Resposta vazia do servidor');
+                let data;
+                if (text && text.trim().length > 0) {
+                    data = JSON.parse(text);
+                } else {
+                    throw new Error('Resposta vazia da API');
+                }
+                
+                if (!data || data.length === 0) {
+                    throw new Error('Dados vazios da API');
+                }
                 
                 currentData = data;
                 filteredData = JSON.parse(JSON.stringify(data));
                 
+                console.log('✅ Dados carregados com sucesso:', data);
                 renderAllComponents(filteredData);
                 
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                document.getElementById('data-info').innerHTML = '📊 Feito!';
-                document.getElementById('conversations-body').innerHTML = 
-                    '<tr><td colspan="5" style="text-align: center; color: #ea4335;">Erro ao carregar dados</td></tr>';
+                console.error('❌ Erro ao carregar dados da API, usando dados de exemplo:', error);
+                
+                // USAR DADOS DE EXEMPLO ENQUANTO A API NÃO FUNCIONA
+                currentData = sampleData;
+                filteredData = JSON.parse(JSON.stringify(sampleData));
+                
+                updateDataInfo(sampleData);
+                renderAllComponents(sampleData);
+                
+                document.getElementById('data-info').innerHTML += ' <span style="color: #f9ab00;">(Dados de exemplo - API offline)</span>';
             }
         }
 
