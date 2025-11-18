@@ -68,50 +68,35 @@
             font-weight: 500;
         }
         
-        .period-selector {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-btn {
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
             background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .date-filter-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-input {
+            padding: 8px 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            font-size: 14px;
         }
         
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: white;
-            min-width: 160px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
             border-radius: 4px;
-            z-index: 1;
-            margin-top: 5px;
-        }
-        
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        
-        .dropdown-item {
-            padding: 10px 15px;
+            padding: 8px 16px;
             cursor: pointer;
-        }
-        
-        .dropdown-item:hover {
-            background-color: var(--neutral-color);
+            font-weight: 500;
         }
         
         .stats-grid {
@@ -151,9 +136,10 @@
         
         .sentiment-legend {
             display: flex;
-            gap: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-top: 15px;
-            font-size: 14px;
+            font-size: 12px;
         }
         
         .legend-item {
@@ -162,14 +148,9 @@
             gap: 5px;
         }
         
-        .sentiment-dots {
-            display: flex;
-            gap: 5px;
-        }
-        
         .sentiment-dot {
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
         }
         
@@ -183,54 +164,6 @@
         
         .sentiment-negativo {
             background-color: var(--danger-color);
-        }
-        
-        .sentiment-nenhum {
-            background-color: #9aa0a6;
-        }
-        
-        .sentiment-distribution {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .sentiment-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .sentiment-value {
-            font-size: 18px;
-            font-weight: 500;
-        }
-        
-        .sentiment-label {
-            font-size: 14px;
-            color: #5f6368;
-        }
-        
-        .leads-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        
-        .leads-table th, .leads-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .leads-table th {
-            font-weight: 500;
-            color: #5f6368;
-        }
-        
-        .leads-table tr:last-child td {
-            border-bottom: none;
         }
         
         .percentage-bar {
@@ -281,6 +214,12 @@
             padding: 8px;
             text-align: center;
             font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .product-item:hover {
+            background-color: #e8f0fe;
         }
         
         .conversations-table {
@@ -327,7 +266,6 @@
         }
         
         .conversation-full {
-            white-space: pre-wrap;
             line-height: 1.5;
             font-size: 13px;
             padding: 15px;
@@ -335,22 +273,34 @@
             border-radius: 4px;
             margin-top: 10px;
             border: 1px solid #e0e0e0;
-            max-height: 400px;
-            overflow-y: auto;
         }
-        
-        .conversation-full::-webkit-scrollbar {
-            width: 6px;
+
+        .conversation-message {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 3px solid #1a73e8;
+            background-color: white;
+            border-radius: 0 4px 4px 0;
         }
-        
-        .conversation-full::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
+
+        .conversation-message.client {
+            border-left-color: #34a853;
+            background-color: #f8fff8;
         }
-        
-        .conversation-full::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 3px;
+
+        .conversation-message.attendant {
+            border-left-color: #1a73e8;
+            background-color: #f8fbff;
+        }
+
+        .message-sender {
+            font-weight: 500;
+            color: #1a73e8;
+            margin-bottom: 4px;
+        }
+
+        .message-sender.client {
+            color: #34a853;
         }
         
         .expand-icon {
@@ -391,57 +341,6 @@
             cursor: not-allowed;
         }
         
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            font-size: 16px;
-            color: #5f6368;
-        }
-
-        .filter-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
-
-        .filter-select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background-color: white;
-        }
-        
-        .filter-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 16px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .filter-btn:hover {
-            background-color: #0d62c9;
-        }
-        
-        .filter-btn:disabled {
-            background-color: #9aa0a6;
-            cursor: not-allowed;
-        }
-        
         .data-info {
             background-color: #e8f0fe;
             border: 1px solid #d2e3fc;
@@ -462,7 +361,6 @@
             padding: 20px;
         }
 
-        /* NOVOS ESTILOS PARA EXPLICAÇÕES HUMANIZADAS */
         .explanation-bubble {
             background-color: #e8f0fe;
             border: 1px solid #d2e3fc;
@@ -479,87 +377,17 @@
             margin-bottom: 5px;
         }
 
-        .indicators-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-            font-size: 12px;
+        .active-filter {
+            background-color: #1a73e8 !important;
+            color: white !important;
         }
 
-        .indicator-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .indicator-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .indicator-positive {
-            background-color: #34a853;
-        }
-
-        .indicator-negative {
-            background-color: #ea4335;
-        }
-
-        .indicator-neutral {
-            background-color: #f9ab00;
-        }
-
-        .date-filter-section {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .date-input {
-            padding: 6px 10px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .explanation-type {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 500;
-            margin-left: 8px;
-            background-color: #1a73e8;
-            color: white;
-        }
-
-        .explanation-type.positivo_resolvido {
-            background-color: #34a853;
-        }
-
-        .explanation-type.problema_resolvido {
-            background-color: #f9ab00;
-        }
-
-        .explanation-type.objeção_preço {
-            background-color: #ea4335;
-        }
-
-        .explanation-type.urgente {
-            background-color: #ff6d00;
-        }
-
-        .chart-clickable {
+        .clickable {
             cursor: pointer;
         }
 
-        .chart-clickable:hover {
-            opacity: 0.9;
+        .clickable:hover {
+            opacity: 0.8;
         }
         
         @media (max-width: 768px) {
@@ -567,27 +395,13 @@
                 grid-template-columns: 1fr;
             }
             
-            .sentiment-distribution {
+            .date-filter-section {
                 flex-direction: column;
-                gap: 10px;
-            }
-            
-            .sentiment-item {
-                flex-direction: row;
-                justify-content: space-between;
-            }
-
-            .filter-grid {
-                grid-template-columns: 1fr;
+                align-items: stretch;
             }
 
             .conversation-preview {
                 max-width: 200px;
-            }
-
-            .date-filter-section {
-                flex-direction: column;
-                align-items: stretch;
             }
         }
     </style>
@@ -601,118 +415,67 @@
                 </div>
                 <h1>Monitor IA - Portorrol</h1>
             </div>
-            <div class="period-selector">
+            <div>
                 <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
             </div>
         </header>
 
         <!-- Informações dos dados -->
         <div class="data-info" id="data-info">
-            📊 Carregando dados...
+            📊 Feito!
         </div>
 
-        <!-- Filtros -->
+        <!-- Filtros de Data -->
         <div class="filter-section">
-            <div class="card-title">Filtros Avançados</div>
-            <div class="filter-grid">
-                <select class="filter-select" id="sentiment-filter">
-                    <option value="">Todos os Sentimentos</option>
-                    <option value="positivo">Positivo</option>
-                    <option value="neutro">Neutro</option>
-                    <option value="negativo">Negativo</option>
-                </select>
-                
-                <select class="filter-select" id="objection-filter">
-                    <option value="">Todas as Objeções</option>
-                    <option value="highPrice">Preço Elevado</option>
-                    <option value="deliveryTime">Prazo de Entrega</option>
-                    <option value="productQuality">Qualidade do Produto</option>
-                    <option value="availability">Disponibilidade</option>
-                    <option value="technicalSupport">Suporte Técnico</option>
-                </select>
-                
-                <select class="filter-select" id="attendant-filter">
-                    <option value="">Todos os Atendentes</option>
-                </select>
-                
-                <select class="filter-select" id="product-filter">
-                    <option value="">Todos os Produtos</option>
-                </select>
-                
-                <button class="filter-btn" id="apply-filters">Aplicar Filtros</button>
-                <button class="filter-btn" id="clear-filters" style="background-color: #5f6368;">Limpar Filtros</button>
-            </div>
-
-            <!-- Filtros de Data -->
+            <div class="card-title">Filtrar por Data</div>
             <div class="date-filter-section">
                 <input type="date" id="start-date" class="date-input" placeholder="Data inicial">
                 <span>até</span>
                 <input type="date" id="end-date" class="date-input" placeholder="Data final">
-                <button class="filter-btn" id="apply-date-filter">Filtrar por Data</button>
+                <button class="filter-btn" id="apply-date-filter">Filtrar</button>
+                <button class="filter-btn" id="clear-filters" style="background-color: #5f6368;">Limpar Filtros</button>
             </div>
         </div>
         
         <div class="stats-grid">
-            <!-- Card de Transição de Sentimento -->
+            <!-- Card de Distribuição do Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Transição de Sentimento dos Clientes</div>
+                    <div class="card-title">Sentimento Final</div>
                 </div>
-                <div class="chart-container" id="sentiment-transition-container">
-                    <canvas id="sentimentTransitionChart"></canvas>
+                <div class="chart-container" id="sentiment-distribution-container">
+                    <canvas id="sentimentDistributionChart"></canvas>
                 </div>
                 <div class="sentiment-legend">
                     <div class="legend-item">
-                        <span>Legenda:</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="sentiment-dots">
-                            <div class="sentiment-dot sentiment-positivo"></div>
-                            <div class="sentiment-dot sentiment-positivo"></div>
-                        </div>
+                        <div class="sentiment-dot sentiment-positivo"></div>
                         <span>Positivo</span>
                     </div>
                     <div class="legend-item">
-                        <div class="sentiment-dots">
-                            <div class="sentiment-dot sentiment-neutro"></div>
-                            <div class="sentiment-dot sentiment-neutro"></div>
-                        </div>
+                        <div class="sentiment-dot sentiment-neutro"></div>
                         <span>Neutro</span>
                     </div>
                     <div class="legend-item">
-                        <div class="sentiment-dots">
-                            <div class="sentiment-dot sentiment-negativo"></div>
-                            <div class="sentiment-dot sentiment-negativo"></div>
-                        </div>
+                        <div class="sentiment-dot sentiment-negativo"></div>
                         <span>Negativo</span>
                     </div>
                 </div>
             </div>
             
-            <!-- Card de Distribuição do Sentimento -->
+            <!-- Card de Top Objeções -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Sentimento do Cliente ao Final do Atendimento</div>
-                </div>
-                <div class="chart-container" id="sentiment-distribution-container">
-                    <canvas id="sentimentDistributionChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Card de Top 3 Objeções -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Top 3 Objeções dos Clientes</div>
+                    <div class="card-title">Principais Objeções</div>
                 </div>
                 <div class="chart-container" id="objections-container">
                     <canvas id="objectionsChart"></canvas>
                 </div>
             </div>
             
-            <!-- Card de Top 3 Produtos -->
+            <!-- Card de Top Produtos -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 3 Produtos Mais Buscados</div>
+                    <div class="card-title">Produtos Mais Buscados</div>
                 </div>
                 <div class="chart-container" id="products-container">
                     <canvas id="productsChart"></canvas>
@@ -720,20 +483,10 @@
             </div>
         </div>
         
-        <!-- Seção de Análise de Atendentes -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="card-header">
-                <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
-            </div>
-            <div class="chart-container" id="attendant-analysis-container">
-                <canvas id="attendantAnalysisChart"></canvas>
-            </div>
-        </div>
-        
         <!-- Seção de Produtos mais buscados -->
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">
-                <div class="card-title">Produtos mais buscados</div>
+                <div class="card-title">Produtos em Destaque</div>
             </div>
             <div class="products-grid" id="popular-products">
                 <!-- Conteúdo será preenchido dinamicamente -->
@@ -743,36 +496,30 @@
         <!-- Seção de Objeções -->
         <div class="card" style="margin-bottom: 20px;">
             <div class="card-header">
-                <div class="card-title">Objeções</div>
+                <div class="card-title">Análise de Objeções</div>
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-                <div>
+                <div class="clickable" id="high-price-click">
                     <div class="card-title">Preço Elevado</div>
                     <div id="high-price">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
-                <div>
+                <div class="clickable" id="delivery-time-click">
                     <div class="card-title">Prazo de Entrega</div>
                     <div id="delivery-time">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
-                <div>
-                    <div class="card-title">Qualidade do Produto</div>
+                <div class="clickable" id="product-quality-click">
+                    <div class="card-title">Qualidade</div>
                     <div id="product-quality">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
-                <div>
+                <div class="clickable" id="availability-click">
                     <div class="card-title">Disponibilidade</div>
                     <div id="availability">
-                        <!-- Conteúdo será preenchido dinamicamente -->
-                    </div>
-                </div>
-                <div>
-                    <div class="card-title">Suporte Técnico</div>
-                    <div id="technical-support">
                         <!-- Conteúdo será preenchido dinamicamente -->
                     </div>
                 </div>
@@ -782,17 +529,16 @@
         <!-- Seção de Histórico das Conversas -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Histórico de Atendimentos com Análise IA</div>
+                <div class="card-title">Histórico de Atendimentos</div>
             </div>
             <table class="conversations-table" id="conversations-table">
                 <thead>
                     <tr>
                         <th>Data</th>
                         <th>Sessão</th>
-                        <th>Histórico</th>
+                        <th>Resumo</th>
                         <th>Sentimento</th>
                         <th>Atendente</th>
-                        <th>Protocolo</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body">
@@ -810,42 +556,41 @@
     </div>
 
     <script>
-        // Variáveis globais para armazenar dados e estado
+        // Variáveis globais
         let currentData = null;
         let filteredData = null;
         let currentPage = 1;
         let itemsPerPage = 10;
+        let activeFilters = {
+            product: null,
+            objection: null,
+            sentiment: null,
+            dateRange: null
+        };
 
         // Instâncias dos gráficos
         let chartInstances = {
-            sentimentTransition: null,
             sentimentDistribution: null,
             objections: null,
-            products: null,
-            attendantAnalysis: null
+            products: null
         };
 
-        // Paleta de cores contrastantes para gráficos
-        const CONTRASTING_COLORS = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
-            '#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5',
-            '#00BBF9', '#00F5D4', '#FF006E', '#8338EC', '#3A86FF',
-            '#FB5607', '#FFBE0B', '#9B5DE5', '#F15BB5', '#00F5D4'
-        ];
+        // Cores para gráficos
+        const CHART_COLORS = {
+            positivo: '#34a853',
+            neutro: '#f9ab00',
+            negativo: '#ea4335',
+            products: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+            objections: ['#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5']
+        };
 
-        // Função para obter cores contrastantes
-        function getContrastingColors(count) {
-            return CONTRASTING_COLORS.slice(0, count);
-        }
-
-        // Função para destruir gráfico se existir
+        // Funções de utilidade
         function destroyChart(chartInstance) {
             if (chartInstance && typeof chartInstance.destroy === 'function') {
                 chartInstance.destroy();
             }
         }
 
-        // Função para mostrar mensagem de sem dados
         function showNoDataMessage(containerId, message = "Sem dados disponíveis") {
             const container = document.getElementById(containerId);
             if (container) {
@@ -853,128 +598,45 @@
             }
         }
 
-        // Função para atualizar informações dos dados
+        // Atualizar informações dos dados
         function updateDataInfo(data) {
             const infoElement = document.getElementById('data-info');
             if (!data || !Array.isArray(data) || data.length === 0) {
-                infoElement.innerHTML = '📊 Nenhum dado disponível';
+                infoElement.innerHTML = '📊 Feito!';
                 return;
             }
             
             const dashboardData = data[0];
             const totalConversations = dashboardData.totalConversations || 0;
-            const totalAttendants = (dashboardData.attendants && dashboardData.attendants.length) || 0;
-            const totalProducts = (dashboardData.popularProducts && dashboardData.popularProducts.length) || 0;
             const positiveCount = dashboardData.finalSentiment?.positivo || 0;
             const neutralCount = dashboardData.finalSentiment?.neutro || 0;
             const negativeCount = dashboardData.finalSentiment?.negativo || 0;
             
             infoElement.innerHTML = `
                 📊 <strong>${totalConversations}</strong> conversas analisadas | 
-                👥 <strong>${totalAttendants}</strong> atendentes | 
-                📦 <strong>${totalProducts}</strong> produtos |
                 ✅ <strong>${positiveCount}</strong> positivas |
                 ⚠️ <strong>${neutralCount}</strong> neutras |
                 ❌ <strong>${negativeCount}</strong> negativas
             `;
         }
 
-        // Função para renderizar o gráfico de transição de sentimento
-        function renderSentimentTransitionChart(data) {
-            const ctx = document.getElementById('sentimentTransitionChart');
-            const container = document.getElementById('sentiment-transition-container');
-            
-            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
-                showNoDataMessage('sentiment-transition-container', 'Sem dados de transição de sentimento');
-                return;
-            }
-            
-            destroyChart(chartInstances.sentimentTransition);
-            
-            const labels = data.map(item => `${item.from} → ${item.to}`);
-            const counts = data.map(item => item.count);
-            const backgroundColors = getContrastingColors(data.length);
-            
-            chartInstances.sentimentTransition = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                font: {
-                                    size: 10
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((value / total) * 100);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            if (label.includes('positivo')) {
-                                document.getElementById('sentiment-filter').value = 'positivo';
-                            } else if (label.includes('neutro')) {
-                                document.getElementById('sentiment-filter').value = 'neutro';
-                            } else if (label.includes('negativo')) {
-                                document.getElementById('sentiment-filter').value = 'negativo';
-                            }
-                            applyFilters();
-                        }
-                    }
-                }
-            });
-
-            // Tornar o canvas clicável
-            ctx.style.cursor = 'pointer';
-        }
-        
-        // Função para renderizar o gráfico de distribuição de sentimento
+        // Renderizar gráfico de distribuição de sentimento
         function renderSentimentDistributionChart(data) {
             const ctx = document.getElementById('sentimentDistributionChart');
-            const container = document.getElementById('sentiment-distribution-container');
             
-            if (!data || typeof data !== 'object' || Object.values(data).every(val => val === 0)) {
-                showNoDataMessage('sentiment-distribution-container', 'Sem dados de distribuição de sentimento');
+            if (!data || Object.values(data).every(val => val === 0)) {
+                showNoDataMessage('sentiment-distribution-container', 'Sem dados de sentimento');
                 return;
             }
             
             destroyChart(chartInstances.sentimentDistribution);
             
-            const labels = Object.keys(data).map(key => {
-                if (key === 'positivo') return 'Positivo';
-                if (key === 'neutro') return 'Neutro';
-                if (key === 'negativo') return 'Negativo';
-                return key;
-            });
-            
-            const counts = Object.values(data);
-            const backgroundColors = getContrastingColors(labels.length);
+            const labels = ['Positivo', 'Neutro', 'Negativo'];
+            const counts = [data.positivo || 0, data.neutro || 0, data.negativo || 0];
+            const backgroundColors = [CHART_COLORS.positivo, CHART_COLORS.neutro, CHART_COLORS.negativo];
             
             chartInstances.sentimentDistribution = new Chart(ctx, {
-                type: 'pie',
+                type: 'doughnut',
                 data: {
                     labels: labels,
                     datasets: [{
@@ -988,20 +650,23 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'right'
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
                         }
                     },
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            const sentimentMap = {
-                                'Positivo': 'positivo',
-                                'Neutro': 'neutro', 
-                                'Negativo': 'negativo'
-                            };
-                            document.getElementById('sentiment-filter').value = sentimentMap[label] || '';
-                            applyFilters();
+                            const sentiments = ['positivo', 'neutro', 'negativo'];
+                            applySentimentFilter(sentiments[index]);
                         }
                     }
                 }
@@ -1009,11 +674,10 @@
 
             ctx.style.cursor = 'pointer';
         }
-        
-        // Função para renderizar o gráfico de objeções
+
+        // Renderizar gráfico de objeções
         function renderObjectionsChart(data) {
             const ctx = document.getElementById('objectionsChart');
-            const container = document.getElementById('objections-container');
             
             if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
                 showNoDataMessage('objections-container', 'Sem dados de objeções');
@@ -1024,7 +688,7 @@
             
             const labels = data.map(item => item.objection);
             const counts = data.map(item => item.count);
-            const backgroundColors = getContrastingColors(data.length);
+            const backgroundColors = CHART_COLORS.objections.slice(0, data.length);
             
             chartInstances.objections = new Chart(ctx, {
                 type: 'pie',
@@ -1047,7 +711,6 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
                             const objectionMap = {
                                 'Preço Elevado': 'highPrice',
                                 'Prazo de Entrega': 'deliveryTime',
@@ -1055,8 +718,7 @@
                                 'Disponibilidade': 'availability',
                                 'Suporte Técnico': 'technicalSupport'
                             };
-                            document.getElementById('objection-filter').value = objectionMap[label] || '';
-                            applyFilters();
+                            applyObjectionFilter(objectionMap[labels[index]]);
                         }
                     }
                 }
@@ -1064,11 +726,10 @@
 
             ctx.style.cursor = 'pointer';
         }
-        
-        // Função para renderizar o gráfico de produtos
+
+        // Renderizar gráfico de produtos
         function renderProductsChart(data) {
             const ctx = document.getElementById('productsChart');
-            const container = document.getElementById('products-container');
             
             if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
                 showNoDataMessage('products-container', 'Sem dados de produtos');
@@ -1079,7 +740,7 @@
             
             const labels = data.map(item => item.product);
             const counts = data.map(item => item.count);
-            const backgroundColors = getContrastingColors(data.length);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
             
             chartInstances.products = new Chart(ctx, {
                 type: 'pie',
@@ -1102,75 +763,7 @@
                     onClick: (evt, elements) => {
                         if (elements.length > 0) {
                             const index = elements[0].index;
-                            const label = this.data.labels[index];
-                            document.getElementById('product-filter').value = label;
-                            applyFilters();
-                        }
-                    }
-                }
-            });
-
-            ctx.style.cursor = 'pointer';
-        }
-        
-        // Função para renderizar a análise de atendentes
-        function renderAttendantAnalysisChart(data) {
-            const ctx = document.getElementById('attendantAnalysisChart');
-            const container = document.getElementById('attendant-analysis-container');
-            
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                showNoDataMessage('attendant-analysis-container', 'Sem dados de análise de atendentes');
-                return;
-            }
-            
-            destroyChart(chartInstances.attendantAnalysis);
-            
-            const labels = data.map(item => item.attendantName);
-            const technicalData = data.map(item => item.technical);
-            const persuasionData = data.map(item => item.persuasion);
-            
-            chartInstances.attendantAnalysis = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Conhecimento Técnico',
-                            data: technicalData,
-                            backgroundColor: '#4dabf7',
-                            borderColor: '#339af0',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Capacidade de Persuasão',
-                            data: persuasionData,
-                            backgroundColor: '#ffa94d',
-                            borderColor: '#ff922b',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            title: {
-                                display: true,
-                                text: 'Pontuação (%)'
-                            }
-                        }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const attendantId = data[index]?.attendantId;
-                            if (attendantId) {
-                                document.getElementById('attendant-filter').value = attendantId;
-                                applyFilters();
-                            }
+                            applyProductFilter(labels[index]);
                         }
                     }
                 }
@@ -1179,7 +772,7 @@
             ctx.style.cursor = 'pointer';
         }
 
-        // Função para renderizar produtos populares
+        // Renderizar produtos populares
         function renderPopularProducts(products) {
             const container = document.getElementById('popular-products');
             container.innerHTML = '';
@@ -1192,36 +785,23 @@
             products.forEach(product => {
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
-                productItem.style.cursor = 'pointer';
                 
                 if (typeof product === 'object' && product.product && product.count) {
                     productItem.textContent = `${product.product} (${product.count})`;
                     productItem.addEventListener('click', () => {
-                        document.getElementById('product-filter').value = product.product;
-                        applyFilters();
+                        applyProductFilter(product.product);
                     });
-                } else if (typeof product === 'string') {
-                    productItem.textContent = product;
-                    productItem.addEventListener('click', () => {
-                        document.getElementById('product-filter').value = product;
-                        applyFilters();
-                    });
-                } else {
-                    productItem.textContent = 'Produto não especificado';
                 }
                 
                 container.appendChild(productItem);
             });
         }
 
-        // Função para renderizar objeções
+        // Renderizar objeções
         function renderObjections(objections) {
-            if (!objections || typeof objections !== 'object') {
-                console.warn('Dados de objeções inválidos');
-                return;
-            }
+            if (!objections || typeof objections !== 'object') return;
             
-            const createPercentageBar = (yes, no, type) => {
+            const createPercentageBar = (yes, no) => {
                 yes = Number(yes) || 0;
                 no = Number(no) || 0;
                 const total = yes + no;
@@ -1230,8 +810,8 @@
                     return '<div class="no-data-message">Sem dados</div>';
                 }
                 
-                const yesPercentage = total > 0 ? Math.round((yes / total) * 100) : 0;
-                const noPercentage = total > 0 ? 100 - yesPercentage : 0;
+                const yesPercentage = Math.round((yes / total) * 100);
+                const noPercentage = 100 - yesPercentage;
                 
                 return `
                     <div class="percentage-bar">
@@ -1243,98 +823,51 @@
                         </div>
                     </div>
                     <div class="percentage-label">
-                        <span>Sim: ${yes}</span>
-                        <span>Não: ${no}</span>
-                    </div>
-                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                        Total: ${total} menções
+                        <span>${yes} menções</span>
                     </div>
                 `;
             };
             
             // Preço Elevado
             const highPrice = document.getElementById('high-price');
-            if (objections.highPrice && typeof objections.highPrice === 'object') {
-                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no, 'highPrice');
-                highPrice.style.cursor = 'pointer';
-                highPrice.addEventListener('click', () => {
-                    document.getElementById('objection-filter').value = 'highPrice';
-                    applyFilters();
-                });
-            } else {
-                highPrice.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
+            if (objections.highPrice) {
+                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
             }
             
             // Prazo de Entrega
             const deliveryTime = document.getElementById('delivery-time');
-            if (objections.deliveryTime && typeof objections.deliveryTime === 'object') {
-                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no, 'deliveryTime');
-                deliveryTime.style.cursor = 'pointer';
-                deliveryTime.addEventListener('click', () => {
-                    document.getElementById('objection-filter').value = 'deliveryTime';
-                    applyFilters();
-                });
-            } else {
-                deliveryTime.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
+            if (objections.deliveryTime) {
+                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
             }
             
             // Qualidade do Produto
             const productQuality = document.getElementById('product-quality');
-            if (objections.productQuality && typeof objections.productQuality === 'object') {
-                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no, 'productQuality');
-                productQuality.style.cursor = 'pointer';
-                productQuality.addEventListener('click', () => {
-                    document.getElementById('objection-filter').value = 'productQuality';
-                    applyFilters();
-                });
-            } else {
-                productQuality.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
+            if (objections.productQuality) {
+                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
             }
             
             // Disponibilidade
             const availability = document.getElementById('availability');
-            if (objections.availability && typeof objections.availability === 'object') {
-                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no, 'availability');
-                availability.style.cursor = 'pointer';
-                availability.addEventListener('click', () => {
-                    document.getElementById('objection-filter').value = 'availability';
-                    applyFilters();
-                });
-            } else {
-                availability.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
-            }
-            
-            // Suporte Técnico
-            const technicalSupport = document.getElementById('technical-support');
-            if (objections.technicalSupport && typeof objections.technicalSupport === 'object') {
-                technicalSupport.innerHTML = createPercentageBar(objections.technicalSupport.yes, objections.technicalSupport.no, 'technicalSupport');
-                technicalSupport.style.cursor = 'pointer';
-                technicalSupport.addEventListener('click', () => {
-                    document.getElementById('objection-filter').value = 'technicalSupport';
-                    applyFilters();
-                });
-            } else {
-                technicalSupport.innerHTML = '<div class="no-data-message">Dados indisponíveis</div>';
+            if (objections.availability) {
+                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
             }
         }
 
-        // Função para converter datas do formato brasileiro para Date object
-        function parseBrazilianDate(dateStr) {
-            if (!dateStr) return null;
-            const parts = dateStr.split('/');
-            if (parts.length === 3) {
-                return new Date(parts[2], parts[1] - 1, parts[0]);
-            }
-            return null;
+        // Configurar clicks nas objeções
+        function setupObjectionClicks() {
+            document.getElementById('high-price-click').addEventListener('click', () => applyObjectionFilter('highPrice'));
+            document.getElementById('delivery-time-click').addEventListener('click', () => applyObjectionFilter('deliveryTime'));
+            document.getElementById('product-quality-click').addEventListener('click', () => applyObjectionFilter('productQuality'));
+            document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('availability'));
         }
 
-        // Função para renderizar conversas COM EXPLICAÇÕES HUMANIZADAS
+        // Renderizar conversas
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
             
             if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
-                container.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
+                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
                 return;
             }
             
@@ -1367,82 +900,101 @@
                 // Texto para exibir na célula
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
-                const formattedFullText = fullConversationText.replace(/\s*\|\s*/g, '\n');
                 
-                // Explicação humanizada (se disponível)
+                // Processar conversa para exibição formatada
+                const formattedConversation = formatConversation(fullConversationText);
+                
+                // Explicação humanizada
                 const explanation = conversation.explanation ? 
                     conversation.explanation.humanized : 
-                    "Análise baseada no conteúdo da conversa e padrões de comunicação.";
-                
-                const explanationType = conversation.explanation?.type || 'padrao';
-                const explanationTypeClass = `explanation-type ${explanationType}`;
-                const explanationTypeText = explanationType.replace('_', ' ').toUpperCase();
-                
-                // Célula do histórico com gaveta expansível
-                const historyCell = document.createElement('td');
-                historyCell.colSpan = 1;
-                historyCell.innerHTML = `
-                    <div class="conversation-preview">
-                        ${historyText} <span class="expand-icon">[+]</span>
-                    </div>
-                    <div class="conversation-full" style="display: none;">
-                        <div class="explanation-bubble">
-                            <strong>📝 Análise da Conversa <span class="${explanationTypeClass}">${explanationTypeText}</span></strong>
-                            ${explanation}
-                        </div>
-                        <hr style="margin: 10px 0;">
-                        <strong>💬 Histórico Completo:</strong><br>
-                        ${formattedFullText}
-                    </div>
-                `;
-                
-                // Evento de clique para expandir/recolher
-                row.addEventListener('click', function(e) {
-                    // Impedir que o clique no ícone de expandir propague
-                    if (e.target.classList.contains('expand-icon')) {
-                        const fullDiv = this.querySelector('.conversation-full');
-                        const previewDiv = this.querySelector('.conversation-preview');
-                        const expandIcon = this.querySelector('.expand-icon');
-                        
-                        if (fullDiv.style.display === 'none') {
-                            fullDiv.style.display = 'block';
-                            expandIcon.textContent = '[-]';
-                            this.classList.add('expanded');
-                        } else {
-                            fullDiv.style.display = 'none';
-                            expandIcon.textContent = '[+]';
-                            this.classList.remove('expanded');
-                        }
-                    }
-                });
+                    "Análise baseada no conteúdo e padrões da conversa.";
                 
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
                     <td>${conversation.session || 'N/A'}</td>
-                `;
-                row.appendChild(historyCell);
-                row.innerHTML += `
-                    <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
-                    <td>${conversation.attendantName || 'N/A'}</td>
                     <td>
-                        <div style="font-size: 12px; color: #666; max-width: 200px;">
-                            ${conversation.protocol || 'N/A'}
+                        <div class="conversation-preview">
+                            ${historyText} <span class="expand-icon">[+]</span>
+                        </div>
+                        <div class="conversation-full" style="display: none;">
+                            <div class="explanation-bubble">
+                                <strong>📝 Análise da Conversa:</strong>
+                                ${explanation}
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <strong>💬 Conversa Completa:</strong>
+                                ${formattedConversation}
+                            </div>
                         </div>
                     </td>
+                    <td style="color: ${sentimentColor}; font-weight: 500;">${sentimentText}</td>
+                    <td>${conversation.attendantName || 'N/A'}</td>
                 `;
+                
+                // Evento de clique para expandir/recolher
+                const expandIcon = row.querySelector('.expand-icon');
+                const fullDiv = row.querySelector('.conversation-full');
+                const previewDiv = row.querySelector('.conversation-preview');
+                
+                expandIcon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (fullDiv.style.display === 'none') {
+                        fullDiv.style.display = 'block';
+                        expandIcon.textContent = '[-]';
+                        row.classList.add('expanded');
+                    } else {
+                        fullDiv.style.display = 'none';
+                        expandIcon.textContent = '[+]';
+                        row.classList.remove('expanded');
+                    }
+                });
                 
                 container.appendChild(row);
             });
         }
 
-        // Função para renderizar paginação
-        function renderPagination(pagination) {
-            if (!pagination) return;
+        // Formatador de conversa
+        function formatConversation(conversationText) {
+            if (!conversationText) return '<div class="no-data-message">Conversa não disponível</div>';
             
+            // Separar por linhas e processar cada mensagem
+            const lines = conversationText.split('\n').filter(line => line.trim().length > 0);
+            let formattedHTML = '';
+            
+            lines.forEach(line => {
+                // Detectar se é cliente ou atendente
+                const isClient = line.includes('Cliente:') || line.includes('cliente:') || 
+                               (line.includes(':') && !line.includes('Atendente') && !line.includes('atendente'));
+                const isAttendant = line.includes('Atendente:') || line.includes('atendente:') || 
+                                  line.includes('Yasmim:') || line.includes('Kauan:') || 
+                                  line.includes('Teresa:') || line.includes('Isabel:') ||
+                                  line.includes('Andressa:') || line.includes('Roberto:') ||
+                                  line.includes('Vanessa:') || line.includes('Juliana:') ||
+                                  line.includes('Financeiro:') || line.includes('Luis:') ||
+                                  line.includes('Jonathan:') || line.includes('Jessica:') ||
+                                  line.includes('Katlhen:') || line.includes('Michele:') ||
+                                  line.includes('Victor:') || line.includes('Thales:') ||
+                                  line.includes('Faturamento:') || line.includes('Julia:') ||
+                                  line.includes('Kamila:') || line.includes('Esther:');
+                
+                const messageClass = isClient ? 'client' : (isAttendant ? 'attendant' : '');
+                const senderName = isClient ? 'Cliente' : (isAttendant ? 'Atendente' : 'Sistema');
+                
+                formattedHTML += `
+                    <div class="conversation-message ${messageClass}">
+                        <div class="message-sender ${messageClass}">${senderName}</div>
+                        <div>${line.replace(/^[^:]+:\s*/, '')}</div>
+                    </div>
+                `;
+            });
+            
+            return formattedHTML || '<div class="no-data-message">Formato de conversa não reconhecido</div>';
+        }
+
+        // Renderizar paginação
+        function renderPagination(totalItems) {
             const info = document.getElementById('pagination-info');
-            const totalItems = pagination.totalItems || 0;
-            const totalPages = pagination.totalPages || 1;
-            const itemsPerPage = pagination.itemsPerPage || 10;
+            const totalPages = Math.max(Math.ceil(totalItems / itemsPerPage), 1);
             
             const startItem = ((currentPage - 1) * itemsPerPage) + 1;
             const endItem = Math.min(currentPage * itemsPerPage, totalItems);
@@ -1453,167 +1005,110 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Função para carregar dados do webhook
-        async function loadDataFromWebhook() {
-            try {
-                showLoadingState();
-                
-                console.log('🔄 Carregando dados do backend...');
-                const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
-                
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                console.log('📦 Dados recebidos:', data);
-                
-                if (!data || data.length === 0) {
-                    throw new Error('Resposta vazia do servidor');
-                }
-                
-                currentData = data;
-                filteredData = JSON.parse(JSON.stringify(data));
-                
-                renderAllComponents(filteredData);
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados:', error);
-                
-                document.getElementById('data-info').innerHTML = '❌ Erro ao carregar dados';
-                document.getElementById('conversations-body').innerHTML = 
-                    '<tr><td colspan="6" style="text-align: center; color: #ea4335;">Erro ao carregar dados do servidor</td></tr>';
-                
-                const errorMessage = '<div class="no-data-message" style="color: #ea4335;">Erro ao carregar dados</div>';
-                const chartContainers = [
-                    'sentiment-transition-container', 
-                    'sentiment-distribution-container', 
-                    'objections-container', 
-                    'products-container',
-                    'attendant-analysis-container'
-                ];
-                
-                chartContainers.forEach(container => {
-                    const element = document.getElementById(container);
-                    if (element) {
-                        element.innerHTML = errorMessage;
+        // Sistema de Drill-Down
+        function applyProductFilter(product) {
+            activeFilters.product = product;
+            applyAllFilters();
+            highlightActiveFilter('product', product);
+        }
+
+        function applyObjectionFilter(objection) {
+            activeFilters.objection = objection;
+            applyAllFilters();
+            highlightActiveFilter('objection', objection);
+        }
+
+        function applySentimentFilter(sentiment) {
+            activeFilters.sentiment = sentiment;
+            applyAllFilters();
+            highlightActiveFilter('sentiment', sentiment);
+        }
+
+        function highlightActiveFilter(type, value) {
+            // Remover highlights anteriores
+            document.querySelectorAll('.active-filter').forEach(el => {
+                el.classList.remove('active-filter');
+            });
+            
+            // Aplicar novo highlight baseado no tipo
+            if (type === 'product' && value) {
+                document.querySelectorAll('.product-item').forEach(item => {
+                    if (item.textContent.includes(value)) {
+                        item.classList.add('active-filter');
                     }
                 });
             }
         }
 
-        // Função para aplicar filtros LOCAIS
-        function applyFilters() {
-            if (!currentData) {
-                console.log('⚠️ Nenhum dado carregado ainda');
-                return;
-            }
-            
-            const sentimentFilter = document.getElementById('sentiment-filter').value;
-            const objectionFilter = document.getElementById('objection-filter').value;
-            const attendantFilter = document.getElementById('attendant-filter').value;
-            const productFilter = document.getElementById('product-filter').value;
-            const startDate = document.getElementById('start-date').value;
-            const endDate = document.getElementById('end-date').value;
-            
-            console.log('🎯 Aplicando filtros locais:', {
-                sentimentFilter,
-                objectionFilter, 
-                attendantFilter,
-                productFilter,
-                startDate,
-                endDate
-            });
+        function applyAllFilters() {
+            if (!currentData) return;
             
             const filtered = JSON.parse(JSON.stringify(currentData));
+            const dashboardData = filtered[0];
             
-            if (filtered && filtered.length > 0) {
-                const dashboardData = filtered[0];
-                
-                // Aplicar filtro de sentimento nas conversas
-                if (sentimentFilter && dashboardData.conversations) {
-                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
-                        conv.sentiment && conv.sentiment.to === sentimentFilter
-                    );
-                }
-                
-                // Aplicar filtro de atendente nas conversas
-                if (attendantFilter && dashboardData.conversations) {
-                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
-                        conv.attendantId === attendantFilter
-                    );
-                }
+            if (dashboardData.conversations) {
+                let filteredConversations = [...dashboardData.conversations];
                 
                 // Aplicar filtro de produto
-                if (productFilter && dashboardData.conversations) {
-                    dashboardData.conversations = dashboardData.conversations.filter(conv => 
-                        conv.summary && conv.summary.toUpperCase().includes(productFilter.toUpperCase())
+                if (activeFilters.product) {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
+                    );
+                }
+                
+                // Aplicar filtro de objeção
+                if (activeFilters.objection) {
+                    const objectionKeywords = {
+                        highPrice: ['caro', 'preço', 'valor'],
+                        deliveryTime: ['prazo', 'entrega', 'tempo'],
+                        productQuality: ['qualidade', 'defeito', 'quebrou'],
+                        availability: ['estoque', 'disponível', 'indisponível']
+                    };
+                    
+                    filteredConversations = filteredConversations.filter(conv => {
+                        const text = (conv.summary || '').toLowerCase();
+                        return objectionKeywords[activeFilters.objection]?.some(keyword => 
+                            text.includes(keyword)
+                        );
+                    });
+                }
+                
+                // Aplicar filtro de sentimento
+                if (activeFilters.sentiment) {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.sentiment && conv.sentiment.to === activeFilters.sentiment
                     );
                 }
                 
                 // Aplicar filtro de data
-                if ((startDate || endDate) && dashboardData.conversations) {
-                    const start = startDate ? new Date(startDate) : null;
-                    const end = endDate ? new Date(endDate) : null;
-                    
-                    if (start || end) {
-                        dashboardData.conversations = dashboardData.conversations.filter(conv => {
-                            const convDate = parseBrazilianDate(conv.date);
-                            if (!convDate) return true;
-                            
-                            let passStart = true;
-                            let passEnd = true;
-                            
-                            if (start) {
-                                passStart = convDate >= start;
-                            }
-                            if (end) {
-                                const endDateWithTime = new Date(end);
-                                endDateWithTime.setHours(23, 59, 59, 999);
-                                passEnd = convDate <= endDateWithTime;
-                            }
-                            
-                            return passStart && passEnd;
-                        });
-                    }
-                }
-                
-                // Aplicar filtro de objeção (recalcular baseado nas conversas filtradas)
-                if (objectionFilter && dashboardData.conversations) {
-                    // Recalcular objeções baseado nas conversas filtradas
-                    const objectionCount = {
-                        highPrice: { yes: 0, no: 0 },
-                        deliveryTime: { yes: 0, no: 0 },
-                        productQuality: { yes: 0, no: 0 },
-                        availability: { yes: 0, no: 0 },
-                        technicalSupport: { yes: 0, no: 0 }
-                    };
-                    
-                    dashboardData.conversations.forEach(conv => {
-                        const textLower = (conv.summary || '').toLowerCase();
-                        if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
-                        if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
-                        if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
-                        if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
-                        if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
+                if (activeFilters.dateRange) {
+                    filteredConversations = filteredConversations.filter(conv => {
+                        const convDate = parseBrazilianDate(conv.date);
+                        if (!convDate) return true;
+                        
+                        return convDate >= activeFilters.dateRange.start && 
+                               convDate <= activeFilters.dateRange.end;
                     });
-                    
-                    dashboardData.objections = objectionCount;
                 }
                 
-                // Recalcular TODAS as métricas baseadas nas conversas filtradas
+                dashboardData.conversations = filteredConversations;
                 recalculateMetrics(dashboardData);
-                
                 filteredData = filtered;
                 currentPage = 1;
                 
-                renderAllComponents(filteredData);
-                
-                console.log('✅ Filtros aplicados localmente com sucesso!');
+                renderFilteredComponents(filteredData);
             }
         }
 
-        // Função para recalcular TODAS as métricas após filtragem
+        function parseBrazilianDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return null;
+        }
+
         function recalculateMetrics(dashboardData) {
             if (!dashboardData.conversations) return;
             
@@ -1621,12 +1116,6 @@
             
             // Recalcular totais
             dashboardData.totalConversations = conversations.length;
-            dashboardData.pagination = {
-                currentPage: 1,
-                totalPages: Math.max(Math.ceil(conversations.length / 10), 1),
-                itemsPerPage: 10,
-                totalItems: conversations.length
-            };
             
             // Recalcular sentimentos
             const sentimentCount = { positivo: 0, neutro: 0, negativo: 0 };
@@ -1637,11 +1126,6 @@
             });
             
             dashboardData.finalSentiment = sentimentCount;
-            dashboardData.sentimentTransitions = [
-                { from: 'neutro', to: 'positivo', count: sentimentCount.positivo },
-                { from: 'neutro', to: 'neutro', count: sentimentCount.neutro },
-                { from: 'neutro', to: 'negativo', count: sentimentCount.negativo }
-            ];
             
             // Recalcular produtos
             const productCount = {};
@@ -1664,173 +1148,99 @@
                 .sort((a,b) => b.count - a.count)
                 .slice(0,15);
             
-            // Recalcular objeções (se não foi filtrado por objeção específica)
-            if (!document.getElementById('objection-filter').value) {
-                const objectionCount = {
-                    highPrice: { yes: 0, no: 0 },
-                    deliveryTime: { yes: 0, no: 0 },
-                    productQuality: { yes: 0, no: 0 },
-                    availability: { yes: 0, no: 0 },
-                    technicalSupport: { yes: 0, no: 0 }
-                };
-                
-                conversations.forEach(conv => {
-                    const textLower = (conv.summary || '').toLowerCase();
-                    if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
-                    if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
-                    if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
-                    if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
-                    if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
-                });
-                
-                dashboardData.objections = objectionCount;
-                dashboardData.topObjections = [
-                    { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
-                    { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
-                    { objection: 'Disponibilidade', count: objectionCount.availability.yes },
-                    { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
-                    { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
-                ].sort((a,b) => b.count - a.count).slice(0,5);
-            }
+            // Recalcular objeções
+            const objectionCount = {
+                highPrice: { yes: 0, no: 0 },
+                deliveryTime: { yes: 0, no: 0 },
+                productQuality: { yes: 0, no: 0 },
+                availability: { yes: 0, no: 0 },
+                technicalSupport: { yes: 0, no: 0 }
+            };
             
-            // Recalcular análise de atendentes
-            const attendantStats = {};
             conversations.forEach(conv => {
-                const aid = conv.attendantId || '';
-                const aname = conv.attendantName || 'Atendente Desconhecido';
-                
-                if (aid) {
-                    if (!attendantStats[aid]) {
-                        attendantStats[aid] = { 
-                            attendantId: aid, 
-                            attendantName: aname, 
-                            totalConversations: 0, 
-                            positivo: 0, 
-                            neutro: 0, 
-                            negativo: 0 
-                        };
-                    }
-                    attendantStats[aid].totalConversations++;
-                    const sentiment = conv.sentiment.to;
-                    attendantStats[aid][sentiment] = (attendantStats[aid][sentiment] || 0) + 1;
-                }
+                const textLower = (conv.summary || '').toLowerCase();
+                if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
+                if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
+                if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
+                if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
+                if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
             });
             
-            const attendantAnalysis = [];
-            Object.values(attendantStats).forEach(att => {
-                const total = att.totalConversations || 1;
-                const positiveRate = total > 0 ? (att.positivo || 0) / total : 0;
-                
-                attendantAnalysis.push({
-                    attendantId: att.attendantId,
-                    attendantName: att.attendantName,
-                    totalConversations: att.totalConversations,
-                    positivo: att.positivo || 0,
-                    neutro: att.neutro || 0,
-                    negativo: att.negativo || 0,
-                    technical: Math.min(100, Math.floor(60 + (positiveRate * 40))),
-                    persuasion: Math.min(100, Math.floor(65 + (positiveRate * 35)))
-                });
-            });
-            
-            dashboardData.attendantAnalysis = attendantAnalysis;
-            dashboardData.attendants = Object.values(attendantStats).map(a => ({ 
-                id: a.attendantId, 
-                name: a.attendantName 
-            }));
+            dashboardData.objections = objectionCount;
+            dashboardData.topObjections = [
+                { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
+                { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
+                { objection: 'Disponibilidade', count: objectionCount.availability.yes },
+                { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
+                { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
+            ].sort((a,b) => b.count - a.count).slice(0,5);
         }
 
-        // Função para limpar filtros
-        function clearFilters() {
-            console.log('🧹 Limpando filtros...');
+        function renderFilteredComponents(data) {
+            const dashboardData = Array.isArray(data) ? data[0] : data;
             
-            document.getElementById('sentiment-filter').value = '';
-            document.getElementById('objection-filter').value = '';
-            document.getElementById('attendant-filter').value = '';
-            document.getElementById('product-filter').value = '';
-            document.getElementById('start-date').value = '';
-            document.getElementById('end-date').value = '';
-            
-            filteredData = JSON.parse(JSON.stringify(currentData));
-            currentPage = 1;
-            
-            if (filteredData) {
+            updateDataInfo(data);
+            renderSentimentDistributionChart(dashboardData.finalSentiment);
+            renderObjectionsChart(dashboardData.topObjections);
+            renderProductsChart(dashboardData.topProducts);
+            renderPopularProducts(dashboardData.popularProducts);
+            renderObjections(dashboardData.objections);
+            renderConversations(dashboardData.conversations);
+            renderPagination(dashboardData.conversations?.length || 0);
+        }
+
+        // Carregar dados
+        async function loadDataFromWebhook() {
+            try {
+                document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center;">Carregando dados...</td></tr>';
+                
+                const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
+                
+                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (!data || data.length === 0) throw new Error('Resposta vazia do servidor');
+                
+                currentData = data;
+                filteredData = JSON.parse(JSON.stringify(data));
+                
                 renderAllComponents(filteredData);
-                console.log('✅ Filtros limpos - dados restaurados');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                document.getElementById('data-info').innerHTML = '📊 Feito!';
+                document.getElementById('conversations-body').innerHTML = 
+                    '<tr><td colspan="5" style="text-align: center; color: #ea4335;">Erro ao carregar dados</td></tr>';
             }
         }
 
-        function showLoadingState() {
-            document.getElementById('conversations-body').innerHTML = '<tr><td colspan="6" style="text-align: center;">Carregando dados...</td></tr>';
-            document.getElementById('data-info').innerHTML = '📊 Carregando dados...';
-        }
-
-        // Função para renderizar todos os componentes
         function renderAllComponents(data) {
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             updateDataInfo(data);
-            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
             renderObjectionsChart(dashboardData.topObjections);
             renderProductsChart(dashboardData.topProducts);
-            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
             renderPopularProducts(dashboardData.popularProducts);
             renderObjections(dashboardData.objections);
             renderConversations(dashboardData.conversations);
-            renderPagination(dashboardData.pagination);
-            populateFilters(dashboardData);
+            renderPagination(dashboardData.conversations?.length || 0);
+            setupObjectionClicks();
         }
 
-        // Função para popular filtros
-        function populateFilters(data) {
-            const dashboardData = Array.isArray(data) ? data[0] : data;
-            
-            // Popular filtro de atendentes
-            const attendantFilter = document.getElementById('attendant-filter');
-            attendantFilter.innerHTML = '<option value="">Todos os Atendentes</option>';
-            
-            if (dashboardData.attendants && Array.isArray(dashboardData.attendants)) {
-                dashboardData.attendants.forEach(attendant => {
-                    const option = document.createElement('option');
-                    option.value = attendant.id;
-                    option.textContent = attendant.name;
-                    attendantFilter.appendChild(option);
-                });
-            }
-
-            // Popular filtro de produtos
-            const productFilter = document.getElementById('product-filter');
-            productFilter.innerHTML = '<option value="">Todos os Produtos</option>';
-            
-            if (dashboardData.popularProducts && Array.isArray(dashboardData.popularProducts)) {
-                dashboardData.popularProducts.forEach(product => {
-                    const option = document.createElement('option');
-                    if (typeof product === 'object' && product.product) {
-                        option.value = product.product;
-                        option.textContent = product.product;
-                    } else if (typeof product === 'string') {
-                        option.value = product;
-                        option.textContent = product;
-                    }
-                    productFilter.appendChild(option);
-                });
-            }
-        }
-
-        // Inicializar a página
+        // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Inicializando dashboard...');
-            
             loadDataFromWebhook();
             
+            // Paginação
             document.getElementById('prev-page').addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
                     if (filteredData) {
                         const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
                         renderConversations(data.conversations);
-                        renderPagination(data.pagination);
+                        renderPagination(data.conversations?.length || 0);
                     }
                 }
             });
@@ -1838,31 +1248,57 @@
             document.getElementById('next-page').addEventListener('click', function() {
                 if (filteredData) {
                     const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
-                    const totalPages = data.pagination?.totalPages || 1;
+                    const totalPages = Math.max(Math.ceil((data.conversations?.length || 0) / itemsPerPage), 1);
                     if (currentPage < totalPages) {
                         currentPage++;
                         renderConversations(data.conversations);
-                        renderPagination(data.pagination);
+                        renderPagination(data.conversations?.length || 0);
                     }
                 }
             });
 
-            document.getElementById('apply-filters').addEventListener('click', applyFilters);
-            document.getElementById('clear-filters').addEventListener('click', clearFilters);
-            document.getElementById('apply-date-filter').addEventListener('click', applyFilters);
-            document.getElementById('refresh-data').addEventListener('click', function() {
-                console.log('🔄 Recarregando dados do servidor...');
-                loadDataFromWebhook();
+            // Filtros de data
+            document.getElementById('apply-date-filter').addEventListener('click', function() {
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                if (startDate || endDate) {
+                    activeFilters.dateRange = {
+                        start: startDate ? new Date(startDate) : new Date(0),
+                        end: endDate ? new Date(endDate) : new Date()
+                    };
+                } else {
+                    activeFilters.dateRange = null;
+                }
+                
+                applyAllFilters();
             });
 
-            // Permitir Enter nos filtros de data
-            ['start-date', 'end-date'].forEach(id => {
-                document.getElementById(id).addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        applyFilters();
-                    }
+            document.getElementById('clear-filters').addEventListener('click', function() {
+                // Limpar todos os filtros
+                activeFilters = {
+                    product: null,
+                    objection: null,
+                    sentiment: null,
+                    dateRange: null
+                };
+                
+                document.getElementById('start-date').value = '';
+                document.getElementById('end-date').value = '';
+                
+                document.querySelectorAll('.active-filter').forEach(el => {
+                    el.classList.remove('active-filter');
                 });
+                
+                filteredData = JSON.parse(JSON.stringify(currentData));
+                currentPage = 1;
+                
+                if (filteredData) {
+                    renderAllComponents(filteredData);
+                }
             });
+
+            document.getElementById('refresh-data').addEventListener('click', loadDataFromWebhook);
         });
     </script>
 </body>
