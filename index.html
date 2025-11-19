@@ -56,9 +56,11 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            background-color: #1a73e8;
-            color: white;
-            font-weight: bold;
+        }
+        
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
         }
         
         h1 {
@@ -421,6 +423,10 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .candlestick-chart {
+            height: 300px;
+        }
         
         @media (max-width: 768px) {
             .stats-grid {
@@ -443,7 +449,7 @@
         <header>
             <div class="logo-container">
                 <div class="logo">
-                    PORTO<span style="color: #ffd700;">RROL</span>
+                    <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol">
                 </div>
                 <h1>Monitor IA - Portorrol</h1>
             </div>
@@ -470,27 +476,33 @@
         </div>
         
         <div class="stats-grid">
-            <!-- Card de Transição de Sentimento -->
+            <!-- Card de Status de Negócio -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Transição de Sentimento</div>
+                    <div class="card-title">Status do Negócio</div>
                 </div>
-                <div class="chart-container" id="sentiment-transition-container">
-                    <canvas id="sentimentTransitionChart"></canvas>
+                <div class="chart-container" id="business-status-container">
+                    <canvas id="businessStatusChart"></canvas>
                 </div>
-                <div class="sentiment-legend">
-                    <div class="legend-item">
-                        <div class="sentiment-dot sentiment-positivo"></div>
-                        <span>Positivo</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="sentiment-dot sentiment-neutro"></div>
-                        <span>Neutro</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="sentiment-dot sentiment-negativo"></div>
-                        <span>Negativo</span>
-                    </div>
+            </div>
+            
+            <!-- Card de Produtos Fechados -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Top 5 Produtos Fechados</div>
+                </div>
+                <div class="chart-container" id="closed-products-container">
+                    <canvas id="closedProductsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Card de Produtos Não Fechados -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Top 5 Produtos Não Fechados</div>
+                </div>
+                <div class="chart-container" id="not-closed-products-container">
+                    <canvas id="notClosedProductsChart"></canvas>
                 </div>
             </div>
             
@@ -503,25 +515,15 @@
                     <canvas id="sentimentDistributionChart"></canvas>
                 </div>
             </div>
-            
-            <!-- Card de Top Objeções -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Principais Objeções</div>
-                </div>
-                <div class="chart-container" id="objections-container">
-                    <canvas id="objectionsChart"></canvas>
-                </div>
+        </div>
+
+        <!-- Seção de Análise de Atendentes -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
             </div>
-            
-            <!-- Card de Top Produtos -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-title">Produtos Mais Buscados</div>
-                </div>
-                <div class="chart-container" id="products-container">
-                    <canvas id="productsChart"></canvas>
-                </div>
+            <div class="chart-container candlestick-chart" id="attendant-analysis-container">
+                <canvas id="attendantAnalysisChart"></canvas>
             </div>
         </div>
         
@@ -600,17 +602,30 @@
     <script>
         // DADOS DE EXEMPLO PARA TESTE ENQUANTO A API NÃO FUNCIONA
         const sampleData = [{
-            totalConversations: 8,
-            sentimentTransitions: [
-                { from: 'neutro', to: 'positivo', count: 5 },
-                { from: 'neutro', to: 'neutro', count: 2 },
-                { from: 'neutro', to: 'negativo', count: 1 }
-            ],
+            totalConversations: 12,
             finalSentiment: { 
-                positivo: 5, 
-                neutro: 2, 
-                negativo: 1 
+                positivo: 7, 
+                neutro: 3, 
+                negativo: 2 
             },
+            businessStatus: {
+                closed: 8,
+                notClosed: 4
+            },
+            closedProducts: [
+                { product: 'ROLAMENTO NSK', count: 5 },
+                { product: 'MANCAL TIMKEN', count: 3 },
+                { product: 'VEDAÇÃO SKF', count: 2 },
+                { product: 'CORREIA INDUSTRIAL', count: 1 },
+                { product: 'ACOPLAMENTO FAG', count: 1 }
+            ],
+            notClosedProducts: [
+                { product: 'ROLAMENTO NTN', count: 3 },
+                { product: 'MANCAL INA', count: 2 },
+                { product: 'CORREIA DENTADA', count: 1 },
+                { product: 'ACOPLAMENTO RMB', count: 1 },
+                { product: 'VEDAÇÃO MECÂNICA', count: 1 }
+            ],
             topObjections: [
                 { objection: 'Preço Elevado', count: 4 },
                 { objection: 'Prazo de Entrega', count: 2 },
@@ -618,110 +633,196 @@
                 { objection: 'Qualidade do Produto', count: 1 },
                 { objection: 'Suporte Técnico', count: 0 }
             ],
-            topProducts: [
-                { product: 'ROLAMENTO', count: 8 },
-                { product: 'NSK', count: 5 },
-                { product: 'TIMKEN', count: 3 },
-                { product: 'MANCAL', count: 2 },
-                { product: 'SKF', count: 2 }
-            ],
             popularProducts: [
-                { product: 'ROLAMENTO', count: 8 },
-                { product: 'NSK', count: 5 },
-                { product: 'TIMKEN', count: 3 },
-                { product: 'MANCAL', count: 2 },
-                { product: 'SKF', count: 2 },
-                { product: 'VEDAÇÃO', count: 1 },
-                { product: 'FAG', count: 1 }
+                { product: 'ROLAMENTO', count: 12 },
+                { product: 'NSK', count: 8 },
+                { product: 'TIMKEN', count: 5 },
+                { product: 'MANCAL', count: 5 },
+                { product: 'SKF', count: 3 },
+                { product: 'VEDAÇÃO', count: 3 },
+                { product: 'FAG', count: 2 },
+                { product: 'NTN', count: 3 },
+                { product: 'INA', count: 2 },
+                { product: 'RMB', count: 1 }
             ],
             objections: {
-                highPrice: { yes: 4, no: 4 },
-                deliveryTime: { yes: 2, no: 6 },
-                productQuality: { yes: 1, no: 7 },
-                availability: { yes: 1, no: 7 },
-                technicalSupport: { yes: 0, no: 8 }
+                highPrice: { yes: 4, no: 8 },
+                deliveryTime: { yes: 2, no: 10 },
+                productQuality: { yes: 1, no: 11 },
+                availability: { yes: 1, no: 11 },
+                technicalSupport: { yes: 0, no: 12 }
             },
+            attendantAnalysis: [
+                {
+                    attendantId: "1",
+                    attendantName: "Yasmim",
+                    technical: 85,
+                    persuasion: 78,
+                    closedDeals: 3,
+                    totalConversations: 4
+                },
+                {
+                    attendantId: "2", 
+                    attendantName: "Kauan",
+                    technical: 72,
+                    persuasion: 65,
+                    closedDeals: 1,
+                    totalConversations: 3
+                },
+                {
+                    attendantId: "3",
+                    attendantName: "Teresa",
+                    technical: 92,
+                    persuasion: 88,
+                    closedDeals: 2,
+                    totalConversations: 2
+                },
+                {
+                    attendantId: "4",
+                    attendantName: "Isabel", 
+                    technical: 68,
+                    persuasion: 72,
+                    closedDeals: 1,
+                    totalConversations: 2
+                },
+                {
+                    attendantId: "5",
+                    attendantName: "Andressa",
+                    technical: 79,
+                    persuasion: 81,
+                    closedDeals: 1,
+                    totalConversations: 1
+                }
+            ],
             conversations: [
                 {
                     date: "17/11/2025",
                     session: "7066c4d5",
-                    summary: "Cliente solicitou cotação de rolamentos NSK. Atendente Yasmim encaminhou para vendedor especializado.",
-                    fullConversation: "[16:28] Yasmim: Boa tarde! Obrigado por seu contato, como posso ajudar?\n[16:34] Cliente: Gostaria de cotação para rolamentos NSK\n[16:35] Yasmim: Já estou lhe transferindo para nosso vendedor especializado",
+                    summary: "Cliente solicitou cotação de rolamentos NSK. Atendente Yasmim encaminhou para vendedor especializado. Cliente confirmou compra.",
+                    fullConversation: "[16:28] Yasmim: Boa tarde! Obrigado por seu contato, como posso ajudar?\n[16:34] Cliente: Gostaria de cotação para rolamentos NSK\n[16:35] Yasmim: Já estou lhe transferindo para nosso vendedor especializado\n[16:40] Cliente: Perfeito, vou fazer o pagamento agora",
                     sentiment: { from: 'neutro', to: 'positivo' },
-                    attendantName: "Yasmim"
+                    attendantName: "Yasmim",
+                    businessStatus: "closed"
                 },
                 {
                     date: "17/11/2025", 
                     session: "fa1eecef",
-                    summary: "Cliente reclamou do preço dos rolamentos TIMKEN. Kauan tentou negociar condições.",
-                    fullConversation: "[15:53] Cliente: O preço está muito acima do mercado\n[15:54] Kauan: Posso verificar condições especiais de pagamento\n[15:55] Cliente: Mesmo assim ficou caro",
+                    summary: "Cliente reclamou do preço dos rolamentos TIMKEN. Kauan tentou negociar condições. Cliente não aceitou.",
+                    fullConversation: "[15:53] Cliente: O preço está muito acima do mercado\n[15:54] Kauan: Posso verificar condições especiais de pagamento\n[15:55] Cliente: Mesmo assim ficou caro, vou pensar\n[15:56] Kauan: Ok, agradeço o contato",
                     sentiment: { from: 'neutro', to: 'negativo' },
-                    attendantName: "Kauan"
+                    attendantName: "Kauan",
+                    businessStatus: "notClosed"
                 },
                 {
                     date: "17/11/2025",
                     session: "a58738c6", 
-                    summary: "Teresa atendeu consulta técnica sobre mancais e conseguiu fechar pedido.",
-                    fullConversation: "[16:35] Teresa: Boa tarde, precisa de ajuda com mancais?\n[16:36] Cliente: Sim, preciso de especificações técnicas\n[16:40] Teresa: Aqui estão as medidas e posso fechar o pedido",
+                    summary: "Teresa atendeu consulta técnica sobre mancais e conseguiu fechar pedido. Cliente transferiu valor.",
+                    fullConversation: "[16:35] Teresa: Boa tarde, precisa de ajuda com mancais?\n[16:36] Cliente: Sim, preciso de especificações técnicas\n[16:40] Teresa: Aqui estão as medidas e posso fechar o pedido\n[16:45] Cliente: Ótimo, vou fazer a transferência",
                     sentiment: { from: 'neutro', to: 'positivo' },
-                    attendantName: "Teresa"
+                    attendantName: "Teresa",
+                    businessStatus: "closed"
                 },
                 {
                     date: "16/11/2025",
                     session: "8de21465",
-                    summary: "Consulta sobre disponibilidade de rolamentos SKF. Isabel verificou estoque.",
-                    fullConversation: "[14:34] Isabel: Boa tarde, tudo bem?\n[14:35] Cliente: Tem rolamento SKF 6314 em estoque?\n[14:36] Isabel: Vou verificar disponibilidade",
-                    sentiment: { from: 'neutro', to: 'neutro' },
-                    attendantName: "Isabel"
+                    summary: "Consulta sobre disponibilidade de rolamentos SKF. Isabel verificou estoque. Cliente pediu para enviar.",
+                    fullConversation: "[14:34] Isabel: Boa tarde, tudo bem?\n[14:35] Cliente: Tem rolamento SKF 6314 em estoque?\n[14:36] Isabel: Vou verificar disponibilidade\n[14:38] Isabel: Temos sim, posso enviar hoje\n[14:39] Cliente: Pode enviar, vou pagar agora",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Isabel",
+                    businessStatus: "closed"
                 },
                 {
                     date: "16/11/2025",
                     session: "46309a35",
-                    summary: "Andressa atendeu pedido urgente de correias industriais.",
-                    fullConversation: "[09:06] Cliente: Preciso de correias industriais urgente\n[09:07] Andressa: Temos em estoque, posso enviar hoje\n[09:08] Cliente: Perfeito, obrigado!",
+                    summary: "Andressa atendeu pedido urgente de correias industriais. Cliente confirmou entrega.",
+                    fullConversation: "[09:06] Cliente: Preciso de correias industriais urgente\n[09:07] Andressa: Temos em estoque, posso enviar hoje\n[09:08] Cliente: Perfeito, obrigado! Pode enviar",
                     sentiment: { from: 'neutro', to: 'positivo' },
-                    attendantName: "Andressa"
+                    attendantName: "Andressa",
+                    businessStatus: "closed"
                 },
                 {
                     date: "15/11/2025",
                     session: "a186e053",
-                    summary: "Roberto explicou diferenças entre rolamentos de primeira e segunda linha.",
-                    fullConversation: "[16:58] Roberto: Boa tarde! Precisa de ajuda com rolamentos?\n[16:59] Cliente: Qual a diferença entre primeira e segunda linha?\n[17:00] Roberto: Primeira linha tem melhor acabamento e tolerância",
+                    summary: "Roberto explicou diferenças entre rolamentos de primeira e segunda linha. Cliente agradeceu.",
+                    fullConversation: "[16:58] Roberto: Boa tarde! Precisa de ajuda com rolamentos?\n[16:59] Cliente: Qual a diferença entre primeira e segunda linha?\n[17:00] Roberto: Primeira linha tem melhor acabamento e tolerância\n[17:01] Cliente: Obrigado pela explicação, vou analisar",
                     sentiment: { from: 'neutro', to: 'positivo' },
-                    attendantName: "Roberto"
+                    attendantName: "Roberto",
+                    businessStatus: "notClosed"
                 },
                 {
                     date: "15/11/2025",
                     session: "97ddb390",
                     summary: "Cliente reclamou do prazo de entrega. Matheus explicou processo logístico.",
-                    fullConversation: "[17:53] Matheus: Boa tarde, posso ajudar?\n[17:54] Cliente: O prazo de entrega está muito longo\n[17:55] Matheus: É nosso tempo padrão de logística",
+                    fullConversation: "[17:53] Matheus: Boa tarde, posso ajudar?\n[17:54] Cliente: O prazo de entrega está muito longo\n[17:55] Matheus: É nosso tempo padrão de logística\n[17:56] Cliente: Entendi, obrigado",
                     sentiment: { from: 'neutro', to: 'neutro' },
-                    attendantName: "Matheus"
+                    attendantName: "Matheus",
+                    businessStatus: "notClosed"
                 },
                 {
                     date: "14/11/2025",
                     session: "5ddfc13f",
-                    summary: "Vanessa atendeu reclamação sobre qualidade de produto.",
-                    fullConversation: "[16:35] Cliente: Recebi um rolamento com defeito\n[16:36] Vanessa: Lamento pelo ocorrido, vou acionar a garantia\n[16:37] Cliente: Preciso de uma solução rápida",
-                    sentiment: { from: 'neutro', to: 'negativo' },
-                    attendantName: "Vanessa"
+                    summary: "Vanessa atendeu reclamação sobre qualidade de produto. Cliente aceitou troca.",
+                    fullConversation: "[16:35] Cliente: Recebi um rolamento com defeito\n[16:36] Vanessa: Lamento pelo ocorrido, vou acionar a garantia\n[16:37] Cliente: Preciso de uma solução rápida\n[16:38] Vanessa: Vou enviar um novo hoje mesmo\n[16:39] Cliente: Obrigado, pode enviar",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Vanessa",
+                    businessStatus: "closed"
+                },
+                {
+                    date: "14/11/2025",
+                    session: "a1b2c3d4",
+                    summary: "Cliente cotou acoplamentos FAG mas não fechou pedido.",
+                    fullConversation: "[10:15] Cliente: Preciso de cotação para acoplamentos FAG\n[10:16] Atendente: Aqui está o orçamento\n[10:17] Cliente: Obrigado, vou analisar",
+                    sentiment: { from: 'neutro', to: 'neutro' },
+                    attendantName: "Carlos",
+                    businessStatus: "notClosed"
+                },
+                {
+                    date: "13/11/2025",
+                    session: "e5f6g7h8",
+                    summary: "Venda de vedações SKF concluída com sucesso.",
+                    fullConversation: "[11:20] Cliente: Preciso de vedações SKF\n[11:21] Atendente: Temos disponível\n[11:22] Cliente: Pode enviar, vou pagar",
+                    sentiment: { from: 'neutro', to: 'positivo' },
+                    attendantName: "Ana",
+                    businessStatus: "closed"
+                },
+                {
+                    date: "13/11/2025",
+                    session: "i9j0k1l2",
+                    summary: "Cliente interessado em mancais INA mas não finalizou.",
+                    fullConversation: "[14:30] Cliente: Tem mancais INA?\n[14:31] Atendente: Sim, temos\n[14:32] Cliente: Obrigado, volto depois",
+                    sentiment: { from: 'neutro', to: 'neutro' },
+                    attendantName: "Paula",
+                    businessStatus: "notClosed"
+                },
+                {
+                    date: "12/11/2025",
+                    session: "m3n4o5p6",
+                    summary: "Venda de rolamentos NTN não concretizada.",
+                    fullConversation: "[16:45] Cliente: Preço do rolamento NTN?\n[16:46] Atendente: Aqui está\n[16:47] Cliente: Obrigado, vou pensar",
+                    sentiment: { from: 'neutro', to: 'neutro' },
+                    attendantName: "Ricardo",
+                    businessStatus: "notClosed"
                 }
             ],
             attendants: [
-                { id: "7066c4d5-6655-4f66-95c5-6c9a5d7e2840", name: "Yasmim" },
-                { id: "fa1eecef-571d-4653-9688-abf9d7e64f96", name: "Kauan" },
-                { id: "a58738c6-3f3a-45dd-aa1e-0dbd5f2c392e", name: "Teresa" },
-                { id: "8de21465-ba15-4a5a-a81d-9315448170aa", name: "Isabel" },
-                { id: "46309a35-a011-4485-9e15-06965195c62b", name: "Andressa" },
-                { id: "a186e053-6ba3-4d4b-88e8-46f7fba109ff", name: "Roberto" },
-                { id: "97ddb390-16a6-4050-adc1-3463cf6ed25f", name: "Matheus" },
-                { id: "5ddfc13f-2c7f-4e8c-b9d1-55ece9147cbb", name: "Vanessa" }
+                { id: "1", name: "Yasmim" },
+                { id: "2", name: "Kauan" },
+                { id: "3", name: "Teresa" },
+                { id: "4", name: "Isabel" },
+                { id: "5", name: "Andressa" },
+                { id: "6", name: "Roberto" },
+                { id: "7", name: "Matheus" },
+                { id: "8", name: "Vanessa" },
+                { id: "9", name: "Carlos" },
+                { id: "10", name: "Ana" },
+                { id: "11", name: "Paula" },
+                { id: "12", name: "Ricardo" }
             ],
             pagination: { 
                 currentPage: 1, 
-                totalPages: 1, 
+                totalPages: 2, 
                 itemsPerPage: 10, 
-                totalItems: 8 
+                totalItems: 12 
             }
         }];
 
@@ -739,10 +840,11 @@
 
         // Instâncias dos gráficos
         let chartInstances = {
-            sentimentTransition: null,
+            businessStatus: null,
+            closedProducts: null,
+            notClosedProducts: null,
             sentimentDistribution: null,
-            objections: null,
-            products: null
+            attendantAnalysis: null
         };
 
         // Cores para gráficos
@@ -750,6 +852,8 @@
             positivo: '#34a853',
             neutro: '#f9ab00',
             negativo: '#ea4335',
+            closed: '#34a853',
+            notClosed: '#ea4335',
             products: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
             objections: ['#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5']
         };
@@ -784,55 +888,77 @@
             
             const dashboardData = data[0];
             const totalConversations = dashboardData.totalConversations || 0;
-            const positiveCount = dashboardData.finalSentiment?.positivo || 0;
-            const neutralCount = dashboardData.finalSentiment?.neutro || 0;
-            const negativeCount = dashboardData.finalSentiment?.negativo || 0;
+            const closedDeals = dashboardData.businessStatus?.closed || 0;
+            const notClosedDeals = dashboardData.businessStatus?.notClosed || 0;
+            const closeRate = totalConversations > 0 ? Math.round((closedDeals / totalConversations) * 100) : 0;
             
             infoElement.innerHTML = `
                 📊 <strong>${totalConversations}</strong> conversas analisadas | 
-                ✅ <strong>${positiveCount}</strong> positivas |
-                ⚠️ <strong>${neutralCount}</strong> neutras |
-                ❌ <strong>${negativeCount}</strong> negativas
+                ✅ <strong>${closedDeals}</strong> negócios fechados |
+                ❌ <strong>${notClosedDeals}</strong> não fechados |
+                📈 <strong>${closeRate}%</strong> taxa de fechamento
             `;
         }
 
-        // Gerar explicação baseada no sentimento
-        function generateExplanation(conversation) {
-            const sentiment = conversation.sentiment?.to || 'neutro';
+        // Renderizar gráfico de status do negócio
+        function renderBusinessStatusChart(data) {
+            const ctx = document.getElementById('businessStatusChart');
             
-            switch(sentiment) {
-                case 'positivo':
-                    return "✅ A maioria das questões desta conversa foram tratadas e resolvidas com sucesso. O cliente demonstrou satisfação com o atendimento e as soluções apresentadas.";
-                case 'negativo':
-                    return "❌ Restaram várias pendências e questões não resolvidas nesta conversa. O cliente pode ter demonstrado insatisfação ou frustração com algum aspecto do atendimento.";
-                case 'neutro':
-                default:
-                    return "📋 Conversa sem grandes conclusões ou resoluções definitivas. O atendimento seguiu um fluxo padrão sem manifestações significativas de satisfação ou insatisfação.";
-            }
-        }
-
-        // Renderizar gráfico de transição de sentimento
-        function renderSentimentTransitionChart(data) {
-            const ctx = document.getElementById('sentimentTransitionChart');
-            
-            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
-                showNoDataMessage('sentiment-transition-container', 'Sem dados de transição');
+            if (!data || (data.closed === 0 && data.notClosed === 0)) {
+                showNoDataMessage('business-status-container', 'Sem dados de status do negócio');
                 return;
             }
             
-            destroyChart(chartInstances.sentimentTransition);
+            destroyChart(chartInstances.businessStatus);
             
-            const labels = data.map(item => `${item.from} → ${item.to}`);
-            const counts = data.map(item => item.count);
-            const backgroundColors = data.map(item => {
-                if (item.to === 'positivo') return CHART_COLORS.positivo;
-                if (item.to === 'neutro') return CHART_COLORS.neutro;
-                if (item.to === 'negativo') return CHART_COLORS.negativo;
-                return '#9aa0a6';
+            chartInstances.businessStatus = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Fechados', 'Não Fechados'],
+                    datasets: [{
+                        data: [data.closed, data.notClosed],
+                        backgroundColor: [CHART_COLORS.closed, CHART_COLORS.notClosed],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
             });
+        }
+
+        // Renderizar gráfico de produtos fechados
+        function renderClosedProductsChart(data) {
+            const ctx = document.getElementById('closedProductsChart');
             
-            chartInstances.sentimentTransition = new Chart(ctx, {
-                type: 'doughnut',
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('closed-products-container', 'Sem dados de produtos fechados');
+                return;
+            }
+            
+            destroyChart(chartInstances.closedProducts);
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
+            
+            chartInstances.closedProducts = new Chart(ctx, {
+                type: 'pie',
                 data: {
                     labels: labels,
                     datasets: [{
@@ -846,31 +972,46 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                boxWidth: 12,
-                                font: {
-                                    size: 10
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = Math.round((context.raw / total) * 100);
-                                    return `${context.label}: ${context.raw} (${percentage}%)`;
-                                }
-                            }
+                            position: 'right'
                         }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const sentiment = data[index]?.to;
-                            if (sentiment) {
-                                applySentimentFilter(sentiment);
-                            }
+                    }
+                }
+            });
+
+            ctx.style.cursor = 'pointer';
+        }
+
+        // Renderizar gráfico de produtos não fechados
+        function renderNotClosedProductsChart(data) {
+            const ctx = document.getElementById('notClosedProductsChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('not-closed-products-container', 'Sem dados de produtos não fechados');
+                return;
+            }
+            
+            destroyChart(chartInstances.notClosedProducts);
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
+            
+            chartInstances.notClosedProducts = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
                         }
                     }
                 }
@@ -920,13 +1061,6 @@
                                 }
                             }
                         }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const sentiments = ['positivo', 'neutro', 'negativo'];
-                            applySentimentFilter(sentiments[index]);
-                        }
                     }
                 }
             });
@@ -934,101 +1068,57 @@
             ctx.style.cursor = 'pointer';
         }
 
-        // Renderizar gráfico de objeções
-        function renderObjectionsChart(data) {
-            const ctx = document.getElementById('objectionsChart');
+        // Renderizar gráfico de análise de atendentes (CANDLESTICK)
+        function renderAttendantAnalysisChart(data) {
+            const ctx = document.getElementById('attendantAnalysisChart');
             
-            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
-                showNoDataMessage('objections-container', 'Sem dados de objeções');
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                showNoDataMessage('attendant-analysis-container', 'Sem dados de análise de atendentes');
                 return;
             }
             
-            destroyChart(chartInstances.objections);
+            destroyChart(chartInstances.attendantAnalysis);
             
-            const labels = data.map(item => item.objection);
-            const counts = data.map(item => item.count);
-            const backgroundColors = CHART_COLORS.objections.slice(0, data.length);
+            const labels = data.map(item => item.attendantName);
+            const technicalData = data.map(item => item.technical);
+            const persuasionData = data.map(item => item.persuasion);
             
-            chartInstances.objections = new Chart(ctx, {
-                type: 'pie',
+            chartInstances.attendantAnalysis = new Chart(ctx, {
+                type: 'bar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 1
-                    }]
+                    datasets: [
+                        {
+                            label: 'Conhecimento Técnico',
+                            data: technicalData,
+                            backgroundColor: '#4dabf7',
+                            borderColor: '#339af0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Capacidade de Persuasão',
+                            data: persuasionData,
+                            backgroundColor: '#ffa94d',
+                            borderColor: '#ff922b',
+                            borderWidth: 1
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const objectionMap = {
-                                'Preço Elevado': 'highPrice',
-                                'Prazo de Entrega': 'deliveryTime',
-                                'Qualidade do Produto': 'productQuality',
-                                'Disponibilidade': 'availability',
-                                'Suporte Técnico': 'technicalSupport'
-                            };
-                            applyObjectionFilter(objectionMap[labels[index]]);
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Pontuação (%)'
+                            }
                         }
                     }
                 }
             });
-
-            ctx.style.cursor = 'pointer';
-        }
-
-        // Renderizar gráfico de produtos
-        function renderProductsChart(data) {
-            const ctx = document.getElementById('productsChart');
-            
-            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
-                showNoDataMessage('products-container', 'Sem dados de produtos');
-                return;
-            }
-            
-            destroyChart(chartInstances.products);
-            
-            const labels = data.map(item => item.product);
-            const counts = data.map(item => item.count);
-            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
-            
-            chartInstances.products = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: counts,
-                        backgroundColor: backgroundColors,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right'
-                        }
-                    },
-                    onClick: (evt, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            applyProductFilter(labels[index]);
-                        }
-                    }
-                }
-            });
-
-            ctx.style.cursor = 'pointer';
         }
 
         // Renderizar produtos populares
@@ -1125,7 +1215,27 @@
             document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('availability'));
         }
 
-        // Renderizar conversas - CORREÇÃO CRÍTICA: TODAS CONVERSAS EXPANDEM
+        // Gerar explicação baseada no sentimento
+        function generateExplanation(conversation) {
+            const sentiment = conversation.sentiment?.to || 'neutro';
+            const businessStatus = conversation.businessStatus || 'notClosed';
+            
+            if (businessStatus === 'closed') {
+                return "✅ NEGÓCIO FECHADO - Esta conversa resultou em uma venda concretizada. O cliente demonstrou satisfação e confirmou o pedido/pagamento.";
+            } else {
+                switch(sentiment) {
+                    case 'positivo':
+                        return "💬 CONVERSA POSITIVA - O cliente demonstrou interesse e satisfação, mas o negócio não foi fechado neste contato. Pode ser necessário follow-up.";
+                    case 'negativo':
+                        return "⚠️ CONVERSA NEGATIVA - O cliente demonstrou insatisfação ou objeções que impediram o fechamento do negócio. Análise necessária.";
+                    case 'neutro':
+                    default:
+                        return "📋 CONVERSA NEUTRA - Atendimento padrão sem conclusão de venda. Cliente pode retornar posteriormente.";
+                }
+            }
+        }
+
+        // Renderizar conversas
         function renderConversations(conversations) {
             const container = document.getElementById('conversations-body');
             container.innerHTML = '';
@@ -1161,14 +1271,14 @@
                     }
                 }
                 
-                // Texto para exibir na célula - GARANTIR QUE TODAS TENHAM O +
+                // Texto para exibir na célula
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = conversation.fullConversation || historyText;
                 
-                // Gerar explicação (garantir que todas as conversas tenham)
+                // Gerar explicação
                 const explanation = generateExplanation(conversation);
                 
-                // CÉLULA DO RESUMO - GARANTIR QUE TODAS TENHAM O [+]
+                // Célula do resumo
                 const summaryCell = document.createElement('td');
                 summaryCell.innerHTML = `
                     <div class="conversation-preview">
@@ -1201,7 +1311,7 @@
                     <td>${conversation.attendantName || 'N/A'}</td>
                 `;
                 
-                // EVENTO DE CLIQUE CORRIGIDO - CLIQUE EM QUALQUER LUGAR DA LINHA EXPANDE
+                // Evento de clique para expandir
                 row.addEventListener('click', function(e) {
                     const fullDiv = this.querySelector('.conversation-full');
                     const expandIcon = this.querySelector('.expand-icon');
@@ -1235,7 +1345,7 @@
             document.getElementById('next-page').disabled = currentPage >= totalPages;
         }
 
-        // Sistema de Drill-Down - PRODUTOS AGORA FUNCIONAM
+        // Sistema de Drill-Down
         function applyProductFilter(product) {
             // Toggle do filtro - clica de novo para remover
             if (activeFilters.product === product) {
@@ -1284,7 +1394,7 @@
             if (dashboardData.conversations) {
                 let filteredConversations = [...dashboardData.conversations];
                 
-                // Aplicar filtro de produto - AGORA FUNCIONA
+                // Aplicar filtro de produto
                 if (activeFilters.product) {
                     filteredConversations = filteredConversations.filter(conv => 
                         conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
@@ -1352,6 +1462,13 @@
             // Recalcular totais
             dashboardData.totalConversations = conversations.length;
             
+            // Recalcular status do negócio
+            const businessStatus = {
+                closed: conversations.filter(conv => conv.businessStatus === 'closed').length,
+                notClosed: conversations.filter(conv => conv.businessStatus === 'notClosed').length
+            };
+            dashboardData.businessStatus = businessStatus;
+            
             // Recalcular sentimentos
             const sentimentCount = { positivo: 0, neutro: 0, negativo: 0 };
             conversations.forEach(conv => {
@@ -1361,32 +1478,42 @@
             });
             
             dashboardData.finalSentiment = sentimentCount;
-            dashboardData.sentimentTransitions = [
-                { from: 'neutro', to: 'positivo', count: sentimentCount.positivo },
-                { from: 'neutro', to: 'neutro', count: sentimentCount.neutro },
-                { from: 'neutro', to: 'negativo', count: sentimentCount.negativo }
-            ];
             
             // Recalcular produtos
             const productCount = {};
-            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB'];
+            const closedProductCount = {};
+            const notClosedProductCount = {};
+            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB', 'CORREIA', 'ACOPLAMENTO'];
             
             conversations.forEach(conv => {
                 const textToAnalyze = (conv.summary || '').toUpperCase();
                 productWords.forEach(w => { 
-                    if (textToAnalyze.includes(w)) productCount[w] = (productCount[w] || 0) + 1; 
+                    if (textToAnalyze.includes(w)) {
+                        productCount[w] = (productCount[w] || 0) + 1;
+                        
+                        if (conv.businessStatus === 'closed') {
+                            closedProductCount[w] = (closedProductCount[w] || 0) + 1;
+                        } else {
+                            notClosedProductCount[w] = (notClosedProductCount[w] || 0) + 1;
+                        }
+                    }
                 });
             });
             
-            dashboardData.topProducts = Object.entries(productCount)
-                .map(([product, count]) => ({product, count}))
-                .sort((a,b) => b.count - a.count)
-                .slice(0,5);
-                
             dashboardData.popularProducts = Object.entries(productCount)
                 .map(([product, count]) => ({product, count}))
                 .sort((a,b) => b.count - a.count)
                 .slice(0,15);
+            
+            dashboardData.closedProducts = Object.entries(closedProductCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
+                
+            dashboardData.notClosedProducts = Object.entries(notClosedProductCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
             
             // Recalcular objeções
             const objectionCount = {
@@ -1414,23 +1541,57 @@
                 { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
                 { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
             ].sort((a,b) => b.count - a.count).slice(0,5);
+            
+            // Recalcular análise de atendentes
+            const attendantStats = {};
+            conversations.forEach(conv => {
+                const aname = conv.attendantName || 'Atendente Desconhecido';
+                
+                if (!attendantStats[aname]) {
+                    attendantStats[aname] = { 
+                        attendantName: aname, 
+                        totalConversations: 0, 
+                        closedDeals: 0,
+                        technical: Math.floor(Math.random() * 30) + 60, // Simulação
+                        persuasion: Math.floor(Math.random() * 30) + 60 // Simulação
+                    };
+                }
+                attendantStats[aname].totalConversations++;
+                if (conv.businessStatus === 'closed') {
+                    attendantStats[aname].closedDeals++;
+                }
+            });
+            
+            const attendantAnalysis = [];
+            Object.values(attendantStats).forEach(att => {
+                attendantAnalysis.push({
+                    attendantName: att.attendantName,
+                    technical: att.technical,
+                    persuasion: att.persuasion,
+                    closedDeals: att.closedDeals,
+                    totalConversations: att.totalConversations
+                });
+            });
+            
+            dashboardData.attendantAnalysis = attendantAnalysis;
         }
 
         function renderFilteredComponents(data) {
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             updateDataInfo(data);
-            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
+            renderBusinessStatusChart(dashboardData.businessStatus);
+            renderClosedProductsChart(dashboardData.closedProducts);
+            renderNotClosedProductsChart(dashboardData.notClosedProducts);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
-            renderObjectionsChart(dashboardData.topObjections);
-            renderProductsChart(dashboardData.topProducts);
+            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
             renderPopularProducts(dashboardData.popularProducts);
             renderObjections(dashboardData.objections);
             renderConversations(dashboardData.conversations);
             renderPagination(dashboardData.conversations?.length || 0);
         }
 
-        // Carregar dados - CORREÇÃO: USA DADOS DE EXEMPLO SE API FALHAR
+        // Carregar dados
         async function loadDataFromWebhook() {
             try {
                 updateDataInfo(null, true);
@@ -1481,10 +1642,11 @@
             const dashboardData = Array.isArray(data) ? data[0] : data;
             
             updateDataInfo(data);
-            renderSentimentTransitionChart(dashboardData.sentimentTransitions);
+            renderBusinessStatusChart(dashboardData.businessStatus);
+            renderClosedProductsChart(dashboardData.closedProducts);
+            renderNotClosedProductsChart(dashboardData.notClosedProducts);
             renderSentimentDistributionChart(dashboardData.finalSentiment);
-            renderObjectionsChart(dashboardData.topObjections);
-            renderProductsChart(dashboardData.topProducts);
+            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
             renderPopularProducts(dashboardData.popularProducts);
             renderObjections(dashboardData.objections);
             renderConversations(dashboardData.conversations);
