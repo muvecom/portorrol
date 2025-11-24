@@ -650,13 +650,8 @@
 
     <script>
         // DADOS DE EXEMPLO PARA TESTE ENQUANTO A API NÃO FUNCIONA
-        const sampleData = [{
+        const sampleData = {
             totalConversations: 12,
-            finalSentiment: { 
-                positivo: 7, 
-                neutro: 3, 
-                negativo: 2 
-            },
             businessStatus: [
                 { status: 'Fechados', count: 8 },
                 { status: 'Não Fechados', count: 4 }
@@ -864,28 +859,8 @@
                     attendantName: "Ricardo",
                     businessStatus: "notClosed"
                 }
-            ],
-            attendants: [
-                { id: "1", name: "Yasmim" },
-                { id: "2", name: "Kauan" },
-                { id: "3", name: "Teresa" },
-                { id: "4", name: "Isabel" },
-                { id: "5", name: "Andressa" },
-                { id: "6", name: "Roberto" },
-                { id: "7", name: "Matheus" },
-                { id: "8", name: "Vanessa" },
-                { id: "9", name: "Carlos" },
-                { id: "10", name: "Ana" },
-                { id: "11", name: "Paula" },
-                { id: "12", name: "Ricardo" }
-            ],
-            pagination: { 
-                currentPage: 1, 
-                totalPages: 2, 
-                itemsPerPage: 10, 
-                totalItems: 12 
-            }
-        }];
+            ]
+        };
 
         // Variáveis globais
         let currentData = null;
@@ -947,21 +922,20 @@
                 return;
             }
             
-            if (!data || !Array.isArray(data) || data.length === 0) {
+            if (!data) {
                 infoElement.innerHTML = '📊 Feito!';
                 return;
             }
             
-            const dashboardData = data[0];
-            const totalConversations = dashboardData.totalConversations || 0;
+            const totalConversations = data.totalConversations || 0;
             
             // Calcular negócios fechados
             let closedDeals = 0;
             let notClosedDeals = 0;
             
-            if (dashboardData.businessStatus && Array.isArray(dashboardData.businessStatus)) {
-                const closedItem = dashboardData.businessStatus.find(item => item.status === 'Fechados');
-                const notClosedItem = dashboardData.businessStatus.find(item => item.status === 'Não Fechados');
+            if (data.businessStatus && Array.isArray(data.businessStatus)) {
+                const closedItem = data.businessStatus.find(item => item.status === 'Fechados');
+                const notClosedItem = data.businessStatus.find(item => item.status === 'Não Fechados');
                 closedDeals = closedItem ? closedItem.count : 0;
                 notClosedDeals = notClosedItem ? notClosedItem.count : 0;
             }
@@ -1677,89 +1651,106 @@
         function applyAllFilters() {
             if (!currentData) return;
             
-            const filtered = JSON.parse(JSON.stringify(currentData));
-            const dashboardData = filtered[0];
+            // Se não há filtros ativos, usa os dados originais
+            const hasActiveFilters = Object.values(activeFilters).some(filter => filter !== null);
             
-            if (dashboardData.conversations) {
-                let filteredConversations = [...dashboardData.conversations];
-                
-                // Apply business status filter
-                if (activeFilters.businessStatus) {
-                    if (activeFilters.businessStatus === 'Fechados') {
-                        filteredConversations = filteredConversations.filter(conv => 
-                            conv.businessStatus === 'closed'
-                        );
-                    } else if (activeFilters.businessStatus === 'Não Fechados') {
-                        filteredConversations = filteredConversations.filter(conv => 
-                            conv.businessStatus === 'notClosed'
-                        );
-                    }
-                }
-                
-                // Apply product filters
-                if (activeFilters.product) {
+            if (!hasActiveFilters) {
+                filteredData = JSON.parse(JSON.stringify(currentData));
+                renderFilteredComponents(filteredData);
+                return;
+            }
+            
+            // Cria uma cópia dos dados originais para filtrar
+            const filtered = JSON.parse(JSON.stringify(currentData));
+            
+            // Se não temos conversas originais, não podemos filtrar
+            if (!filtered.conversations) {
+                console.error('Não há conversas para filtrar');
+                return;
+            }
+            
+            let filteredConversations = [...filtered.conversations];
+            
+            // Apply business status filter
+            if (activeFilters.businessStatus) {
+                if (activeFilters.businessStatus === 'Fechados') {
                     filteredConversations = filteredConversations.filter(conv => 
-                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
-                    );
-                }
-                
-                if (activeFilters.closedProduct) {
-                    filteredConversations = filteredConversations.filter(conv => 
-                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.closedProduct.toUpperCase()) &&
                         conv.businessStatus === 'closed'
                     );
-                }
-                
-                if (activeFilters.notClosedProduct) {
+                } else if (activeFilters.businessStatus === 'Não Fechados') {
                     filteredConversations = filteredConversations.filter(conv => 
-                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.notClosedProduct.toUpperCase()) &&
                         conv.businessStatus === 'notClosed'
                     );
                 }
-                
-                // Apply objection filter
-                if (activeFilters.objection) {
-                    const objectionKeywords = {
-                        'Preço Elevado': ['caro', 'preço', 'valor'],
-                        'Prazo de Entrega': ['prazo', 'entrega', 'tempo'],
-                        'Qualidade do Produto': ['qualidade', 'defeito', 'quebrou'],
-                        'Disponibilidade': ['estoque', 'disponível', 'indisponível']
-                    };
-                    
-                    filteredConversations = filteredConversations.filter(conv => {
-                        const text = (conv.summary || '').toLowerCase();
-                        return objectionKeywords[activeFilters.objection]?.some(keyword => 
-                            text.includes(keyword)
-                        );
-                    });
-                }
-                
-                // Apply sentiment filter
-                if (activeFilters.sentiment) {
-                    filteredConversations = filteredConversations.filter(conv => 
-                        conv.sentiment && conv.sentiment.to === activeFilters.sentiment
-                    );
-                }
-                
-                // Apply date filter
-                if (activeFilters.dateRange) {
-                    filteredConversations = filteredConversations.filter(conv => {
-                        const convDate = parseBrazilianDate(conv.date);
-                        if (!convDate) return true;
-                        
-                        return convDate >= activeFilters.dateRange.start && 
-                               convDate <= activeFilters.dateRange.end;
-                    });
-                }
-                
-                dashboardData.conversations = filteredConversations;
-                recalculateMetrics(dashboardData);
-                filteredData = filtered;
-                currentPage = 1;
-                
-                renderFilteredComponents(filteredData);
-                updateChartTitleHighlights();
             }
+            
+            // Apply product filters
+            if (activeFilters.product) {
+                filteredConversations = filteredConversations.filter(conv => 
+                    conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
+                );
+            }
+            
+            if (activeFilters.closedProduct) {
+                filteredConversations = filteredConversations.filter(conv => 
+                    conv.summary && conv.summary.toUpperCase().includes(activeFilters.closedProduct.toUpperCase()) &&
+                    conv.businessStatus === 'closed'
+                );
+            }
+            
+            if (activeFilters.notClosedProduct) {
+                filteredConversations = filteredConversations.filter(conv => 
+                    conv.summary && conv.summary.toUpperCase().includes(activeFilters.notClosedProduct.toUpperCase()) &&
+                    conv.businessStatus === 'notClosed'
+                );
+            }
+            
+            // Apply objection filter
+            if (activeFilters.objection) {
+                const objectionKeywords = {
+                    'Preço Elevado': ['caro', 'preço', 'valor'],
+                    'Prazo de Entrega': ['prazo', 'entrega', 'tempo'],
+                    'Qualidade do Produto': ['qualidade', 'defeito', 'quebrou'],
+                    'Disponibilidade': ['estoque', 'disponível', 'indisponível']
+                };
+                
+                filteredConversations = filteredConversations.filter(conv => {
+                    const text = (conv.summary || '').toLowerCase();
+                    return objectionKeywords[activeFilters.objection]?.some(keyword => 
+                        text.includes(keyword)
+                    );
+                });
+            }
+            
+            // Apply sentiment filter
+            if (activeFilters.sentiment) {
+                filteredConversations = filteredConversations.filter(conv => 
+                    conv.sentiment && conv.sentiment.to === activeFilters.sentiment
+                );
+            }
+            
+            // Apply date filter
+            if (activeFilters.dateRange) {
+                filteredConversations = filteredConversations.filter(conv => {
+                    const convDate = parseBrazilianDate(conv.date);
+                    if (!convDate) return true;
+                    
+                    return convDate >= activeFilters.dateRange.start && 
+                           convDate <= activeFilters.dateRange.end;
+                });
+            }
+            
+            // Atualiza os dados filtrados
+            filtered.conversations = filteredConversations;
+            
+            // Recalcula as métricas baseadas nas conversas filtradas
+            recalculateMetrics(filtered);
+            
+            filteredData = filtered;
+            currentPage = 1;
+            
+            renderFilteredComponents(filteredData);
+            updateChartTitleHighlights();
         }
 
         function parseBrazilianDate(dateStr) {
@@ -1771,22 +1762,25 @@
             return null;
         }
 
-        function recalculateMetrics(dashboardData) {
-            if (!dashboardData.conversations) return;
+        function recalculateMetrics(data) {
+            if (!data.conversations) return;
             
-            const conversations = dashboardData.conversations;
+            const conversations = data.conversations;
             
-            dashboardData.totalConversations = conversations.length;
+            // Atualiza contagem total de conversas
+            data.totalConversations = conversations.length;
             
+            // Recalcula status do negócio
             const businessStatus = {
                 closed: conversations.filter(conv => conv.businessStatus === 'closed').length,
                 notClosed: conversations.filter(conv => conv.businessStatus === 'notClosed').length
             };
-            dashboardData.businessStatus = [
+            data.businessStatus = [
                 { status: 'Fechados', count: businessStatus.closed },
                 { status: 'Não Fechados', count: businessStatus.notClosed }
             ];
             
+            // Recalcula distribuição de sentimento
             const sentimentCount = { positivo: 0, neutro: 0, negativo: 0 };
             conversations.forEach(conv => {
                 if (conv.sentiment && conv.sentiment.to) {
@@ -1794,16 +1788,17 @@
                 }
             });
             
-            dashboardData.finalSentiment = [
+            data.finalSentiment = [
                 { sentiment: 'Positivo', count: sentimentCount.positivo },
                 { sentiment: 'Neutro', count: sentimentCount.neutro },
                 { sentiment: 'Negativo', count: sentimentCount.negativo }
             ];
             
+            // Recalcula produtos
             const productCount = {};
             const closedProductCount = {};
             const notClosedProductCount = {};
-            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB', 'CORREIA', 'ACOPLAMENTO'];
+            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB', 'CORREIA', 'ACOPLAMENTO', 'BUCHA', 'RETENTOR'];
             
             conversations.forEach(conv => {
                 const textToAnalyze = (conv.summary || '').toUpperCase();
@@ -1820,26 +1815,27 @@
                 });
             });
             
-            dashboardData.popularProducts = Object.entries(productCount)
+            data.popularProducts = Object.entries(productCount)
                 .map(([product, count]) => ({product, count}))
                 .sort((a,b) => b.count - a.count)
                 .slice(0,15);
             
-            dashboardData.closedProducts = Object.entries(closedProductCount)
+            data.closedProducts = Object.entries(closedProductCount)
                 .map(([product, count]) => ({product, count}))
                 .sort((a,b) => b.count - a.count)
                 .slice(0,5);
                 
-            dashboardData.notClosedProducts = Object.entries(notClosedProductCount)
+            data.notClosedProducts = Object.entries(notClosedProductCount)
                 .map(([product, count]) => ({product, count}))
                 .sort((a,b) => b.count - a.count)
                 .slice(0,5);
             
-            dashboardData.topProducts = Object.entries(productCount)
+            data.topProducts = Object.entries(productCount)
                 .map(([product, count]) => ({product, count}))
                 .sort((a,b) => b.count - a.count)
                 .slice(0,5);
             
+            // Recalcula objeções
             const objectionCount = {
                 highPrice: { yes: 0, no: 0 },
                 deliveryTime: { yes: 0, no: 0 },
@@ -1857,8 +1853,8 @@
                 if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
             });
             
-            dashboardData.objections = objectionCount;
-            dashboardData.topObjections = [
+            data.objections = objectionCount;
+            data.topObjections = [
                 { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
                 { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
                 { objection: 'Disponibilidade', count: objectionCount.availability.yes },
@@ -1866,6 +1862,7 @@
                 { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
             ].sort((a,b) => b.count - a.count).slice(0,5);
             
+            // Recalcula análise de atendentes
             const attendantStats = {};
             conversations.forEach(conv => {
                 const aname = conv.attendantName || 'Atendente Desconhecido';
@@ -1896,24 +1893,22 @@
                 });
             });
             
-            dashboardData.attendantAnalysis = attendantAnalysis;
+            data.attendantAnalysis = attendantAnalysis;
         }
 
         function renderFilteredComponents(data) {
-            const dashboardData = Array.isArray(data) ? data[0] : data;
-            
             updateDataInfo(data);
-            renderBusinessStatusChart(dashboardData.businessStatus);
-            renderClosedProductsChart(dashboardData.closedProducts);
-            renderNotClosedProductsChart(dashboardData.notClosedProducts);
-            renderSentimentDistributionChart(dashboardData.finalSentiment);
-            renderObjectionsChart(dashboardData.topObjections);
-            renderProductsChart(dashboardData.topProducts);
-            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
-            renderPopularProducts(dashboardData.popularProducts);
-            renderObjections(dashboardData.objections);
-            renderConversations(dashboardData.conversations);
-            renderPagination(dashboardData.conversations?.length || 0);
+            renderBusinessStatusChart(data.businessStatus);
+            renderClosedProductsChart(data.closedProducts);
+            renderNotClosedProductsChart(data.notClosedProducts);
+            renderSentimentDistributionChart(data.finalSentiment);
+            renderObjectionsChart(data.topObjections);
+            renderProductsChart(data.topProducts);
+            renderAttendantAnalysisChart(data.attendantAnalysis);
+            renderPopularProducts(data.popularProducts);
+            renderObjections(data.objections);
+            renderConversations(data.conversations);
+            renderPagination(data.conversations?.length || 0);
         }
 
         // Carregar dados
@@ -1939,8 +1934,13 @@
                     throw new Error('Resposta vazia da API');
                 }
                 
-                if (!data || data.length === 0) {
+                if (!data) {
                     throw new Error('Dados vazios da API');
+                }
+                
+                // Adiciona conversas de exemplo se a API não retornar conversas
+                if (!data.conversations) {
+                    data.conversations = sampleData.conversations;
                 }
                 
                 currentData = data;
@@ -1963,20 +1963,18 @@
         }
 
         function renderAllComponents(data) {
-            const dashboardData = Array.isArray(data) ? data[0] : data;
-            
             updateDataInfo(data);
-            renderBusinessStatusChart(dashboardData.businessStatus);
-            renderClosedProductsChart(dashboardData.closedProducts);
-            renderNotClosedProductsChart(dashboardData.notClosedProducts);
-            renderSentimentDistributionChart(dashboardData.finalSentiment);
-            renderObjectionsChart(dashboardData.topObjections);
-            renderProductsChart(dashboardData.topProducts);
-            renderAttendantAnalysisChart(dashboardData.attendantAnalysis);
-            renderPopularProducts(dashboardData.popularProducts);
-            renderObjections(dashboardData.objections);
-            renderConversations(dashboardData.conversations);
-            renderPagination(dashboardData.conversations?.length || 0);
+            renderBusinessStatusChart(data.businessStatus);
+            renderClosedProductsChart(data.closedProducts);
+            renderNotClosedProductsChart(data.notClosedProducts);
+            renderSentimentDistributionChart(data.finalSentiment);
+            renderObjectionsChart(data.topObjections);
+            renderProductsChart(data.topProducts);
+            renderAttendantAnalysisChart(data.attendantAnalysis);
+            renderPopularProducts(data.popularProducts);
+            renderObjections(data.objections);
+            renderConversations(data.conversations);
+            renderPagination(data.conversations?.length || 0);
             setupObjectionClicks();
             setupChartTitleClicks();
             updateChartTitleHighlights();
@@ -1990,21 +1988,19 @@
                 if (currentPage > 1) {
                     currentPage--;
                     if (filteredData) {
-                        const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
-                        renderConversations(data.conversations);
-                        renderPagination(data.conversations?.length || 0);
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.conversations?.length || 0);
                     }
                 }
             });
             
             document.getElementById('next-page').addEventListener('click', function() {
                 if (filteredData) {
-                    const data = Array.isArray(filteredData) ? filteredData[0] : filteredData;
-                    const totalPages = Math.max(Math.ceil((data.conversations?.length || 0) / itemsPerPage), 1);
+                    const totalPages = Math.max(Math.ceil((filteredData.conversations?.length || 0) / itemsPerPage), 1);
                     if (currentPage < totalPages) {
                         currentPage++;
-                        renderConversations(data.conversations);
-                        renderPagination(data.conversations?.length || 0);
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.conversations?.length || 0);
                     }
                 }
             });
