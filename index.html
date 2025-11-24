@@ -435,6 +435,20 @@
             height: 300px;
         }
         
+        .active-filter {
+            background-color: #e8f0fe !important;
+            border: 1px solid #1a73e8 !important;
+        }
+        
+        .filter-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            margin-left: 5px;
+        }
+        
         @media (max-width: 1200px) {
             .six-pizzas-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -494,7 +508,7 @@
             <!-- Pizza 1: Status do Negócio -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Status do Negócio</div>
+                    <div class="card-title clickable" id="business-status-title">Status do Negócio</div>
                 </div>
                 <div class="chart-container" id="business-status-container">
                     <canvas id="businessStatusChart"></canvas>
@@ -504,7 +518,7 @@
             <!-- Pizza 2: Top Produtos -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 5 Linhas Buscadas</div>
+                    <div class="card-title clickable" id="products-title">Top 5 Linhas Buscadas</div>
                 </div>
                 <div class="chart-container" id="products-container">
                     <canvas id="productsChart"></canvas>
@@ -514,7 +528,7 @@
             <!-- Pizza 3: Produtos Fechados -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 5 Linhas, Fechados</div>
+                    <div class="card-title clickable" id="closed-products-title">Top 5 Linhas, Fechados</div>
                 </div>
                 <div class="chart-container" id="closed-products-container">
                     <canvas id="closedProductsChart"></canvas>
@@ -524,7 +538,7 @@
             <!-- Pizza 4: Produtos Não Fechados -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 5 Linhas, Não Fechados</div>
+                    <div class="card-title clickable" id="not-closed-products-title">Top 5 Linhas, Não Fechados</div>
                 </div>
                 <div class="chart-container" id="not-closed-products-container">
                     <canvas id="notClosedProductsChart"></canvas>
@@ -534,7 +548,7 @@
             <!-- Pizza 5: Top Objeções -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Top 5 Objeções</div>
+                    <div class="card-title clickable" id="objections-title">Top 5 Objeções</div>
                 </div>
                 <div class="chart-container" id="objections-container">
                     <canvas id="objectionsChart"></canvas>
@@ -544,7 +558,7 @@
             <!-- Pizza 6: Distribuição do Sentimento -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-title">Sentimento Final</div>
+                    <div class="card-title clickable" id="sentiment-distribution-title">Sentimento Final</div>
                 </div>
                 <div class="chart-container" id="sentiment-distribution-container">
                     <canvas id="sentimentDistributionChart"></canvas>
@@ -879,7 +893,10 @@
         let currentPage = 1;
         let itemsPerPage = 10;
         let activeFilters = {
+            businessStatus: null,
             product: null,
+            closedProduct: null,
+            notClosedProduct: null,
             objection: null,
             sentiment: null,
             dateRange: null
@@ -1000,6 +1017,13 @@
                                 }
                             }
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyBusinessStatusFilter(label);
+                        }
                     }
                 }
             });
@@ -1037,6 +1061,13 @@
                         legend: {
                             position: 'right'
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyClosedProductFilter(label);
+                        }
                     }
                 }
             });
@@ -1073,6 +1104,13 @@
                     plugins: {
                         legend: {
                             position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyNotClosedProductFilter(label);
                         }
                     }
                 }
@@ -1120,6 +1158,13 @@
                                 }
                             }
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applySentimentFilter(label.toLowerCase());
+                        }
                     }
                 }
             });
@@ -1157,6 +1202,13 @@
                         legend: {
                             position: 'right'
                         }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyObjectionFilter(label);
+                        }
                     }
                 }
             });
@@ -1193,6 +1245,13 @@
                     plugins: {
                         legend: {
                             position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyProductFilter(label);
                         }
                     }
                 }
@@ -1335,10 +1394,20 @@
 
         // Configurar clicks nas objeções
         function setupObjectionClicks() {
-            document.getElementById('high-price-click').addEventListener('click', () => applyObjectionFilter('highPrice'));
-            document.getElementById('delivery-time-click').addEventListener('click', () => applyObjectionFilter('deliveryTime'));
-            document.getElementById('product-quality-click').addEventListener('click', () => applyObjectionFilter('productQuality'));
-            document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('availability'));
+            document.getElementById('high-price-click').addEventListener('click', () => applyObjectionFilter('Preço Elevado'));
+            document.getElementById('delivery-time-click').addEventListener('click', () => applyObjectionFilter('Prazo de Entrega'));
+            document.getElementById('product-quality-click').addEventListener('click', () => applyObjectionFilter('Qualidade do Produto'));
+            document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('Disponibilidade'));
+        }
+
+        // Configurar clicks nos títulos dos gráficos
+        function setupChartTitleClicks() {
+            document.getElementById('business-status-title').addEventListener('click', () => clearBusinessStatusFilter());
+            document.getElementById('products-title').addEventListener('click', () => clearProductFilter());
+            document.getElementById('closed-products-title').addEventListener('click', () => clearClosedProductFilter());
+            document.getElementById('not-closed-products-title').addEventListener('click', () => clearNotClosedProductFilter());
+            document.getElementById('objections-title').addEventListener('click', () => clearObjectionFilter());
+            document.getElementById('sentiment-distribution-title').addEventListener('click', () => clearSentimentFilter());
         }
 
         // Gerar explicação baseada no sentimento
@@ -1465,6 +1534,16 @@
         }
 
         // Sistema de Drill-Down
+        function applyBusinessStatusFilter(status) {
+            if (activeFilters.businessStatus === status) {
+                activeFilters.businessStatus = null;
+            } else {
+                activeFilters.businessStatus = status;
+            }
+            applyAllFilters();
+            updateChartTitleHighlights();
+        }
+
         function applyProductFilter(product) {
             if (activeFilters.product === product) {
                 activeFilters.product = null;
@@ -1473,6 +1552,24 @@
             }
             applyAllFilters();
             updateProductHighlights();
+        }
+
+        function applyClosedProductFilter(product) {
+            if (activeFilters.closedProduct === product) {
+                activeFilters.closedProduct = null;
+            } else {
+                activeFilters.closedProduct = product;
+            }
+            applyAllFilters();
+        }
+
+        function applyNotClosedProductFilter(product) {
+            if (activeFilters.notClosedProduct === product) {
+                activeFilters.notClosedProduct = null;
+            } else {
+                activeFilters.notClosedProduct = product;
+            }
+            applyAllFilters();
         }
 
         function applyObjectionFilter(objection) {
@@ -1493,6 +1590,38 @@
             applyAllFilters();
         }
 
+        function clearBusinessStatusFilter() {
+            activeFilters.businessStatus = null;
+            applyAllFilters();
+            updateChartTitleHighlights();
+        }
+
+        function clearProductFilter() {
+            activeFilters.product = null;
+            applyAllFilters();
+            updateProductHighlights();
+        }
+
+        function clearClosedProductFilter() {
+            activeFilters.closedProduct = null;
+            applyAllFilters();
+        }
+
+        function clearNotClosedProductFilter() {
+            activeFilters.notClosedProduct = null;
+            applyAllFilters();
+        }
+
+        function clearObjectionFilter() {
+            activeFilters.objection = null;
+            applyAllFilters();
+        }
+
+        function clearSentimentFilter() {
+            activeFilters.sentiment = null;
+            applyAllFilters();
+        }
+
         function updateProductHighlights() {
             document.querySelectorAll('.product-item').forEach(item => {
                 item.classList.remove('active');
@@ -1500,6 +1629,49 @@
                     item.classList.add('active');
                 }
             });
+        }
+
+        function updateChartTitleHighlights() {
+            // Remove all active indicators
+            document.querySelectorAll('.card-title').forEach(title => {
+                title.classList.remove('active-filter');
+                const existingIndicator = title.querySelector('.filter-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+            });
+
+            // Add indicators for active filters
+            if (activeFilters.businessStatus) {
+                const title = document.getElementById('business-status-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Status do Negócio <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.product) {
+                const title = document.getElementById('products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas Buscadas <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.closedProduct) {
+                const title = document.getElementById('closed-products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas, Fechados <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.notClosedProduct) {
+                const title = document.getElementById('not-closed-products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas, Não Fechados <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.objection) {
+                const title = document.getElementById('objections-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Objeções <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.sentiment) {
+                const title = document.getElementById('sentiment-distribution-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Sentimento Final <span class="filter-indicator"></span>';
+            }
         }
 
         function applyAllFilters() {
@@ -1511,18 +1683,47 @@
             if (dashboardData.conversations) {
                 let filteredConversations = [...dashboardData.conversations];
                 
+                // Apply business status filter
+                if (activeFilters.businessStatus) {
+                    if (activeFilters.businessStatus === 'Fechados') {
+                        filteredConversations = filteredConversations.filter(conv => 
+                            conv.businessStatus === 'closed'
+                        );
+                    } else if (activeFilters.businessStatus === 'Não Fechados') {
+                        filteredConversations = filteredConversations.filter(conv => 
+                            conv.businessStatus === 'notClosed'
+                        );
+                    }
+                }
+                
+                // Apply product filters
                 if (activeFilters.product) {
                     filteredConversations = filteredConversations.filter(conv => 
                         conv.summary && conv.summary.toUpperCase().includes(activeFilters.product.toUpperCase())
                     );
                 }
                 
+                if (activeFilters.closedProduct) {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.closedProduct.toUpperCase()) &&
+                        conv.businessStatus === 'closed'
+                    );
+                }
+                
+                if (activeFilters.notClosedProduct) {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.summary && conv.summary.toUpperCase().includes(activeFilters.notClosedProduct.toUpperCase()) &&
+                        conv.businessStatus === 'notClosed'
+                    );
+                }
+                
+                // Apply objection filter
                 if (activeFilters.objection) {
                     const objectionKeywords = {
-                        highPrice: ['caro', 'preço', 'valor'],
-                        deliveryTime: ['prazo', 'entrega', 'tempo'],
-                        productQuality: ['qualidade', 'defeito', 'quebrou'],
-                        availability: ['estoque', 'disponível', 'indisponível']
+                        'Preço Elevado': ['caro', 'preço', 'valor'],
+                        'Prazo de Entrega': ['prazo', 'entrega', 'tempo'],
+                        'Qualidade do Produto': ['qualidade', 'defeito', 'quebrou'],
+                        'Disponibilidade': ['estoque', 'disponível', 'indisponível']
                     };
                     
                     filteredConversations = filteredConversations.filter(conv => {
@@ -1533,12 +1734,14 @@
                     });
                 }
                 
+                // Apply sentiment filter
                 if (activeFilters.sentiment) {
                     filteredConversations = filteredConversations.filter(conv => 
                         conv.sentiment && conv.sentiment.to === activeFilters.sentiment
                     );
                 }
                 
+                // Apply date filter
                 if (activeFilters.dateRange) {
                     filteredConversations = filteredConversations.filter(conv => {
                         const convDate = parseBrazilianDate(conv.date);
@@ -1555,6 +1758,7 @@
                 currentPage = 1;
                 
                 renderFilteredComponents(filteredData);
+                updateChartTitleHighlights();
             }
         }
 
@@ -1774,6 +1978,8 @@
             renderConversations(dashboardData.conversations);
             renderPagination(dashboardData.conversations?.length || 0);
             setupObjectionClicks();
+            setupChartTitleClicks();
+            updateChartTitleHighlights();
         }
 
         // Inicializar
@@ -1821,7 +2027,10 @@
 
             document.getElementById('clear-filters').addEventListener('click', function() {
                 activeFilters = {
+                    businessStatus: null,
                     product: null,
+                    closedProduct: null,
+                    notClosedProduct: null,
                     objection: null,
                     sentiment: null,
                     dateRange: null
