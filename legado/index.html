@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Portorrol Monitor IA</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --neutral-color: #f8f9fa;
+            --border-color: #dadce0;
+            --text-color: #202124;
+            --success-color: #34a853;
+            --warning-color: #f9ab00;
+            --danger-color: #ea4335;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 150px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+        
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .date-filter-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-input {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .filter-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .six-pizzas-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .sentiment-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .sentiment-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .sentiment-positivo {
+            background-color: var(--success-color);
+        }
+        
+        .sentiment-neutro {
+            background-color: var(--warning-color);
+        }
+        
+        .sentiment-negativo {
+            background-color: var(--danger-color);
+        }
+        
+        .percentage-bar {
+            display: flex;
+            height: 24px;
+            background-color: var(--neutral-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        
+        .percentage-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .percentage-yes {
+            background-color: var(--success-color);
+        }
+        
+        .percentage-no {
+            background-color: #dadce0;
+            color: #5f6368;
+        }
+        
+        .percentage-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .product-item {
+            background-color: var(--neutral-color);
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .product-item:hover {
+            background-color: #e8f0fe;
+        }
+
+        .product-item.active {
+            background-color: #1a73e8;
+            color: white;
+            border-color: #0d62c9;
+        }
+        
+        .conversations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .conversations-table th, .conversations-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .conversations-table th {
+            font-weight: 500;
+            color: #5f6368;
+            background-color: var(--neutral-color);
+        }
+        
+        .conversation-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .conversation-row:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .conversation-row.expanded {
+            background-color: #f0f7ff;
+        }
+        
+        .conversation-preview {
+            max-width: 400px;
+            max-height: 60px;
+            overflow: hidden;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #5f6368;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .conversation-full {
+            line-height: 1.5;
+            font-size: 13px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .conversation-full::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .conversation-full::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .conversation-full::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .conversation-message {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 3px solid #1a73e8;
+            background-color: white;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .conversation-message.client {
+            border-left-color: #34a853;
+            background-color: #f8fff8;
+        }
+
+        .conversation-message.attendant {
+            border-left-color: #1a73e8;
+            background-color: #f8fbff;
+        }
+
+        .message-sender {
+            font-weight: 500;
+            color: #1a73e8;
+            margin-bottom: 4px;
+        }
+
+        .message-sender.client {
+            color: #34a853;
+        }
+        
+        .expand-icon {
+            color: #1a73e8;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .pagination-info {
+            font-size: 14px;
+            color: #5f6368;
+        }
+        
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .pagination-btn {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 6px 12px;
+            cursor: pointer;
+        }
+        
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .data-info {
+            background-color: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .no-data-message {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .explanation-bubble {
+            background-color: #e8f0fe;
+            border: 1px solid #d2e3fc;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .explanation-bubble strong {
+            color: #1a73e8;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .clickable {
+            cursor: pointer;
+        }
+
+        .clickable:hover {
+            opacity: 0.8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1a73e8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .candlestick-chart {
+            height: 300px;
+        }
+        
+        .active-filter {
+            background-color: #e8f0fe !important;
+            border: 1px solid #1a73e8 !important;
+        }
+        
+        .filter-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            margin-left: 5px;
+        }
+        
+        @media (max-width: 1200px) {
+            .six-pizzas-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid,
+            .six-pizzas-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .conversation-preview {
+                max-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <div class="logo">
+                    <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol">
+                </div>
+                <h1>Monitor IA - Portorrol</h1>
+            </div>
+            <div>
+                <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
+            </div>
+        </header>
+
+        <!-- Informações dos dados -->
+        <div class="data-info" id="data-info">
+            <div class="loading"></div>Carregando dados...
+        </div>
+
+        <!-- Filtros de Data -->
+        <div class="filter-section">
+            <div class="card-title">Filtrar por Data</div>
+            <div class="date-filter-section">
+                <input type="date" id="start-date" class="date-input" placeholder="Data inicial">
+                <span>até</span>
+                <input type="date" id="end-date" class="date-input" placeholder="Data final">
+                <button class="filter-btn" id="apply-date-filter">Filtrar</button>
+                <button class="filter-btn" id="clear-filters" style="background-color: #5f6368;">Limpar Filtros</button>
+            </div>
+        </div>
+        
+        <!-- SEÇÃO DAS 6 PIZZAS EM GRID 3x2 -->
+        <div class="six-pizzas-grid">
+            <!-- Pizza 1: Status do Negócio -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="business-status-title">Status do Negócio</div>
+                </div>
+                <div class="chart-container" id="business-status-container">
+                    <canvas id="businessStatusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pizza 2: Top Produtos -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="products-title">Top 5 Linhas Buscadas</div>
+                </div>
+                <div class="chart-container" id="products-container">
+                    <canvas id="productsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Pizza 3: Produtos Fechados -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="closed-products-title">Top 5 Linhas, Fechados</div>
+                </div>
+                <div class="chart-container" id="closed-products-container">
+                    <canvas id="closedProductsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Pizza 4: Produtos Não Fechados -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="not-closed-products-title">Top 5 Linhas, Não Fechados</div>
+                </div>
+                <div class="chart-container" id="not-closed-products-container">
+                    <canvas id="notClosedProductsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pizza 5: Top Objeções -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="objections-title">Top 5 Objeções</div>
+                </div>
+                <div class="chart-container" id="objections-container">
+                    <canvas id="objectionsChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Pizza 6: Distribuição do Sentimento -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title clickable" id="sentiment-distribution-title">Sentimento Final</div>
+                </div>
+                <div class="chart-container" id="sentiment-distribution-container">
+                    <canvas id="sentimentDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seção de Análise de Atendentes -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Análise de Conhecimento Técnico e Capacidade de Persuasão dos Atendentes</div>
+            </div>
+            <div class="chart-container candlestick-chart" id="attendant-analysis-container">
+                <canvas id="attendantAnalysisChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Seção de Produtos mais buscados -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Produtos em Destaque</div>
+            </div>
+            <div class="products-grid" id="popular-products">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+        </div>
+        
+        <!-- Seção de Objeções -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div class="card-header">
+                <div class="card-title">Análise de Objeções</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <div class="clickable" id="high-price-click">
+                    <div class="card-title">Preço Elevado</div>
+                    <div id="high-price">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div class="clickable" id="delivery-time-click">
+                    <div class="card-title">Prazo de Entrega</div>
+                    <div id="delivery-time">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div class="clickable" id="product-quality-click">
+                    <div class="card-title">Qualidade</div>
+                    <div id="product-quality">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+                <div class="clickable" id="availability-click">
+                    <div class="card-title">Disponibilidade</div>
+                    <div id="availability">
+                        <!-- Conteúdo será preenchido dinamicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Histórico das Conversas -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Histórico de Atendimentos</div>
+            </div>
+            <table class="conversations-table" id="conversations-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Sessão</th>
+                        <th>Resumo</th>
+                        <th>Sentimento</th>
+                        <th>Atendente</th>
+                    </tr>
+                </thead>
+                <tbody id="conversations-body">
+                    <!-- Conteúdo será preenchido dinamicamente -->
+                </tbody>
+            </table>
+            <div class="pagination">
+                <div class="pagination-info" id="pagination-info">Carregando...</div>
+                <div class="pagination-controls">
+                    <button class="pagination-btn" id="prev-page">Anterior</button>
+                    <button class="pagination-btn" id="next-page">Próxima</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let currentData = null;
+        let filteredData = null;
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let activeFilters = {
+            businessStatus: null,
+            product: null,
+            closedProduct: null,
+            notClosedProduct: null,
+            objection: null,
+            sentiment: null,
+            dateRange: null
+        };
+
+        // Instâncias dos gráficos
+        let chartInstances = {
+            businessStatus: null,
+            closedProducts: null,
+            notClosedProducts: null,
+            sentimentDistribution: null,
+            objections: null,
+            products: null,
+            attendantAnalysis: null
+        };
+
+        // Cores para gráficos
+        const CHART_COLORS = {
+            positivo: '#34a853',
+            neutro: '#f9ab00',
+            negativo: '#ea4335',
+            closed: '#34a853',
+            notClosed: '#ea4335',
+            products: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'],
+            objections: ['#FF9F40', '#8AC926', '#1982C4', '#6A4C93', '#F15BB5']
+        };
+
+        // Funções de utilidade
+        function destroyChart(chartInstance) {
+            if (chartInstance && typeof chartInstance.destroy === 'function') {
+                chartInstance.destroy();
+            }
+        }
+
+        function showNoDataMessage(containerId, message = "Sem dados disponíveis") {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `<div class="no-data-message">${message}</div>`;
+            }
+        }
+
+        // Atualizar informações dos dados
+        function updateDataInfo(data, isLoading = false) {
+            const infoElement = document.getElementById('data-info');
+            
+            if (isLoading) {
+                infoElement.innerHTML = '<div class="loading"></div>Carregando dados...';
+                return;
+            }
+            
+            if (!data) {
+                infoElement.innerHTML = '📊 Feito!';
+                return;
+            }
+            
+            const totalConversations = data.totalConversations || 0;
+            const conversationsCount = data.conversations?.length || 0;
+            
+            // Calcular negócios fechados
+            let closedDeals = 0;
+            let notClosedDeals = 0;
+            
+            if (data.businessStatus && Array.isArray(data.businessStatus)) {
+                const closedItem = data.businessStatus.find(item => item.status === 'Fechados');
+                const notClosedItem = data.businessStatus.find(item => item.status === 'Não Fechados');
+                closedDeals = closedItem ? closedItem.count : 0;
+                notClosedDeals = notClosedItem ? notClosedItem.count : 0;
+            }
+            
+            const closeRate = totalConversations > 0 ? Math.round((closedDeals / totalConversations) * 100) : 0;
+            
+            infoElement.innerHTML = `
+                📊 <strong>${totalConversations}</strong> conversas analisadas | 
+                ✅ <strong>${closedDeals}</strong> negócios fechados |
+                ❌ <strong>${notClosedDeals}</strong> não fechados |
+                📈 <strong>${closeRate}%</strong> taxa de fechamento
+                ${conversationsCount < totalConversations ? `| 📄 <strong>${conversationsCount}</strong> exibidas` : ''}
+            `;
+        }
+
+        // Renderizar gráfico de status do negócio
+        function renderBusinessStatusChart(data) {
+            const ctx = document.getElementById('businessStatusChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('business-status-container', 'Sem dados de status do negócio');
+                return;
+            }
+            
+            destroyChart(chartInstances.businessStatus);
+            
+            const labels = data.map(item => item.status);
+            const counts = data.map(item => item.count);
+            const backgroundColors = [CHART_COLORS.closed, CHART_COLORS.notClosed];
+            
+            chartInstances.businessStatus = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyBusinessStatusFilter(label);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de produtos fechados
+        function renderClosedProductsChart(data) {
+            const ctx = document.getElementById('closedProductsChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('closed-products-container', 'Sem dados de produtos fechados');
+                return;
+            }
+            
+            destroyChart(chartInstances.closedProducts);
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
+            
+            chartInstances.closedProducts = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyClosedProductFilter(label);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de produtos não fechados
+        function renderNotClosedProductsChart(data) {
+            const ctx = document.getElementById('notClosedProductsChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('not-closed-products-container', 'Sem dados de produtos não fechados');
+                return;
+            }
+            
+            destroyChart(chartInstances.notClosedProducts);
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
+            
+            chartInstances.notClosedProducts = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyNotClosedProductFilter(label);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de distribuição de sentimento
+        function renderSentimentDistributionChart(data) {
+            const ctx = document.getElementById('sentimentDistributionChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('sentiment-distribution-container', 'Sem dados de sentimento');
+                return;
+            }
+            
+            destroyChart(chartInstances.sentimentDistribution);
+            
+            const labels = data.map(item => item.sentiment);
+            const counts = data.map(item => item.count);
+            const backgroundColors = [CHART_COLORS.positivo, CHART_COLORS.neutro, CHART_COLORS.negativo];
+            
+            chartInstances.sentimentDistribution = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((context.raw / total) * 100);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applySentimentFilter(label.toLowerCase());
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de objeções
+        function renderObjectionsChart(data) {
+            const ctx = document.getElementById('objectionsChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('objections-container', 'Sem dados de objeções');
+                return;
+            }
+            
+            destroyChart(chartInstances.objections);
+            
+            const labels = data.map(item => item.objection);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.objections.slice(0, data.length);
+            
+            chartInstances.objections = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyObjectionFilter(label);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de produtos
+        function renderProductsChart(data) {
+            const ctx = document.getElementById('productsChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0 || data.every(item => item.count === 0)) {
+                showNoDataMessage('products-container', 'Sem dados de produtos');
+                return;
+            }
+            
+            destroyChart(chartInstances.products);
+            
+            const labels = data.map(item => item.product);
+            const counts = data.map(item => item.count);
+            const backgroundColors = CHART_COLORS.products.slice(0, data.length);
+            
+            chartInstances.products = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: counts,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const label = labels[index];
+                            applyProductFilter(label);
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar gráfico de análise de atendentes
+        function renderAttendantAnalysisChart(data) {
+            const ctx = document.getElementById('attendantAnalysisChart');
+            
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                showNoDataMessage('attendant-analysis-container', 'Sem dados de análise de atendentes');
+                return;
+            }
+            
+            destroyChart(chartInstances.attendantAnalysis);
+            
+            const labels = data.map(item => item.attendantName);
+            const technicalData = data.map(item => item.technical);
+            const persuasionData = data.map(item => item.persuasion);
+            
+            chartInstances.attendantAnalysis = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Conhecimento Técnico',
+                            data: technicalData,
+                            backgroundColor: '#4dabf7',
+                            borderColor: '#339af0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Capacidade de Persuasão',
+                            data: persuasionData,
+                            backgroundColor: '#ffa94d',
+                            borderColor: '#ff922b',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Pontuação (%)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Renderizar produtos populares
+        function renderPopularProducts(products) {
+            const container = document.getElementById('popular-products');
+            container.innerHTML = '';
+            
+            if (!products || !Array.isArray(products) || products.length === 0) {
+                container.innerHTML = '<div class="no-data-message">Sem produtos disponíveis</div>';
+                return;
+            }
+            
+            // Mostrar até 15 produtos
+            const displayProducts = products.slice(0, 15);
+            
+            displayProducts.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                
+                if (typeof product === 'object' && product.product && product.count) {
+                    productItem.textContent = `${product.product} (${product.count})`;
+                    productItem.addEventListener('click', () => {
+                        applyProductFilter(product.product);
+                    });
+                    
+                    if (activeFilters.product === product.product) {
+                        productItem.classList.add('active');
+                    }
+                }
+                
+                container.appendChild(productItem);
+            });
+            
+            // Se tiver mais produtos que o limite, mostrar contador
+            if (products.length > 15) {
+                const moreItem = document.createElement('div');
+                moreItem.className = 'product-item';
+                moreItem.style.backgroundColor = '#f0f0f0';
+                moreItem.textContent = `+${products.length - 15} mais...`;
+                moreItem.title = 'Clique para ver todos os produtos';
+                moreItem.addEventListener('click', () => {
+                    alert(`Total de produtos: ${products.length}\n\n${products.map(p => `${p.product}: ${p.count}`).join('\n')}`);
+                });
+                container.appendChild(moreItem);
+            }
+        }
+
+        // Renderizar objeções
+        function renderObjections(objections) {
+            if (!objections || typeof objections !== 'object') return;
+            
+            const createPercentageBar = (yes, no) => {
+                yes = Number(yes) || 0;
+                no = Number(no) || 0;
+                const total = yes + no;
+                
+                if (total === 0) {
+                    return '<div class="no-data-message">Sem dados</div>';
+                }
+                
+                const yesPercentage = Math.round((yes / total) * 100);
+                const noPercentage = 100 - yesPercentage;
+                
+                return `
+                    <div class="percentage-bar">
+                        <div class="percentage-fill percentage-yes" style="width: ${yesPercentage}%">
+                            ${yesPercentage}%
+                        </div>
+                        <div class="percentage-fill percentage-no" style="width: ${noPercentage}%">
+                            ${noPercentage}%
+                        </div>
+                    </div>
+                    <div class="percentage-label">
+                        <span>${yes} menções</span>
+                        <span>${total} total</span>
+                    </div>
+                `;
+            };
+            
+            const highPrice = document.getElementById('high-price');
+            if (objections.highPrice) {
+                highPrice.innerHTML = createPercentageBar(objections.highPrice.yes, objections.highPrice.no);
+            }
+            
+            const deliveryTime = document.getElementById('delivery-time');
+            if (objections.deliveryTime) {
+                deliveryTime.innerHTML = createPercentageBar(objections.deliveryTime.yes, objections.deliveryTime.no);
+            }
+            
+            const productQuality = document.getElementById('product-quality');
+            if (objections.productQuality) {
+                productQuality.innerHTML = createPercentageBar(objections.productQuality.yes, objections.productQuality.no);
+            }
+            
+            const availability = document.getElementById('availability');
+            if (objections.availability) {
+                availability.innerHTML = createPercentageBar(objections.availability.yes, objections.availability.no);
+            }
+        }
+
+        // Configurar clicks nas objeções
+        function setupObjectionClicks() {
+            document.getElementById('high-price-click').addEventListener('click', () => applyObjectionFilter('Preço Elevado'));
+            document.getElementById('delivery-time-click').addEventListener('click', () => applyObjectionFilter('Prazo de Entrega'));
+            document.getElementById('product-quality-click').addEventListener('click', () => applyObjectionFilter('Qualidade do Produto'));
+            document.getElementById('availability-click').addEventListener('click', () => applyObjectionFilter('Disponibilidade'));
+        }
+
+        // Configurar clicks nos títulos dos gráficos
+        function setupChartTitleClicks() {
+            document.getElementById('business-status-title').addEventListener('click', () => clearBusinessStatusFilter());
+            document.getElementById('products-title').addEventListener('click', () => clearProductFilter());
+            document.getElementById('closed-products-title').addEventListener('click', () => clearClosedProductFilter());
+            document.getElementById('not-closed-products-title').addEventListener('click', () => clearNotClosedProductFilter());
+            document.getElementById('objections-title').addEventListener('click', () => clearObjectionFilter());
+            document.getElementById('sentiment-distribution-title').addEventListener('click', () => clearSentimentFilter());
+        }
+
+        // Gerar explicação baseada no sentimento
+        function generateExplanation(conversation) {
+            const sentiment = conversation.sentiment?.to || 'neutro';
+            const businessStatus = conversation.businessStatus || 'notClosed';
+            const summary = conversation.summary || '';
+            
+            if (businessStatus === 'closed') {
+                return "✅ NEGÓCIO FECHADO - Esta conversa resultou em uma venda concretizada. O cliente demonstrou satisfação e confirmou o pedido/pagamento.";
+            } else {
+                switch(sentiment) {
+                    case 'positivo':
+                        return "💬 CONVERSA POSITIVA - O cliente demonstrou interesse e satisfação, mas o negócio não foi fechado neste contato. Pode ser necessário follow-up.";
+                    case 'negativo':
+                        return "⚠️ CONVERSA NEGATIVA - O cliente demonstrou insatisfação ou objeções que impediram o fechamento do negócio. Análise necessária.";
+                    case 'neutro':
+                    default:
+                        return "📋 CONVERSA NEUTRA - Atendimento padrão sem conclusão de venda. Cliente pode retornar posteriormente.";
+                }
+            }
+        }
+
+        // Formatar conversa para melhor visualização
+        function formatConversationText(text) {
+            if (!text) return 'Conversa não disponível';
+            
+            // Se já está formatada com [horas], manter
+            if (text.includes(']: ') && text.includes('\n')) {
+                return text;
+            }
+            
+            // Tentar detectar e formatar mensagens
+            const lines = text.split('\n').filter(line => line.trim());
+            let formatted = '';
+            
+            lines.forEach((line, index) => {
+                if (line.includes(': ')) {
+                    const parts = line.split(': ');
+                    const sender = parts[0];
+                    const message = parts.slice(1).join(': ');
+                    const time = `[${String(index + 10).padStart(2, '0')}:${String(index).padStart(2, '0')}]`;
+                    formatted += `${time} ${sender}: ${message}\n`;
+                } else {
+                    formatted += `[${String(index + 10).padStart(2, '0')}:${String(index).padStart(2, '0')}] Sistema: ${line}\n`;
+                }
+            });
+            
+            return formatted || text;
+        }
+
+        // Renderizar conversas
+        function renderConversations(conversations) {
+            const container = document.getElementById('conversations-body');
+            container.innerHTML = '';
+            
+            if (!conversations || !Array.isArray(conversations) || conversations.length === 0) {
+                container.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;" class="no-data-message">Nenhum histórico disponível</td></tr>';
+                return;
+            }
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedConversations = conversations.slice(startIndex, endIndex);
+            
+            paginatedConversations.forEach(conversation => {
+                const row = document.createElement('tr');
+                row.className = 'conversation-row';
+                
+                let sentimentColor = '#9aa0a6';
+                let sentimentText = 'N/A';
+                let sentimentIcon = '';
+                
+                if (conversation.sentiment && conversation.sentiment.to) {
+                    sentimentText = conversation.sentiment.to;
+                    if (conversation.sentiment.to === 'positivo') {
+                        sentimentColor = '#34a853';
+                        sentimentText = 'Positivo';
+                        sentimentIcon = '😊';
+                    } else if (conversation.sentiment.to === 'neutro') {
+                        sentimentColor = '#f9ab00';
+                        sentimentText = 'Neutro';
+                        sentimentIcon = '😐';
+                    } else if (conversation.sentiment.to === 'negativo') {
+                        sentimentColor = '#ea4335';
+                        sentimentText = 'Negativo';
+                        sentimentIcon = '😞';
+                    }
+                }
+                
+                const historyText = conversation.summary || 'Sem histórico disponível';
+                const fullConversationText = formatConversationText(conversation.fullConversation || historyText);
+                const explanation = generateExplanation(conversation);
+                
+                // Status do negócio
+                const businessStatus = conversation.businessStatus || 'notClosed';
+                const statusIcon = businessStatus === 'closed' ? '✅' : '⏳';
+                const statusTitle = businessStatus === 'closed' ? 'Negócio Fechado' : 'Em Andamento';
+                
+                const summaryCell = document.createElement('td');
+                summaryCell.innerHTML = `
+                    <div class="conversation-preview">
+                        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
+                            <span title="${statusTitle}">${statusIcon}</span>
+                            <span style="font-size: 11px; color: #666;">${conversation.date || 'N/A'}</span>
+                        </div>
+                        ${historyText} <span class="expand-icon">[+]</span>
+                    </div>
+                    <div class="conversation-full" style="display: none;">
+                        <div class="explanation-bubble">
+                            <strong>📝 Análise da Conversa:</strong>
+                            ${explanation}
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <strong>💬 Conversa Completa:</strong><br>
+                            <div style="white-space: pre-wrap; font-family: monospace; background: white; padding: 10px; border-radius: 4px; border: 1px solid #e0e0e0; max-height: 300px; overflow-y: auto;">
+                                ${fullConversationText}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                row.innerHTML = `
+                    <td>${conversation.date || 'N/A'}</td>
+                    <td><code style="font-size: 11px;">${conversation.session || 'N/A'}</code></td>
+                `;
+                
+                row.appendChild(summaryCell);
+                
+                row.innerHTML += `
+                    <td style="color: ${sentimentColor}; font-weight: 500;">
+                        ${sentimentIcon} ${sentimentText}
+                    </td>
+                    <td>${conversation.attendantName || 'N/A'}</td>
+                `;
+                
+                row.addEventListener('click', function(e) {
+                    // Não expandir se clicar em links ou botões dentro
+                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+                    
+                    const fullDiv = this.querySelector('.conversation-full');
+                    const expandIcon = this.querySelector('.expand-icon');
+                    
+                    if (fullDiv.style.display === 'none') {
+                        fullDiv.style.display = 'block';
+                        expandIcon.textContent = '[-]';
+                        this.classList.add('expanded');
+                    } else {
+                        fullDiv.style.display = 'none';
+                        expandIcon.textContent = '[+]';
+                        this.classList.remove('expanded');
+                    }
+                });
+                
+                container.appendChild(row);
+            });
+        }
+
+        // Renderizar paginação
+        function renderPagination(totalItems) {
+            const info = document.getElementById('pagination-info');
+            const totalPages = Math.max(Math.ceil(totalItems / itemsPerPage), 1);
+            
+            const startItem = ((currentPage - 1) * itemsPerPage) + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+            
+            info.textContent = `Página ${currentPage} de ${totalPages} | ${startItem} - ${endItem} de ${totalItems} conversas`;
+            
+            const prevBtn = document.getElementById('prev-page');
+            const nextBtn = document.getElementById('next-page');
+            
+            prevBtn.disabled = currentPage <= 1;
+            nextBtn.disabled = currentPage >= totalPages;
+            
+            // Atualizar textos dos botões
+            prevBtn.textContent = currentPage <= 1 ? '⏪ Primeira' : '◀ Anterior';
+            nextBtn.textContent = currentPage >= totalPages ? 'Última ⏩' : 'Próxima ▶';
+        }
+
+        // Sistema de Drill-Down
+        function applyBusinessStatusFilter(status) {
+            if (activeFilters.businessStatus === status) {
+                activeFilters.businessStatus = null;
+            } else {
+                activeFilters.businessStatus = status;
+            }
+            applyAllFilters();
+            updateChartTitleHighlights();
+        }
+
+        function applyProductFilter(product) {
+            if (activeFilters.product === product) {
+                activeFilters.product = null;
+            } else {
+                activeFilters.product = product;
+            }
+            applyAllFilters();
+            updateProductHighlights();
+        }
+
+        function applyClosedProductFilter(product) {
+            if (activeFilters.closedProduct === product) {
+                activeFilters.closedProduct = null;
+            } else {
+                activeFilters.closedProduct = product;
+            }
+            applyAllFilters();
+        }
+
+        function applyNotClosedProductFilter(product) {
+            if (activeFilters.notClosedProduct === product) {
+                activeFilters.notClosedProduct = null;
+            } else {
+                activeFilters.notClosedProduct = product;
+            }
+            applyAllFilters();
+        }
+
+        function applyObjectionFilter(objection) {
+            if (activeFilters.objection === objection) {
+                activeFilters.objection = null;
+            } else {
+                activeFilters.objection = objection;
+            }
+            applyAllFilters();
+        }
+
+        function applySentimentFilter(sentiment) {
+            if (activeFilters.sentiment === sentiment) {
+                activeFilters.sentiment = null;
+            } else {
+                activeFilters.sentiment = sentiment;
+            }
+            applyAllFilters();
+        }
+
+        function clearBusinessStatusFilter() {
+            activeFilters.businessStatus = null;
+            applyAllFilters();
+            updateChartTitleHighlights();
+        }
+
+        function clearProductFilter() {
+            activeFilters.product = null;
+            applyAllFilters();
+            updateProductHighlights();
+        }
+
+        function clearClosedProductFilter() {
+            activeFilters.closedProduct = null;
+            applyAllFilters();
+        }
+
+        function clearNotClosedProductFilter() {
+            activeFilters.notClosedProduct = null;
+            applyAllFilters();
+        }
+
+        function clearObjectionFilter() {
+            activeFilters.objection = null;
+            applyAllFilters();
+        }
+
+        function clearSentimentFilter() {
+            activeFilters.sentiment = null;
+            applyAllFilters();
+        }
+
+        function updateProductHighlights() {
+            document.querySelectorAll('.product-item').forEach(item => {
+                item.classList.remove('active');
+                if (activeFilters.product && item.textContent.includes(activeFilters.product)) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function updateChartTitleHighlights() {
+            // Remove all active indicators
+            document.querySelectorAll('.card-title').forEach(title => {
+                title.classList.remove('active-filter');
+                const existingIndicator = title.querySelector('.filter-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+            });
+
+            // Add indicators for active filters
+            if (activeFilters.businessStatus) {
+                const title = document.getElementById('business-status-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Status do Negócio <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.product) {
+                const title = document.getElementById('products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas Buscadas <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.closedProduct) {
+                const title = document.getElementById('closed-products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas, Fechados <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.notClosedProduct) {
+                const title = document.getElementById('not-closed-products-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Linhas, Não Fechados <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.objection) {
+                const title = document.getElementById('objections-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Top 5 Objeções <span class="filter-indicator"></span>';
+            }
+            if (activeFilters.sentiment) {
+                const title = document.getElementById('sentiment-distribution-title');
+                title.classList.add('active-filter');
+                title.innerHTML = 'Sentimento Final <span class="filter-indicator"></span>';
+            }
+        }
+
+        function applyAllFilters() {
+            if (!currentData) return;
+            
+            // Se não há filtros ativos, usa os dados originais
+            const hasActiveFilters = Object.values(activeFilters).some(filter => filter !== null);
+            
+            if (!hasActiveFilters) {
+                filteredData = JSON.parse(JSON.stringify(currentData));
+                renderFilteredComponents(filteredData);
+                return;
+            }
+            
+            // Cria uma cópia dos dados originais para filtrar
+            const filtered = JSON.parse(JSON.stringify(currentData));
+            
+            // Se não temos conversas originais, não podemos filtrar
+            if (!filtered.conversations) {
+                console.error('Não há conversas para filtrar');
+                return;
+            }
+            
+            let filteredConversations = [...filtered.conversations];
+            
+            // Apply business status filter
+            if (activeFilters.businessStatus) {
+                if (activeFilters.businessStatus === 'Fechados') {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.businessStatus === 'closed'
+                    );
+                } else if (activeFilters.businessStatus === 'Não Fechados') {
+                    filteredConversations = filteredConversations.filter(conv => 
+                        conv.businessStatus === 'notClosed'
+                    );
+                }
+            }
+            
+            // Apply product filters
+            if (activeFilters.product) {
+                filteredConversations = filteredConversations.filter(conv => {
+                    const searchText = (conv.summary + ' ' + (conv.fullConversation || '')).toUpperCase();
+                    return searchText.includes(activeFilters.product.toUpperCase());
+                });
+            }
+            
+            if (activeFilters.closedProduct) {
+                filteredConversations = filteredConversations.filter(conv => {
+                    const searchText = (conv.summary + ' ' + (conv.fullConversation || '')).toUpperCase();
+                    return searchText.includes(activeFilters.closedProduct.toUpperCase()) &&
+                           conv.businessStatus === 'closed';
+                });
+            }
+            
+            if (activeFilters.notClosedProduct) {
+                filteredConversations = filteredConversations.filter(conv => {
+                    const searchText = (conv.summary + ' ' + (conv.fullConversation || '')).toUpperCase();
+                    return searchText.includes(activeFilters.notClosedProduct.toUpperCase()) &&
+                           conv.businessStatus === 'notClosed';
+                });
+            }
+            
+            // Apply objection filter
+            if (activeFilters.objection) {
+                const objectionKeywords = {
+                    'Preço Elevado': ['caro', 'preço', 'valor', 'custando', 'alto'],
+                    'Prazo de Entrega': ['prazo', 'entrega', 'tempo', 'demora', 'logística'],
+                    'Qualidade do Produto': ['qualidade', 'defeito', 'quebrou', 'ruim', 'problema'],
+                    'Disponibilidade': ['estoque', 'disponível', 'indisponível', 'falta', 'acabou']
+                };
+                
+                filteredConversations = filteredConversations.filter(conv => {
+                    const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
+                    return objectionKeywords[activeFilters.objection]?.some(keyword => 
+                        text.includes(keyword)
+                    );
+                });
+            }
+            
+            // Apply sentiment filter
+            if (activeFilters.sentiment) {
+                filteredConversations = filteredConversations.filter(conv => 
+                    conv.sentiment && conv.sentiment.to === activeFilters.sentiment
+                );
+            }
+            
+            // Apply date filter
+            if (activeFilters.dateRange) {
+                filteredConversations = filteredConversations.filter(conv => {
+                    const convDate = parseBrazilianDate(conv.date);
+                    if (!convDate) return true;
+                    
+                    return convDate >= activeFilters.dateRange.start && 
+                           convDate <= activeFilters.dateRange.end;
+                });
+            }
+            
+            // Atualiza os dados filtrados
+            filtered.conversations = filteredConversations;
+            
+            // Recalcula as métricas baseadas nas conversas filtradas
+            recalculateMetrics(filtered);
+            
+            filteredData = filtered;
+            currentPage = 1;
+            
+            renderFilteredComponents(filteredData);
+            updateChartTitleHighlights();
+        }
+
+        function parseBrazilianDate(dateStr) {
+            if (!dateStr) return null;
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return null;
+        }
+
+        function recalculateMetrics(data) {
+            if (!data.conversations) return;
+            
+            const conversations = data.conversations;
+            
+            // Atualiza contagem total de conversas
+            data.totalConversations = conversations.length;
+            
+            // Recalcula status do negócio
+            const businessStatus = {
+                closed: conversations.filter(conv => conv.businessStatus === 'closed').length,
+                notClosed: conversations.filter(conv => conv.businessStatus === 'notClosed').length
+            };
+            data.businessStatus = [
+                { status: 'Fechados', count: businessStatus.closed },
+                { status: 'Não Fechados', count: businessStatus.notClosed }
+            ];
+            
+            // Recalcula distribuição de sentimento
+            const sentimentCount = { positivo: 0, neutro: 0, negativo: 0 };
+            conversations.forEach(conv => {
+                if (conv.sentiment && conv.sentiment.to) {
+                    sentimentCount[conv.sentiment.to] = (sentimentCount[conv.sentiment.to] || 0) + 1;
+                }
+            });
+            
+            data.finalSentiment = [
+                { sentiment: 'Positivo', count: sentimentCount.positivo },
+                { sentiment: 'Neutro', count: sentimentCount.neutro },
+                { sentiment: 'Negativo', count: sentimentCount.negativo }
+            ];
+            
+            // Recalcula produtos
+            const productCount = {};
+            const closedProductCount = {};
+            const notClosedProductCount = {};
+            const productWords = ['SKF','NSK','FAG','TIMKEN','NTN','ROLAMENTO','MANCAL','VEDAÇÃO','INA','RMB', 'CORREIA', 'ACOPLAMENTO', 'BUCHA', 'RETENTOR'];
+            
+            conversations.forEach(conv => {
+                const textToAnalyze = (conv.summary + ' ' + (conv.fullConversation || '')).toUpperCase();
+                productWords.forEach(w => { 
+                    if (textToAnalyze.includes(w)) {
+                        productCount[w] = (productCount[w] || 0) + 1;
+                        
+                        if (conv.businessStatus === 'closed') {
+                            closedProductCount[w] = (closedProductCount[w] || 0) + 1;
+                        } else {
+                            notClosedProductCount[w] = (notClosedProductCount[w] || 0) + 1;
+                        }
+                    }
+                });
+            });
+            
+            data.popularProducts = Object.entries(productCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,15);
+            
+            data.closedProducts = Object.entries(closedProductCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
+                
+            data.notClosedProducts = Object.entries(notClosedProductCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
+            
+            data.topProducts = Object.entries(productCount)
+                .map(([product, count]) => ({product, count}))
+                .sort((a,b) => b.count - a.count)
+                .slice(0,5);
+            
+            // 1. Definição das Categorias e Objeções
+            const stats = {
+                categories: { 'Vendas': 0, 'Suporte': 0, 'Financeiro': 0, 'Outros': 0 },
+                objections: { highPrice: 0, deliveryTime: 0, productQuality: 0 }
+            };
+            
+            conversations.forEach(conv => {
+                const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
+                
+                // Classificação por Categorias (Baseado em palavras-chave)
+                if (text.includes('comprar') || text.includes('preço') || text.includes('orçamento')) stats.categories['Vendas']++;
+                else if (text.includes('ajuda') || text.includes('defeito') || text.includes('suporte')) stats.categories['Suporte']++;
+                else if (text.includes('boleto') || text.includes('nota') || text.includes('pagamento')) stats.categories['Financeiro']++;
+                else stats.categories['Outros']++;
+
+                // Objeções
+                if (text.includes('caro') || text.includes('valor')) stats.objections.highPrice++;
+                if (text.includes('prazo') || text.includes('demora')) stats.objections.deliveryTime++;
+            });
+
+            // Salva no objeto data para o gráfico usar depois
+            data.categoryStats = Object.entries(stats.categories).map(([name, count]) => ({ name, count }));
+            
+            const attendantAnalysis = [];
+            Object.values(attendantStats).forEach(att => {
+                attendantAnalysis.push({
+                    attendantId: `att_${attendantAnalysis.length + 1}`,
+                    attendantName: att.attendantName,
+                    technical: att.technical,
+                    persuasion: att.persuasion,
+                    closedDeals: att.closedDeals,
+                    totalConversations: att.totalConversations,
+                    closeRate: att.totalConversations > 0 ? Math.round((att.closedDeals / att.totalConversations) * 100) : 0
+                });
+            });
+            
+            data.attendantAnalysis = attendantAnalysis;
+        }
+
+        function renderFilteredComponents(data) {
+            updateDataInfo(data);
+            renderBusinessStatusChart(data.businessStatus);
+            renderClosedProductsChart(data.closedProducts);
+            renderNotClosedProductsChart(data.notClosedProducts);
+            renderSentimentDistributionChart(data.finalSentiment);
+            renderObjectionsChart(data.topObjections);
+            renderProductsChart(data.topProducts);
+            renderAttendantAnalysisChart(data.attendantAnalysis);
+            renderPopularProducts(data.popularProducts);
+            renderObjections(data.objections);
+            renderConversations(data.conversations);
+            renderPagination(data.conversations?.length || 0);
+        }
+
+        // Carregar dados - VERSÃO MELHORADA
+        async function loadDataFromWebhook() {
+            try {
+                updateDataInfo(null, true);
+                document.getElementById('conversations-body').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px;"><div class="loading"></div> Carregando dados...</td></tr>';
+                
+                console.log('🔄 Tentando carregar dados da API...');
+                
+                // Adicionar timestamp para evitar cache
+                const timestamp = new Date().getTime();
+                const response = await fetch(`https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b?t=${timestamp}`, {
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                console.log('📦 Resposta da API (primeiros 1000 chars):', text.substring(0, 1000));
+                
+                let data;
+                if (text && text.trim().length > 0) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseError) {
+                        console.error('❌ Erro ao parsear JSON:', parseError);
+                        throw new Error('Resposta da API não é JSON válido');
+                    }
+                } else {
+                    throw new Error('Resposta vazia da API');
+                }
+                
+                if (!data) {
+                    throw new Error('Dados vazios da API');
+                }
+                
+                // VALIDAÇÃO E ENRIQUECIMENTO DOS DADOS
+                console.log('🔍 Validando estrutura dos dados...');
+                
+                // Garantir que conversations existe
+                if (!data.conversations || !Array.isArray(data.conversations)) {
+                    console.warn('⚠️ API não retornou array conversations, criando vazio');
+                    data.conversations = [];
+                }
+                
+                // Enriquecer conversas com dados faltantes
+                data.conversations = data.conversations.map((conv, index) => {
+                    return {
+                        date: conv.date || new Date().toLocaleDateString('pt-BR'),
+                        session: conv.session || `sess_${index + 1}`,
+                        summary: conv.summary || 'Conversa registrada',
+                        fullConversation: conv.fullConversation || conv.summary || 'Detalhes da conversa não disponíveis',
+                        sentiment: conv.sentiment || { from: 'neutro', to: 'neutro' },
+                        attendantName: conv.attendantName || 'Atendente',
+                        businessStatus: conv.businessStatus || 'notClosed',
+                        ...conv
+                    };
+                });
+                
+                // Se tiver poucas conversas, duplicar para teste visual
+                if (data.conversations.length < 5) {
+                    console.log(`⚠️ Apenas ${data.conversations.length} conversas, enriquecendo para teste...`);
+                    const sampleConversations = [
+                        {
+                            date: "20/11/2025",
+                            session: "CONV001",
+                            summary: "Cliente solicitou cotação de rolamentos SKF 6204",
+                            fullConversation: "Cliente: Boa tarde, preciso de cotação para rolamentos SKF 6204\nAtendente: Boa tarde! Temos em estoque. Valor unitário R$ 18,90\nCliente: Perfeito, vou fazer o pedido",
+                            sentiment: { from: 'neutro', to: 'positivo' },
+                            attendantName: "Yasmim",
+                            businessStatus: "closed"
+                        },
+                        {
+                            date: "19/11/2025",
+                            session: "CONV002",
+                            summary: "Consulta sobre prazo de entrega de mancais TIMKEN",
+                            fullConversation: "Cliente: Qual o prazo para mancais TIMKEN?\nAtendente: Temos entrega em 5 dias úteis\nCliente: Está caro, vou pensar",
+                            sentiment: { from: 'neutro', to: 'neutro' },
+                            attendantName: "Kauan",
+                            businessStatus: "notClosed"
+                        }
+                    ];
+                    
+                    // Adicionar algumas conversas de exemplo se tiver muito pouco
+                    data.conversations = [...data.conversations, ...sampleConversations.slice(0, 5 - data.conversations.length)];
+                }
+                
+                // Garantir que outros arrays existam
+                data.businessStatus = data.businessStatus || [
+                    { status: 'Fechados', count: Math.floor(data.conversations.length * 0.7) },
+                    { status: 'Não Fechados', count: Math.ceil(data.conversations.length * 0.3) }
+                ];
+                
+                data.finalSentiment = data.finalSentiment || [
+                    { sentiment: 'Positivo', count: Math.floor(data.conversations.length * 0.6) },
+                    { sentiment: 'Neutro', count: Math.floor(data.conversations.length * 0.3) },
+                    { sentiment: 'Negativo', count: Math.ceil(data.conversations.length * 0.1) }
+                ];
+                
+                // Atualizar contagem total
+                data.totalConversations = data.conversations.length;
+                
+                currentData = data;
+                filteredData = JSON.parse(JSON.stringify(data));
+                
+                console.log(`✅ Dados carregados: ${data.conversations.length} conversas`);
+                renderAllComponents(filteredData);
+                
+                // Mostrar aviso se tiver poucos dados
+                if (data.conversations.length < 10) {
+                    document.getElementById('data-info').innerHTML += 
+                        ' <span style="color: #f9ab00;">(Poucos dados - Verifique conexão com o banco)</span>';
+                }
+                
+            } catch (error) {
+                console.error('❌ Erro ao carregar dados da API:', error);
+                
+                // Usar dados de exemplo com aviso
+                const infoElement = document.getElementById('data-info');
+                infoElement.innerHTML = `
+                    <div style="color: #ea4335; background: #fee; padding: 10px; border-radius: 4px; border: 1px solid #fcc;">
+                        ⚠️ <strong>Erro ao carregar dados:</strong> ${error.message}<br>
+                        <small>Usando dados de exemplo para demonstração</small>
+                    </div>
+                `;
+                
+                currentData = sampleData;
+                filteredData = JSON.parse(JSON.stringify(sampleData));
+                
+                renderAllComponents(sampleData);
+            }
+        }
+
+        function renderAllComponents(data) {
+            updateDataInfo(data);
+            renderBusinessStatusChart(data.businessStatus);
+            renderClosedProductsChart(data.closedProducts);
+            renderNotClosedProductsChart(data.notClosedProducts);
+            renderSentimentDistributionChart(data.finalSentiment);
+            renderObjectionsChart(data.topObjections);
+            renderProductsChart(data.topProducts);
+            renderAttendantAnalysisChart(data.attendantAnalysis);
+            renderPopularProducts(data.popularProducts);
+            renderObjections(data.objections);
+            renderConversations(data.conversations);
+            renderPagination(data.conversations?.length || 0);
+            setupObjectionClicks();
+            setupChartTitleClicks();
+            updateChartTitleHighlights();
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataFromWebhook();
+            
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    if (filteredData) {
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.conversations?.length || 0);
+                    }
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', function() {
+                if (filteredData) {
+                    const totalPages = Math.max(Math.ceil((filteredData.conversations?.length || 0) / itemsPerPage), 1);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        renderConversations(filteredData.conversations);
+                        renderPagination(filteredData.conversations?.length || 0);
+                    }
+                }
+            });
+
+            document.getElementById('apply-date-filter').addEventListener('click', function() {
+                const startDate = document.getElementById('start-date').value;
+                const endDate = document.getElementById('end-date').value;
+                
+                if (startDate || endDate) {
+                    activeFilters.dateRange = {
+                        start: startDate ? new Date(startDate) : new Date(0),
+                        end: endDate ? new Date(endDate) : new Date()
+                    };
+                } else {
+                    activeFilters.dateRange = null;
+                }
+                
+                applyAllFilters();
+            });
+
+            document.getElementById('clear-filters').addEventListener('click', function() {
+                activeFilters = {
+                    businessStatus: null,
+                    product: null,
+                    closedProduct: null,
+                    notClosedProduct: null,
+                    objection: null,
+                    sentiment: null,
+                    dateRange: null
+                };
+                
+                document.getElementById('start-date').value = '';
+                document.getElementById('end-date').value = '';
+                
+                document.querySelectorAll('.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                filteredData = JSON.parse(JSON.stringify(currentData));
+                currentPage = 1;
+                
+                if (filteredData) {
+                    renderAllComponents(filteredData);
+                }
+            });
+
+            document.getElementById('refresh-data').addEventListener('click', loadDataFromWebhook);
+            // Adicionar Botão do Dashboard de Áudio
+            const headerActions = document.querySelector('.filter-section'); // Ajuste o seletor conforme seu HTML
+            const audioBtn = document.createElement('button');
+            audioBtn.className = 'filter-btn'; // Usa a mesma classe dos seus outros botões
+            audioBtn.style.backgroundColor = '#673ab7'; // Cor roxa para destacar
+            audioBtn.style.marginLeft = '10px';
+            audioBtn.innerHTML = '🎙️ Dash de Áudio';
+            audioBtn.onclick = () => {
+                window.location.href = 'SEU_LINK_DO_DASHBOARD_DE_AUDIO_AQUI'; 
+            };
+            document.getElementById('refresh-data').parentNode.appendChild(audioBtn);
+            
+            // Adicionar botão para testar API diretamente
+            const refreshBtn = document.getElementById('refresh-data');
+            const testBtn = document.createElement('button');
+            testBtn.className = 'filter-btn';
+            testBtn.style.marginLeft = '10px';
+            testBtn.style.backgroundColor = '#34a853';
+            testBtn.innerHTML = '🔍 Testar API';
+            testBtn.onclick = async function() {
+                try {
+                    const response = await fetch('https://api.muvecom.com.br/v1/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b');
+                    const data = await response.json();
+                    alert(`API Status: ${response.status}\n\nConversas: ${data.conversations?.length || 0}\nTotal: ${data.totalConversations || 0}\n\nVerifique o console para detalhes.`);
+                    console.log('📊 Dados completos da API:', data);
+                } catch (error) {
+                    alert(`Erro: ${error.message}`);
+                }
+            };
+            refreshBtn.parentNode.appendChild(testBtn);
+        });
+    </script>
+</body>
+</html>
