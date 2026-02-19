@@ -1704,52 +1704,28 @@
                 .sort((a,b) => b.count - a.count)
                 .slice(0,5);
             
-            // Recalcula objeções
-            const objectionCount = {
-                highPrice: { yes: 0, no: 0 },
-                deliveryTime: { yes: 0, no: 0 },
-                productQuality: { yes: 0, no: 0 },
-                availability: { yes: 0, no: 0 },
-                technicalSupport: { yes: 0, no: 0 }
+            // 1. Definição das Categorias e Objeções
+            const stats = {
+                categories: { 'Vendas': 0, 'Suporte': 0, 'Financeiro': 0, 'Outros': 0 },
+                objections: { highPrice: 0, deliveryTime: 0, productQuality: 0 }
             };
             
             conversations.forEach(conv => {
-                const textLower = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
-                if (textLower.includes('caro') || textLower.includes('preço') || textLower.includes('valor')) objectionCount.highPrice.yes++;
-                if (textLower.includes('prazo') || textLower.includes('entrega') || textLower.includes('tempo')) objectionCount.deliveryTime.yes++;
-                if (textLower.includes('qualidade') || textLower.includes('defeito') || textLower.includes('quebrou')) objectionCount.productQuality.yes++;
-                if (textLower.includes('estoque') || textLower.includes('disponível') || textLower.includes('indisponível')) objectionCount.availability.yes++;
-                if (textLower.includes('suporte') || textLower.includes('técnico') || textLower.includes('instalação')) objectionCount.technicalSupport.yes++;
-            });
-            
-            data.objections = objectionCount;
-            data.topObjections = [
-                { objection: 'Preço Elevado', count: objectionCount.highPrice.yes },
-                { objection: 'Prazo de Entrega', count: objectionCount.deliveryTime.yes },
-                { objection: 'Disponibilidade', count: objectionCount.availability.yes },
-                { objection: 'Qualidade do Produto', count: objectionCount.productQuality.yes },
-                { objection: 'Suporte Técnico', count: objectionCount.technicalSupport.yes }
-            ].filter(obj => obj.count > 0).sort((a,b) => b.count - a.count).slice(0,5);
-            
-            // Recalcula análise de atendentes
-            const attendantStats = {};
-            conversations.forEach(conv => {
-                const aname = conv.attendantName || 'Atendente Desconhecido';
+                const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
                 
-                if (!attendantStats[aname]) {
-                    attendantStats[aname] = { 
-                        attendantName: aname, 
-                        totalConversations: 0, 
-                        closedDeals: 0,
-                        technical: Math.floor(Math.random() * 30) + 60,
-                        persuasion: Math.floor(Math.random() * 30) + 60
-                    };
-                }
-                attendantStats[aname].totalConversations++;
-                if (conv.businessStatus === 'closed') {
-                    attendantStats[aname].closedDeals++;
-                }
+                // Classificação por Categorias (Baseado em palavras-chave)
+                if (text.includes('comprar') || text.includes('preço') || text.includes('orçamento')) stats.categories['Vendas']++;
+                else if (text.includes('ajuda') || text.includes('defeito') || text.includes('suporte')) stats.categories['Suporte']++;
+                else if (text.includes('boleto') || text.includes('nota') || text.includes('pagamento')) stats.categories['Financeiro']++;
+                else stats.categories['Outros']++;
+
+                // Objeções
+                if (text.includes('caro') || text.includes('valor')) stats.objections.highPrice++;
+                if (text.includes('prazo') || text.includes('demora')) stats.objections.deliveryTime++;
             });
+
+            // Salva no objeto data para o gráfico usar depois
+            data.categoryStats = Object.entries(stats.categories).map(([name, count]) => ({ name, count }));
             
             const attendantAnalysis = [];
             Object.values(attendantStats).forEach(att => {
@@ -2004,6 +1980,17 @@
             });
 
             document.getElementById('refresh-data').addEventListener('click', loadDataFromWebhook);
+            // Adicionar Botão do Dashboard de Áudio
+            const headerActions = document.querySelector('.filter-section'); // Ajuste o seletor conforme seu HTML
+            const audioBtn = document.createElement('button');
+            audioBtn.className = 'filter-btn'; // Usa a mesma classe dos seus outros botões
+            audioBtn.style.backgroundColor = '#673ab7'; // Cor roxa para destacar
+            audioBtn.style.marginLeft = '10px';
+            audioBtn.innerHTML = '🎙️ Dash de Áudio';
+            audioBtn.onclick = () => {
+                window.location.href = 'SEU_LINK_DO_DASHBOARD_DE_AUDIO_AQUI'; 
+            };
+            document.getElementById('refresh-data').parentNode.appendChild(audioBtn);
             
             // Adicionar botão para testar API diretamente
             const refreshBtn = document.getElementById('refresh-data');
