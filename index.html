@@ -1263,6 +1263,7 @@
                 const row = document.createElement('tr');
                 row.className = 'conversation-row';
                 
+                // --- Lógica de Sentimento (Preservada) ---
                 let sentimentColor = '#9aa0a6';
                 let sentimentText = 'N/A';
                 let sentimentIcon = '';
@@ -1284,20 +1285,36 @@
                     }
                 }
                 
+                // --- Lógica de Categorias (Nova - Pegando o nome após a letra) ---
+                // Se a categoria for "D. Fechamento", pegamos apenas "Fechamento"
+                const fullCategory = conversation.category || 'Não Classificado';
+                const categoryName = fullCategory.includes('.') ? fullCategory.split('.')[1].trim() : fullCategory;
+                
+                // Cor do badge baseada na letra inicial
+                let categoryBg = '#e8eaed';
+                let categoryColor = '#3c4043';
+                if (fullCategory.startsWith('A')) { categoryBg = '#e8f0fe'; categoryColor = '#1a73e8'; }
+                if (fullCategory.startsWith('C')) { categoryBg = '#fef7e0'; categoryColor = '#b06000'; }
+                if (fullCategory.startsWith('D')) { categoryBg = '#e6f4ea'; categoryColor = '#137333'; }
+                if (fullCategory.startsWith('E')) { categoryBg = '#fce8e6'; categoryColor = '#c5221f'; }
+        
                 const historyText = conversation.summary || 'Sem histórico disponível';
                 const fullConversationText = formatConversationText(conversation.fullConversation || historyText);
                 const explanation = generateExplanation(conversation);
                 
-                // Status do negócio
                 const businessStatus = conversation.businessStatus || 'notClosed';
                 const statusIcon = businessStatus === 'closed' ? '✅' : '⏳';
                 const statusTitle = businessStatus === 'closed' ? 'Negócio Fechado' : 'Em Andamento';
                 
+                // --- Construção da Célula de Resumo (Preservada e Melhorada) ---
                 const summaryCell = document.createElement('td');
                 summaryCell.innerHTML = `
                     <div class="conversation-preview">
-                        <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 3px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
                             <span title="${statusTitle}">${statusIcon}</span>
+                            <span style="background: ${categoryBg}; color: ${categoryColor}; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase;">
+                                ${categoryName}
+                            </span>
                             <span style="font-size: 11px; color: #666;">${conversation.date || 'N/A'}</span>
                         </div>
                         ${historyText} <span class="expand-icon">[+]</span>
@@ -1316,6 +1333,7 @@
                     </div>
                 `;
                 
+                // Montagem das colunas da linha
                 row.innerHTML = `
                     <td>${conversation.date || 'N/A'}</td>
                     <td><code style="font-size: 11px;">${conversation.session || 'N/A'}</code></td>
@@ -1330,8 +1348,8 @@
                     <td>${conversation.attendantName || 'N/A'}</td>
                 `;
                 
+                // --- Evento de Clique para Expandir (Preservado) ---
                 row.addEventListener('click', function(e) {
-                    // Não expandir se clicar em links ou botões dentro
                     if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
                     
                     const fullDiv = this.querySelector('.conversation-full');
@@ -1514,6 +1532,35 @@
             }
         }
 
+        function classifyConversation(conv) {
+            const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
+            
+            // Regra para D (Fechamento) - Prioridade sobre C
+            if (text.includes('confirmado') || text.includes('pedido feito') || text.includes('pagamento realizado') || text.includes('fechamos')) {
+                return 'D. Fechamento';
+            }
+            
+            // Regra para C (Negociação)
+            if (text.includes('preço') || text.includes('valor') || text.includes('desconto') || text.includes('prazo') || text.includes('orçamento')) {
+                return 'C. Negociação';
+            }
+        
+            // Regra para E (Suporte) - Se tiver termos de "problema"
+            const isSupport = text.includes('problema') || text.includes('defeito') || text.includes('ajuda') || text.includes('reclamação');
+            if (isSupport) {
+                return 'E. Suporte / Relacionamento';
+            }
+        
+            // Regra para A vs B (Iniciado pelo vendedor vs cliente)
+            // Se a tua API tiver um campo 'direction' ou 'initiatedBy', usa-o. 
+            // Caso contrário, classificamos como A se não houver termos de suporte.
+            if (!isSupport) {
+                return 'A. Prospecção Ativa';
+            }
+        
+            return 'B. Atendimento Receptivo';
+        }
+        
         function applyAllFilters() {
             if (!currentData) return;
             
@@ -1631,6 +1678,45 @@
             return null;
         }
 
+        // 1. Função de Classificação Inteligente (Regras Fernando)
+        function classifyConversation(conv) {
+            const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
+            
+            // Regra D: Fechamento (Qualquer match entre C e D vira D)
+            const isClosing = text.includes('confirmado') || text.includes('pedido feito') || 
+                              text.includes('fechamos') || text.includes('boleto enviado') || 
+                              text.includes('pode faturar') || text.includes('segue o pedido');
+        
+            if (isClosing) return 'D. Fechamento';
+        
+            // Regra C: Negociação
+            if (text.includes('preço') || text.includes('valor') || text.includes('desconto') || 
+                text.includes('prazo') || text.includes('orçamento') || text.includes('cotar')) {
+                return 'C. Negociação';
+            }
+        
+            // Regra E: Suporte / Relacionamento (Palavras de problema/pós-venda)
+            const isSupport = text.includes('problema') || text.includes('defeito') || 
+                              text.includes('ajuda') || text.includes('reclamação') || 
+                              text.includes('garantia') || text.includes('devolução') ||
+                              text.includes('não chegou') || text.includes('atraso');
+        
+            if (isSupport) return 'E. Suporte / Relacionamento';
+        
+            // Regra A vs B: Prospecção Ativa vs Receptiva
+            // Se não tem 'problema' e não caiu nas anteriores:
+            // A regra de "quem começou" depende da sua API. Na falta do campo, 
+            // se o resumo indica uma abordagem inicial, classificamos como A.
+            const isActiveKeywords = text.includes('bom dia') || text.includes('olá') || text.includes('procurando por');
+            
+            if (isActiveKeywords && !isSupport) {
+                return 'A. Prospecção Ativa';
+            }
+        
+            return 'B. Atendimento Receptivo';
+        }
+        
+        // 2. Função de Métricas Completa e Atualizada
         function recalculateMetrics(data) {
             if (!data.conversations) return;
             
@@ -1639,7 +1725,7 @@
             // Atualiza contagem total de conversas
             data.totalConversations = conversations.length;
             
-            // Recalcula status do negócio
+            // Recalcula status do negócio (Fechados/Não Fechados)
             const businessStatus = {
                 closed: conversations.filter(conv => conv.businessStatus === 'closed').length,
                 notClosed: conversations.filter(conv => conv.businessStatus === 'notClosed').length
@@ -1662,8 +1748,27 @@
                 { sentiment: 'Neutro', count: sentimentCount.neutro },
                 { sentiment: 'Negativo', count: sentimentCount.negativo }
             ];
-            
-            // Recalcula produtos
+        
+            // --- NOVA LÓGICA DE CATEGORIAS (A, B, C, D, E) ---
+            const stats = {
+                'A. Prospecção Ativa': 0,
+                'B. Atendimento Receptivo': 0,
+                'C. Negociação': 0,
+                'D. Fechamento': 0,
+                'E. Suporte / Relacionamento': 0
+            };
+        
+            conversations.forEach(conv => {
+                const category = classifyConversation(conv);
+                conv.category = category; // Atribui a categoria à conversa para filtros
+                stats[category]++;
+            });
+        
+            // Salva no objeto data para o gráfico de pizza de Categorias
+            data.categoryStats = Object.entries(stats).map(([name, count]) => ({ name, count }));
+            // ------------------------------------------------
+        
+            // Recalcula produtos mais citados
             const productCount = {};
             const closedProductCount = {};
             const notClosedProductCount = {};
@@ -1674,7 +1779,6 @@
                 productWords.forEach(w => { 
                     if (textToAnalyze.includes(w)) {
                         productCount[w] = (productCount[w] || 0) + 1;
-                        
                         if (conv.businessStatus === 'closed') {
                             closedProductCount[w] = (closedProductCount[w] || 0) + 1;
                         } else {
@@ -1686,61 +1790,38 @@
             
             data.popularProducts = Object.entries(productCount)
                 .map(([product, count]) => ({product, count}))
-                .sort((a,b) => b.count - a.count)
-                .slice(0,15);
+                .sort((a,b) => b.count - a.count).slice(0,15);
             
             data.closedProducts = Object.entries(closedProductCount)
                 .map(([product, count]) => ({product, count}))
-                .sort((a,b) => b.count - a.count)
-                .slice(0,5);
+                .sort((a,b) => b.count - a.count).slice(0,5);
                 
             data.notClosedProducts = Object.entries(notClosedProductCount)
                 .map(([product, count]) => ({product, count}))
-                .sort((a,b) => b.count - a.count)
-                .slice(0,5);
+                .sort((a,b) => b.count - a.count).slice(0,5);
             
             data.topProducts = Object.entries(productCount)
                 .map(([product, count]) => ({product, count}))
-                .sort((a,b) => b.count - a.count)
-                .slice(0,5);
+                .sort((a,b) => b.count - a.count).slice(0,5);
             
-            // 1. Definição das Categorias e Objeções
-            const stats = {
-                categories: { 'Vendas': 0, 'Suporte': 0, 'Financeiro': 0, 'Outros': 0 },
-                objections: { highPrice: 0, deliveryTime: 0, productQuality: 0 }
-            };
-            
+            // Recalcula análise de atendentes
+            const attendantMap = {};
             conversations.forEach(conv => {
-                const text = (conv.summary + ' ' + (conv.fullConversation || '')).toLowerCase();
-                
-                // Classificação por Categorias (Baseado em palavras-chave)
-                if (text.includes('comprar') || text.includes('preço') || text.includes('orçamento')) stats.categories['Vendas']++;
-                else if (text.includes('ajuda') || text.includes('defeito') || text.includes('suporte')) stats.categories['Suporte']++;
-                else if (text.includes('boleto') || text.includes('nota') || text.includes('pagamento')) stats.categories['Financeiro']++;
-                else stats.categories['Outros']++;
-
-                // Objeções
-                if (text.includes('caro') || text.includes('valor')) stats.objections.highPrice++;
-                if (text.includes('prazo') || text.includes('demora')) stats.objections.deliveryTime++;
+                const name = conv.attendantName || 'Desconhecido';
+                if (!attendantMap[name]) {
+                    attendantMap[name] = { name, total: 0, closed: 0 };
+                }
+                attendantMap[name].total++;
+                if (conv.businessStatus === 'closed') attendantMap[name].closed++;
             });
-
-            // Salva no objeto data para o gráfico usar depois
-            data.categoryStats = Object.entries(stats.categories).map(([name, count]) => ({ name, count }));
-            
-            const attendantAnalysis = [];
-            Object.values(attendantStats).forEach(att => {
-                attendantAnalysis.push({
-                    attendantId: `att_${attendantAnalysis.length + 1}`,
-                    attendantName: att.attendantName,
-                    technical: att.technical,
-                    persuasion: att.persuasion,
-                    closedDeals: att.closedDeals,
-                    totalConversations: att.totalConversations,
-                    closeRate: att.totalConversations > 0 ? Math.round((att.closedDeals / att.totalConversations) * 100) : 0
-                });
-            });
-            
-            data.attendantAnalysis = attendantAnalysis;
+        
+            data.attendantAnalysis = Object.values(attendantMap).map((att, index) => ({
+                attendantId: `att_${index}`,
+                attendantName: att.name,
+                totalConversations: att.total,
+                closedDeals: att.closed,
+                closeRate: Math.round((att.closed / att.total) * 100)
+            }));
         }
 
         function renderFilteredComponents(data) {
