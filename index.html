@@ -90,22 +90,22 @@
         
         // D. FECHAMENTO (Prioridade Máxima)
         if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) 
-            return "D. Fechamento";
+            return "Fechamento";
         
         // C. NEGOCIAÇÃO
         if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) 
-            return "C. Negociação";
+            return "Negociação";
         
         // E. SUPORTE / RELACIONAMENTO
         if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) 
-            return "E. Suporte / Relacionamento";
+            return "Suporte / Relacionamento";
         
         // A vs B (Ativo vs Receptivo)
         // Regra: Se não é suporte/negociação, checa se tem saudação de abordagem
         if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) 
-            return "A. Prospecção Ativa";
+            return "Prospecção Ativa";
 
-        return "B. Atendimento Receptivo";
+        return "Atendimento Receptivo";
     }
 
     function processAndRender() {
@@ -130,7 +130,7 @@
 
     function renderCharts(data) {
         const counts = {};
-        ["A. Prospecção Ativa", "B. Atendimento Receptivo", "C. Negociação", "D. Fechamento", "E. Suporte / Relacionamento"].forEach(cat => counts[cat] = 0);
+        ["Prospecção Ativa", "Atendimento Receptivo", "Negociação", "Fechamento", "Suporte / Relacionamento"].forEach(cat => counts[cat] = 0);
         data.forEach(c => counts[c.category] = (counts[c.category] || 0) + 1);
 
         const ctx = document.getElementById('categoryChart').getContext('2d');
@@ -188,7 +188,7 @@
     function renderMetrics(data) {
         const div = document.getElementById('metric-summary');
         const total = data.length;
-        const fechados = data.filter(c => c.category === "D. Fechamento").length;
+        const fechados = data.filter(c => c.category === "Fechamento").length;
         const taxa = total > 0 ? ((fechados/total)*100).toFixed(1) : 0;
         
         div.innerHTML = `
