@@ -237,19 +237,14 @@
             
             const resumoInteligente = generateSmartSummary(conv.textoCompleto);
             
-            // Renderização condicional do player de áudio e botão de download
+            // Alterado: Removemos a tag <audio> (que é bloqueada pelo Mixed Content do HTTPS)
+            // e deixamos apenas o link direto para o arquivo HTTP.
             let audioHtml = '';
             if (conv.audioUrl) {
                 audioHtml = `
                     <div class="audio-player-container">
-                        <strong>🎧 Reproduzir Gravação:</strong>
-                        <audio controls preload="none">
-                            <source src="${conv.audioUrl}" type="audio/mpeg">
-                            <source src="${conv.audioUrl}" type="audio/wav">
-                            Seu navegador não suporta o elemento de áudio.
-                        </audio>
-                        <br>
-                        <a href="${conv.audioUrl}" target="_blank" download class="download-link">⬇️ Baixar / Abrir Link Original (HTTP)</a>
+                        <strong>🎧 Gravação de Áudio:</strong><br>
+                        <a href="${conv.audioUrl}" target="_blank" class="download-link">🔗 Abrir / Baixar Áudio Original</a>
                     </div>
                 `;
             }
@@ -269,8 +264,8 @@
             `;
             
             row.onclick = (e) => {
-                // Previne fechar a aba se o usuário clicou para dar play ou baixar o áudio
-                if(e.target.tagName.toLowerCase() === 'audio' || e.target.tagName.toLowerCase() === 'a' || e.target.tagName.toLowerCase() === 'source') {
+                // Previne fechar a aba se o usuário clicou no link
+                if(e.target.tagName.toLowerCase() === 'a') {
                     return;
                 }
                 const full = row.querySelector('.conversation-full');
