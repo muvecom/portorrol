@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qualidade de Atendimento - Portorrol Monitor IA</title>
+    <title>Qualidade de Atendimento (Voz) - Portorrol Monitor IA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary-color: #1a73e8; --success-color: #34a853; --warning-color: #f9ab00; --danger-color: #ea4335; --text-color: #202124; }
+        :root { --primary-color: #673ab7; --success-color: #34a853; --warning-color: #f9ab00; --danger-color: #ea4335; --text-color: #202124; }
         body { background-color: #f5f5f5; color: var(--text-color); font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -35,8 +35,8 @@
         <header>
             <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol" style="height: 40px;">
             <div>
+                <button class="filter-btn" style="background: #1a73e8;" onclick="window.location.href='#'">💬 Dash de Texto</button>
                 <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
-                <button class="filter-btn" style="background: #673ab7;" onclick="window.location.href='#'">🎙️ Dash de Áudio</button>
             </div>
         </header>
 
@@ -49,13 +49,13 @@
 
         <div class="dashboard-grid">
             <div class="card">
-                <h3 style="margin-top:0;">Distribuição por Categoria</h3>
+                <h3 style="margin-top:0;">Distribuição por Categoria (Áudio)</h3>
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
             <div class="card">
-                <h3 style="margin-top:0;">Quadro Resumo de Performance</h3>
+                <h3 style="margin-top:0;">Quadro Resumo de Performance (Áudio)</h3>
                 <div id="metric-summary" class="metrics-box">
                     <!-- Preenchido via JS -->
                 </div>
@@ -63,13 +63,14 @@
         </div>
 
         <div class="card">
-            <h3>Histórico Classificado</h3>
+            <h3>Histórico Transcrito (Voz)</h3>
             <table id="main-table">
                 <thead>
                     <tr>
                         <th width="10%">Data</th>
                         <th width="15%">Categoria</th>
-                        <th width="60%">Resumo Inteligente (Clique p/ expandir a transcrição completa)</th>
+                        <th width="50%">Resumo Inteligente (Clique p/ expandir a transcrição)</th>
+                        <th width="10%">Duração</th>
                         <th width="15%">Atendente</th>
                     </tr>
                 </thead>
@@ -84,15 +85,41 @@
     let categoryChart = null;
     let selectedCategory = null;
 
-    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
+    // Substitua pelo Webhook que trará os dados em formato de array de áudio
+    const API_URL = 'https://evo.muvecom.com.br/webhook/SEU_WEBHOOK_DE_VOZ';
 
     const colors = {
-        "Prospecção Ativa": "#1a73e8",
+        "Prospecção Ativa": "#673ab7", // Alterado para roxo para dar cara de voz
         "Atendimento Receptivo": "#9aa0a6",
         "Negociação": "#f9ab00",
         "Fechamento": "#34a853",
         "Suporte / Relacionamento": "#ea4335"
     };
+
+    // NOVA FUNÇÃO PARA ÁUDIO: Extrai o texto concatenando os objetos
+    function extractAudioText(convData) {
+        const audioArray = convData.fullConversation || convData.transcript || convData;
+        if (Array.isArray(audioArray)) {
+            // Concatena todos os "text" dos objetos
+            return audioArray.map(item => item.text || "").join("");
+        }
+        return (typeof audioArray === 'string') ? audioArray : "";
+    }
+
+    // NOVA FUNÇÃO: Retorna a duração em segundos baseando-se no "end" da última palavra
+    function extractDuration(convData) {
+        const audioArray = convData.fullConversation || convData.transcript || [];
+        if (Array.isArray(audioArray) && audioArray.length > 0) {
+            const lastItem = audioArray[audioArray.length - 1];
+            if (lastItem && lastItem.end) {
+                const totalSeconds = Math.round(lastItem.end);
+                const m = Math.floor(totalSeconds / 60);
+                const s = totalSeconds % 60;
+                return `${m}m ${s}s`;
+            }
+        }
+        return '--';
+    }
 
     async function loadData() {
         try {
@@ -106,9 +133,8 @@
         }
     }
 
-    // Função de categorização limpa (sem o A. na frente)
     function classify(conv) {
-        const text = ((conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
+        const text = extractAudioText(conv).toLowerCase();
         
         if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
         if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
@@ -118,7 +144,6 @@
         return "Atendimento Receptivo";
     }
 
-    // NOVA FUNÇÃO: Gera um resumo por palavras-chave em vez de cortar o texto!
     function generateSmartSummary(text) {
         if (!text) return "Sem dados suficientes para resumo.";
         const lowerText = text.toLowerCase();
@@ -137,14 +162,18 @@
 
         let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
         
-        // Pega um pequeno trecho real (limpando saudações chatas) para dar contexto
         let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 70);
 
-        return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>💬 <i>Contexto: "${contextClean}..."</i>`;
+        return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho do áudio: "${contextClean}..."</i>`;
     }
 
     function processAndRender() {
-        filteredData = rawData.map(c => ({ ...c, category: classify(c) }));
+        filteredData = rawData.map(c => ({ 
+            ...c, 
+            category: classify(c),
+            textoCompleto: extractAudioText(c),
+            duracao: extractDuration(c)
+        }));
         applyFilters();
     }
 
@@ -204,9 +233,7 @@
             const catName = conv.category;
             const bgCor = colors[catName] || '#999';
             
-            // Aqui aplicamos o Resumo Inteligente extraindo as palavras-chave!
-            const textoParaResumir = (conv.summary || "") + " " + (conv.fullConversation || "");
-            const resumoInteligente = generateSmartSummary(textoParaResumir);
+            const resumoInteligente = generateSmartSummary(conv.textoCompleto);
             
             row.innerHTML = `
                 <td>${conv.date || 'N/A'}</td>
@@ -214,9 +241,10 @@
                 <td>
                     <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+]</b></span></div>
                     <div class="conversation-full" style="display:none">
-                        <strong>Transcrição da Conversa:</strong><br><br>${conv.fullConversation || conv.summary || 'Sem detalhes disponíveis'}
+                        <strong>Transcrição Completa do Áudio:</strong><br><br>${conv.textoCompleto || 'Sem detalhes disponíveis'}
                     </div>
                 </td>
+                <td><span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">⏱️ ${conv.duracao}</span></td>
                 <td>${conv.attendantName || 'N/A'}</td>
             `;
             
@@ -238,16 +266,16 @@
         
         div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
-                <p>Total Geral de Conversas</p>
+                <p>Total de Áudios Analisados</p>
                 <h2>${totalGeral}</h2>
             </div>
-            <div class="metric-card" style="border-color: #1a73e8; background:#e8f0fe;">
-                <p>Total de Conversas Comerciais (S/ Suporte)</p>
+            <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
+                <p>Total de Áudios Comerciais</p>
                 <h2>${totalComercial}</h2>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
-                <p>Total de Fechamentos</p>
-                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${taxa.replace('.', ',')}% das conversas comerciais)</span></h2>
+                <p>Fechamentos em Voz</p>
+                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${taxa.replace('.', ',')}% das conversas)</span></h2>
             </div>
         `;
     }
