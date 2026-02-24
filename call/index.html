@@ -262,7 +262,9 @@
         const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento");
         const totalComercial = conversasComerciais.length;
         const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
-        const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : 0;
+        
+        // CORREÇÃO: Forçando o "0" a ser texto "0.00" para o replace funcionar sempre
+        const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
         
         div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
@@ -275,7 +277,7 @@
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
                 <p>Fechamentos em Voz</p>
-                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${taxa.replace('.', ',')}% das conversas)</span></h2>
+                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das conversas)</span></h2>
             </div>
         `;
     }
