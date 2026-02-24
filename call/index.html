@@ -28,6 +28,10 @@
         .metric-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid var(--primary-color); }
         .metric-card h2 { margin: 5px 0 0 0; font-size: 24px; }
         .metric-card p { margin: 0; font-size: 13px; color: #555; }
+        .audio-player-container { background: white; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; }
+        .audio-player-container audio { width: 100%; margin-top: 8px; outline: none; }
+        .download-link { font-size: 13px; color: var(--primary-color); text-decoration: none; font-weight: bold; display: inline-block; margin-top: 5px; }
+        .download-link:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -69,7 +73,7 @@
                     <tr>
                         <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
-                        <th width="50%">Resumo Inteligente (Clique p/ expandir a transcrição)</th>
+                        <th width="50%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
                         <th width="10%">Contato</th>
                         <th width="10%">Atendente (Ramal)</th>
                     </tr>
@@ -86,7 +90,7 @@
     let selectedCategory = null;
 
     // Coloque seu Webhook do n8n aqui
-    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a'; // Mude caso seja outro link para voz
+    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
 
     const colors = {
         "Prospecção Ativa": "#673ab7",
@@ -102,7 +106,6 @@
             const resp = await fetch(API_URL);
             const json = await resp.json();
             
-            // VERIFICAÇÃO CHAVE: O json agora é uma lista direta ou tem a propriedade "conversations"?
             if (Array.isArray(json)) {
                 rawData = json;
             } else {
@@ -119,7 +122,6 @@
     function classify(text) {
         text = (text || "").toLowerCase();
         
-        // Nova regra de Caixa postal ou falhas
         if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
 
         if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
@@ -152,14 +154,14 @@
         
         let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
-        return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho do áudio: "${contextClean}..."</i>`;
+        return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
     }
 
     function processAndRender() {
         filteredData = rawData.map(c => {
             const textoTranscrito = c.resumo_conversa || "";
-            // Formatar Data vinda do call_date (ex: 2026-02-19T08:08:38)
             let dataFormatada = "N/A";
+            
             if(c.call_date) {
                 const dataObj = new Date(c.call_date);
                 dataFormatada = dataObj.toLocaleString('pt-BR');
@@ -170,7 +172,8 @@
                 textoCompleto: textoTranscrito,
                 category: classify(textoTranscrito),
                 displayDate: dataFormatada,
-                filterDate: c.call_date ? c.call_date.split('T')[0] : null // para o filtro de data YYYY-MM-DD
+                filterDate: c.call_date ? c.call_date.split('T')[0] : null,
+                audioUrl: c.audio_url || null // Pega o link do áudio, se existir
             };
         });
         applyFilters();
@@ -234,20 +237,42 @@
             
             const resumoInteligente = generateSmartSummary(conv.textoCompleto);
             
+            // Renderização condicional do player de áudio e botão de download
+            let audioHtml = '';
+            if (conv.audioUrl) {
+                audioHtml = `
+                    <div class="audio-player-container">
+                        <strong>🎧 Reproduzir Gravação:</strong>
+                        <audio controls preload="none">
+                            <source src="${conv.audioUrl}" type="audio/mpeg">
+                            <source src="${conv.audioUrl}" type="audio/wav">
+                            Seu navegador não suporta o elemento de áudio.
+                        </audio>
+                        <br>
+                        <a href="${conv.audioUrl}" target="_blank" download class="download-link">⬇️ Baixar / Abrir Link Original (HTTP)</a>
+                    </div>
+                `;
+            }
+            
             row.innerHTML = `
                 <td>${conv.displayDate}</td>
                 <td><span class="category-tag" style="background:${bgCor}">${catName}</span></td>
                 <td>
-                    <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+]</b></span></div>
+                    <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+ Expandir]</b></span></div>
                     <div class="conversation-full" style="display:none">
-                        <strong>Transcrição Completa do Áudio:</strong><br><br>${conv.textoCompleto || 'Sem detalhes disponíveis'}
+                        ${audioHtml}
+                        <strong>Transcrição Completa da Chamada:</strong><br><br>${conv.textoCompleto || 'Sem detalhes disponíveis'}
                     </div>
                 </td>
                 <td>${conv.session || 'N/A'}</td>
                 <td>Ramal: <b>${conv.ramal || 'N/A'}</b></td>
             `;
             
-            row.onclick = () => {
+            row.onclick = (e) => {
+                // Previne fechar a aba se o usuário clicou para dar play ou baixar o áudio
+                if(e.target.tagName.toLowerCase() === 'audio' || e.target.tagName.toLowerCase() === 'a' || e.target.tagName.toLowerCase() === 'source') {
+                    return;
+                }
                 const full = row.querySelector('.conversation-full');
                 full.style.display = full.style.display === 'none' ? 'block' : 'none';
             };
@@ -258,7 +283,6 @@
     function renderMetrics(data) {
         const div = document.getElementById('metric-summary');
         const totalGeral = data.length;
-        // Agora ignoramos as chamadas que caem na caixa postal/sem interação na hora de ver as "Comerciais"
         const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
         const totalComercial = conversasComerciais.length;
         const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
