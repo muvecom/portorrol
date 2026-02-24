@@ -67,11 +67,11 @@
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th width="10%">Data</th>
+                        <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
                         <th width="50%">Resumo Inteligente (Clique p/ expandir a transcrição)</th>
-                        <th width="10%">Duração</th>
-                        <th width="15%">Atendente</th>
+                        <th width="10%">Contato</th>
+                        <th width="10%">Atendente (Ramal)</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body"></tbody>
@@ -85,47 +85,30 @@
     let categoryChart = null;
     let selectedCategory = null;
 
-    // Substitua pelo Webhook que trará os dados em formato de array de áudio
-    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
+    // Coloque seu Webhook do n8n aqui
+    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a'; // Mude caso seja outro link para voz
 
     const colors = {
-        "Prospecção Ativa": "#673ab7", // Alterado para roxo para dar cara de voz
+        "Prospecção Ativa": "#673ab7",
         "Atendimento Receptivo": "#9aa0a6",
         "Negociação": "#f9ab00",
         "Fechamento": "#34a853",
+        "Caixa Postal / Sem Interação": "#555555",
         "Suporte / Relacionamento": "#ea4335"
     };
-
-    // NOVA FUNÇÃO PARA ÁUDIO: Extrai o texto concatenando os objetos
-    function extractAudioText(convData) {
-        const audioArray = convData.fullConversation || convData.transcript || convData;
-        if (Array.isArray(audioArray)) {
-            // Concatena todos os "text" dos objetos
-            return audioArray.map(item => item.text || "").join("");
-        }
-        return (typeof audioArray === 'string') ? audioArray : "";
-    }
-
-    // NOVA FUNÇÃO: Retorna a duração em segundos baseando-se no "end" da última palavra
-    function extractDuration(convData) {
-        const audioArray = convData.fullConversation || convData.transcript || [];
-        if (Array.isArray(audioArray) && audioArray.length > 0) {
-            const lastItem = audioArray[audioArray.length - 1];
-            if (lastItem && lastItem.end) {
-                const totalSeconds = Math.round(lastItem.end);
-                const m = Math.floor(totalSeconds / 60);
-                const s = totalSeconds % 60;
-                return `${m}m ${s}s`;
-            }
-        }
-        return '--';
-    }
 
     async function loadData() {
         try {
             const resp = await fetch(API_URL);
             const json = await resp.json();
-            rawData = json.conversations || [];
+            
+            // VERIFICAÇÃO CHAVE: O json agora é uma lista direta ou tem a propriedade "conversations"?
+            if (Array.isArray(json)) {
+                rawData = json;
+            } else {
+                rawData = json.conversations || [];
+            }
+            
             processAndRender();
         } catch (e) { 
             console.error("Erro API:", e);
@@ -133,10 +116,13 @@
         }
     }
 
-    function classify(conv) {
-        const text = extractAudioText(conv).toLowerCase();
+    function classify(text) {
+        text = (text || "").toLowerCase();
         
-        if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
+        // Nova regra de Caixa postal ou falhas
+        if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
+
+        if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
         if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
         if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
         if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
@@ -148,32 +134,45 @@
         if (!text) return "Sem dados suficientes para resumo.";
         const lowerText = text.toLowerCase();
         
+        if (lowerText.match(/sem interação|correio de voz|interferência/)) {
+            return "🔕 <b>Status:</b> Chamada sem contato efetivo / Caixa postal.";
+        }
+
         const keywords = [];
         if (lowerText.match(/rolamento|peça|produto|material/)) keywords.push("Produtos");
         if (lowerText.match(/orçamento|cotação|preço|valor/)) keywords.push("Valores/Cotação");
         if (lowerText.match(/boleto|pagamento|faturamento|nota fiscal|nf|pix/)) keywords.push("Financeiro");
-        if (lowerText.match(/prazo|entrega|frete|rastreio/)) keywords.push("Logística");
-        if (lowerText.match(/defeito|garantia|problema|troca/)) keywords.push("Garantia/Problema");
+        if (lowerText.match(/prazo|entrega|frete|rastreio|coleta/)) keywords.push("Logística / Coleta");
 
         let action = "Contato Genérico";
-        if (lowerText.match(/faturar|aprovado|pedido feito|fechado/)) action = "Aprovação de Pedido";
+        if (lowerText.match(/faturar|aprovado|pedido feito|fechado|agendar uma coleta/)) action = "Agendamento / Fechamento";
         else if (lowerText.match(/orçamento|cotação|cotar/)) action = "Solicitação de Orçamento";
-        else if (lowerText.match(/problema|ajuda|não chegou/)) action = "Solicitação de Suporte";
 
         let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
         
-        let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 70);
+        let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
         return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho do áudio: "${contextClean}..."</i>`;
     }
 
     function processAndRender() {
-        filteredData = rawData.map(c => ({ 
-            ...c, 
-            category: classify(c),
-            textoCompleto: extractAudioText(c),
-            duracao: extractDuration(c)
-        }));
+        filteredData = rawData.map(c => {
+            const textoTranscrito = c.resumo_conversa || "";
+            // Formatar Data vinda do call_date (ex: 2026-02-19T08:08:38)
+            let dataFormatada = "N/A";
+            if(c.call_date) {
+                const dataObj = new Date(c.call_date);
+                dataFormatada = dataObj.toLocaleString('pt-BR');
+            }
+
+            return { 
+                ...c, 
+                textoCompleto: textoTranscrito,
+                category: classify(textoTranscrito),
+                displayDate: dataFormatada,
+                filterDate: c.call_date ? c.call_date.split('T')[0] : null // para o filtro de data YYYY-MM-DD
+            };
+        });
         applyFilters();
     }
 
@@ -183,8 +182,8 @@
         
         let data = [...filteredData];
 
-        if (from) data = data.filter(c => new Date(c.date) >= new Date(from));
-        if (to) data = data.filter(c => new Date(c.date) <= new Date(to));
+        if (from) data = data.filter(c => c.filterDate && new Date(c.filterDate) >= new Date(from));
+        if (to) data = data.filter(c => c.filterDate && new Date(c.filterDate) <= new Date(to));
         if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
 
         renderCharts(data);
@@ -236,7 +235,7 @@
             const resumoInteligente = generateSmartSummary(conv.textoCompleto);
             
             row.innerHTML = `
-                <td>${conv.date || 'N/A'}</td>
+                <td>${conv.displayDate}</td>
                 <td><span class="category-tag" style="background:${bgCor}">${catName}</span></td>
                 <td>
                     <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+]</b></span></div>
@@ -244,8 +243,8 @@
                         <strong>Transcrição Completa do Áudio:</strong><br><br>${conv.textoCompleto || 'Sem detalhes disponíveis'}
                     </div>
                 </td>
-                <td><span style="background: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">⏱️ ${conv.duracao}</span></td>
-                <td>${conv.attendantName || 'N/A'}</td>
+                <td>${conv.session || 'N/A'}</td>
+                <td>Ramal: <b>${conv.ramal || 'N/A'}</b></td>
             `;
             
             row.onclick = () => {
@@ -259,25 +258,25 @@
     function renderMetrics(data) {
         const div = document.getElementById('metric-summary');
         const totalGeral = data.length;
-        const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento");
+        // Agora ignoramos as chamadas que caem na caixa postal/sem interação na hora de ver as "Comerciais"
+        const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
         const totalComercial = conversasComerciais.length;
         const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
         
-        // CORREÇÃO: Forçando o "0" a ser texto "0.00" para o replace funcionar sempre
         const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
         
         div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
-                <p>Total de Áudios Analisados</p>
+                <p>Total de Ligações</p>
                 <h2>${totalGeral}</h2>
             </div>
             <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
-                <p>Total de Áudios Comerciais</p>
+                <p>Total de Ligações Válidas/Comerciais</p>
                 <h2>${totalComercial}</h2>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
                 <p>Fechamentos em Voz</p>
-                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das conversas)</span></h2>
+                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das válidas)</span></h2>
             </div>
         `;
     }
