@@ -1,45 +1,262 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Qualidade de Atendimento (Voz) - Portorrol Monitor IA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary-color: #673ab7; --success-color: #34a853; --warning-color: #f9ab00; --danger-color: #ea4335; --text-color: #202124; }
-        body { background-color: #f5f5f5; color: var(--text-color); font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .filter-section { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .chart-container { max-height: 250px; display: flex; justify-content: center; position: relative; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; position: sticky; top: 0; }
-        .conversation-row { cursor: pointer; transition: background 0.2s; }
-        .conversation-row:hover { background: #f1f3f4; }
-        .category-tag { padding: 6px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #fff; display: inline-block; text-align: center; }
-        .conversation-full { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 10px; border-left: 4px solid var(--primary-color); white-space: pre-wrap; font-size: 13px; }
-        .summary-text { font-size: 13px; line-height: 1.5; color: #333; }
-        .filter-btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background: var(--primary-color); color: white; font-weight: bold;}
-        input[type="date"] { padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
-        .metrics-box { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px;}
-        .metric-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid var(--primary-color); }
-        .metric-card h2 { margin: 5px 0 0 0; font-size: 24px; }
-        .metric-card p { margin: 0; font-size: 13px; color: #555; }
-        .audio-player-container { background: white; padding: 10px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; }
-        .audio-player-container audio { width: 100%; margin-top: 8px; outline: none; }
-        .download-link { font-size: 13px; color: var(--primary-color); text-decoration: none; font-weight: bold; display: inline-block; margin-top: 5px; }
-        .download-link:hover { text-decoration: underline; }
+        :root {
+            --primary-color: #673ab7;
+            --success-color: #34a853;
+            --warning-color: #f9ab00;
+            --danger-color: #ea4335;
+            --text-color: #202124;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--text-color);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            max-height: 250px;
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+
+        .conversation-row {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .conversation-row:hover {
+            background: #f1f3f4;
+        }
+
+        .category-tag {
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #fff;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .direction-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .direction-entrada {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        .direction-saida {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .pagination-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f1f3f4;
+        }
+
+        .pagination-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .conversation-full {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border-left: 4px solid var(--primary-color);
+            white-space: pre-wrap;
+            font-size: 13px;
+        }
+
+        .summary-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        input[type="date"] {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .metrics-box {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .metric-card h2 {
+            margin: 5px 0 0 0;
+            font-size: 24px;
+        }
+
+        .metric-card p {
+            margin: 0;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .audio-player-container {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .audio-player-container audio {
+            width: 100%;
+            margin-top: 8px;
+            outline: none;
+        }
+
+        .download-link {
+            font-size: 13px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
             <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol" style="height: 40px;">
             <div>
-                <button class="filter-btn" style="background: #1a73e8;" onclick="window.location.href='/portorrol'">💬 Dash de Texto</button>
+                <button class="filter-btn" style="background: #1a73e8;" onclick="window.location.href='/portorrol'">💬
+                    Dash de Texto</button>
                 <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
             </div>
         </header>
@@ -71,185 +288,219 @@
             <table id="main-table">
                 <thead>
                     <tr>
+                        <th width="10%">Direção</th>
                         <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
-                        <th width="50%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
+                        <th width="40%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
                         <th width="10%">Contato</th>
                         <th width="10%">Atendente (Ramal)</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body"></tbody>
             </table>
+            <div id="pagination-controls" class="pagination-container"></div>
         </div>
     </div>
 
-<script>
-    let rawData = [];
-    let filteredData = [];
-    let categoryChart = null;
-    let selectedCategory = null;
+    <script>
+        let rawData = [];
+        let filteredData = [];
+        let currentFilteredData = [];
+        let categoryChart = null;
+        let selectedCategory = null;
+        let currentPage = 1;
+        const itemsPerPage = 10;
 
-    // Coloque seu Webhook do n8n aqui
-    const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
+        // Coloque seu Webhook do n8n aqui
+        const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
 
-    const colors = {
-        "Prospecção Ativa": "#673ab7",
-        "Atendimento Receptivo": "#9aa0a6",
-        "Negociação": "#f9ab00",
-        "Fechamento": "#34a853",
-        "Caixa Postal / Sem Interação": "#555555",
-        "Suporte / Relacionamento": "#ea4335"
-    };
+        const colors = {
+            "Prospecção Ativa": "#673ab7",
+            "Atendimento Receptivo": "#9aa0a6",
+            "Negociação": "#f9ab00",
+            "Fechamento": "#34a853",
+            "Caixa Postal / Sem Interação": "#555555",
+            "Suporte / Relacionamento": "#ea4335"
+        };
 
-    async function loadData() {
-        try {
-            const resp = await fetch(API_URL);
-            const json = await resp.json();
-            
-            if (Array.isArray(json)) {
-                rawData = json;
-            } else {
-                rawData = json.conversations || [];
+        async function loadData() {
+            try {
+                const resp = await fetch(API_URL);
+                const json = await resp.json();
+
+                if (Array.isArray(json)) {
+                    rawData = json;
+                } else {
+                    rawData = json.conversations || [];
+                }
+
+                processAndRender();
+            } catch (e) {
+                console.error("Erro API:", e);
+                if (rawData.length === 0) processAndRender();
             }
-            
-            processAndRender();
-        } catch (e) { 
-            console.error("Erro API:", e);
-            if(rawData.length === 0) processAndRender(); 
-        }
-    }
-
-    function classify(text) {
-        text = (text || "").toLowerCase();
-        
-        if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
-
-        if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
-        if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
-        if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
-        if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
-
-        return "Atendimento Receptivo";
-    }
-
-    function generateSmartSummary(text) {
-        if (!text) return "Sem dados suficientes para resumo.";
-        const lowerText = text.toLowerCase();
-        
-        if (lowerText.match(/sem interação|correio de voz|interferência/)) {
-            return "🔕 <b>Status:</b> Chamada sem contato efetivo / Caixa postal.";
         }
 
-        const keywords = [];
-        if (lowerText.match(/rolamento|peça|produto|material/)) keywords.push("Produtos");
-        if (lowerText.match(/orçamento|cotação|preço|valor/)) keywords.push("Valores/Cotação");
-        if (lowerText.match(/boleto|pagamento|faturamento|nota fiscal|nf|pix/)) keywords.push("Financeiro");
-        if (lowerText.match(/prazo|entrega|frete|rastreio|coleta/)) keywords.push("Logística / Coleta");
+        function classify(text) {
+            text = (text || "").toLowerCase();
 
-        let action = "Contato Genérico";
-        if (lowerText.match(/faturar|aprovado|pedido feito|fechado|agendar uma coleta/)) action = "Agendamento / Fechamento";
-        else if (lowerText.match(/orçamento|cotação|cotar/)) action = "Solicitação de Orçamento";
+            if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
 
-        let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
-        
-        let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
+            if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
+            if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
+            if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
+            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
 
-        return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
-    }
+            return "Atendimento Receptivo";
+        }
 
-    function processAndRender() {
-        filteredData = rawData.map(c => {
-            const textoTranscrito = c.resumo_conversa || "";
-            let dataFormatada = "N/A";
-            
-            if(c.call_date) {
-                const dataObj = new Date(c.call_date);
-                dataFormatada = dataObj.toLocaleString('pt-BR');
+        function generateSmartSummary(text) {
+            if (!text) return "Sem dados suficientes para resumo.";
+            const lowerText = text.toLowerCase();
+
+            if (lowerText.match(/sem interação|correio de voz|interferência/)) {
+                return "🔕 <b>Status:</b> Chamada sem contato efetivo / Caixa postal.";
             }
 
-            return { 
-                ...c, 
-                textoCompleto: textoTranscrito,
-                category: classify(textoTranscrito),
-                displayDate: dataFormatada,
-                filterDate: c.call_date ? c.call_date.split('T')[0] : null,
-                audioUrl: c.audio_url || null // Pega o link do áudio, se existir
-            };
-        });
-        applyFilters();
-    }
+            const keywords = [];
+            if (lowerText.match(/rolamento|peça|produto|material/)) keywords.push("Produtos");
+            if (lowerText.match(/orçamento|cotação|preço|valor/)) keywords.push("Valores/Cotação");
+            if (lowerText.match(/boleto|pagamento|faturamento|nota fiscal|nf|pix/)) keywords.push("Financeiro");
+            if (lowerText.match(/prazo|entrega|frete|rastreio|coleta/)) keywords.push("Logística / Coleta");
 
-    function applyFilters() {
-        const from = document.getElementById('date-from').value;
-        const to = document.getElementById('date-to').value;
-        
-        let data = [...filteredData];
+            let action = "Contato Genérico";
+            if (lowerText.match(/faturar|aprovado|pedido feito|fechado|agendar uma coleta/)) action = "Agendamento / Fechamento";
+            else if (lowerText.match(/orçamento|cotação|cotar/)) action = "Solicitação de Orçamento";
 
-        if (from) data = data.filter(c => c.filterDate && new Date(c.filterDate) >= new Date(from));
-        if (to) data = data.filter(c => c.filterDate && new Date(c.filterDate) <= new Date(to));
-        if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
+            let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
 
-        renderCharts(data);
-        renderTable(data);
-        renderMetrics(data);
-    }
+            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
-    function renderCharts(data) {
-        const counts = {};
-        Object.keys(colors).forEach(cat => counts[cat] = 0);
-        data.forEach(c => counts[c.category] = (counts[c.category] || 0) + 1);
+            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
+        }
 
-        const ctx = document.getElementById('categoryChart').getContext('2d');
-        if (categoryChart) categoryChart.destroy();
-        
-        categoryChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(counts),
-                datasets: [{
-                    data: Object.values(counts),
-                    backgroundColor: Object.values(colors)
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } },
-                onClick: (evt, item) => {
-                    if (item.length > 0) {
-                        const label = categoryChart.data.labels[item[0].index];
-                        selectedCategory = (selectedCategory === label) ? null : label;
-                        applyFilters();
+        function processAndRender() {
+            filteredData = rawData.map(c => {
+                const textoTranscrito = c.resumo_conversa || "";
+                let dataFormatada = "N/A";
+
+                if (c.call_date) {
+                    const dataObj = new Date(c.call_date);
+                    dataFormatada = dataObj.toLocaleString('pt-BR');
+                }
+
+                return {
+                    ...c,
+                    textoCompleto: textoTranscrito,
+                    category: classify(textoTranscrito),
+                    displayDate: dataFormatada,
+                    filterDate: c.call_date ? c.call_date.split('T')[0] : null,
+                    audioUrl: c.audio_url || null // Pega o link do áudio, se existir
+                };
+            });
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const from = document.getElementById('date-from').value;
+            const to = document.getElementById('date-to').value;
+
+            let data = [...filteredData];
+
+            if (from) data = data.filter(c => c.filterDate && new Date(c.filterDate) >= new Date(from));
+            if (to) data = data.filter(c => c.filterDate && new Date(c.filterDate) <= new Date(to));
+            if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
+
+            currentFilteredData = data;
+            currentPage = 1;
+
+            renderCharts(data);
+            renderTable();
+            renderMetrics(data);
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderTable();
+        }
+
+        function renderCharts(data) {
+            const counts = {};
+            Object.keys(colors).forEach(cat => counts[cat] = 0);
+            data.forEach(c => counts[c.category] = (counts[c.category] || 0) + 1);
+
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChart) categoryChart.destroy();
+
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(counts),
+                    datasets: [{
+                        data: Object.values(counts),
+                        backgroundColor: Object.values(colors)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } },
+                    onClick: (evt, item) => {
+                        if (item.length > 0) {
+                            const label = categoryChart.data.labels[item[0].index];
+                            selectedCategory = (selectedCategory === label) ? null : label;
+                            applyFilters();
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function renderTable(data) {
-        const body = document.getElementById('conversations-body');
-        body.innerHTML = '';
-        data.forEach(conv => {
-            const row = document.createElement('tr');
-            row.className = 'conversation-row';
-            const catName = conv.category;
-            const bgCor = colors[catName] || '#999';
-            
-            const resumoInteligente = generateSmartSummary(conv.textoCompleto);
-            
-            // Alterado: Removemos a tag <audio> (que é bloqueada pelo Mixed Content do HTTPS)
-            // e deixamos apenas o link direto para o arquivo HTTP.
-            let audioHtml = '';
-            if (conv.audioUrl) {
-                audioHtml = `
+        function renderTable() {
+            const data = currentFilteredData;
+            const totalPages = Math.ceil(data.length / itemsPerPage) || 1;
+
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedData = data.slice(start, end);
+
+            const body = document.getElementById('conversations-body');
+            body.innerHTML = '';
+
+            paginatedData.forEach(conv => {
+                const row = document.createElement('tr');
+                row.className = 'conversation-row';
+                const catName = conv.category;
+                const bgCor = colors[catName] || '#999';
+
+                const resumoInteligente = generateSmartSummary(conv.textoCompleto);
+
+                let audioHtml = '';
+                if (conv.audioUrl) {
+                    audioHtml = `
                     <div class="audio-player-container">
                         <strong>🎧 Gravação de Áudio:</strong><br>
                         <a href="${conv.audioUrl}" target="_blank" class="download-link">🔗 Abrir / Baixar Áudio Original</a>
                     </div>
                 `;
-            }
-            
-            row.innerHTML = `
+                }
+
+                let dirStr = String(conv.context || '').toLowerCase();
+                let direcao = 'Outros';
+                let dirClass = '';
+                let dirIcon = '📞';
+
+                if (dirStr.includes('entrada') || dirStr.includes('inbound')) {
+                    direcao = 'Entrada'; dirClass = 'direction-entrada'; dirIcon = '📥';
+                } else if (dirStr.includes('saida') || dirStr.includes('saída') || dirStr.includes('outbound')) {
+                    direcao = 'Saída'; dirClass = 'direction-saida'; dirIcon = '📤';
+                }
+
+                row.innerHTML = `
+                <td><span class="direction-tag ${dirClass}">${dirIcon} ${direcao}</span></td>
                 <td>${conv.displayDate}</td>
                 <td><span class="category-tag" style="background:${bgCor}">${catName}</span></td>
                 <td>
@@ -262,29 +513,36 @@
                 <td>${conv.session || 'N/A'}</td>
                 <td>Ramal: <b>${conv.ramal || 'N/A'}</b></td>
             `;
-            
-            row.onclick = (e) => {
-                // Previne fechar a aba se o usuário clicou no link
-                if(e.target.tagName.toLowerCase() === 'a') {
-                    return;
-                }
-                const full = row.querySelector('.conversation-full');
-                full.style.display = full.style.display === 'none' ? 'block' : 'none';
-            };
-            body.appendChild(row);
-        });
-    }
 
-    function renderMetrics(data) {
-        const div = document.getElementById('metric-summary');
-        const totalGeral = data.length;
-        const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
-        const totalComercial = conversasComerciais.length;
-        const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
-        
-        const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
-        
-        div.innerHTML = `
+                row.onclick = (e) => {
+                    // Previne fechar a aba se o usuário clicou no link
+                    if (e.target.tagName.toLowerCase() === 'a') {
+                        return;
+                    }
+                    const full = row.querySelector('.conversation-full');
+                    full.style.display = full.style.display === 'none' ? 'block' : 'none';
+                };
+                body.appendChild(row);
+            });
+
+            const paginationControls = document.getElementById('pagination-controls');
+            paginationControls.innerHTML = `
+                <button class="pagination-btn" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+                <span class="pagination-info">Página ${currentPage} de ${totalPages} (Total: ${data.length})</span>
+                <button class="pagination-btn" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Próxima</button>
+            `;
+        }
+
+        function renderMetrics(data) {
+            const div = document.getElementById('metric-summary');
+            const totalGeral = data.length;
+            const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
+            const totalComercial = conversasComerciais.length;
+            const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
+
+            const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
+
+            div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
                 <p>Total de Ligações</p>
                 <h2>${totalGeral}</h2>
@@ -298,17 +556,18 @@
                 <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das válidas)</span></h2>
             </div>
         `;
-    }
+        }
 
-    function resetFilters() {
-        selectedCategory = null;
-        document.getElementById('date-from').value = '';
-        document.getElementById('date-to').value = '';
-        applyFilters();
-    }
+        function resetFilters() {
+            selectedCategory = null;
+            document.getElementById('date-from').value = '';
+            document.getElementById('date-to').value = '';
+            applyFilters();
+        }
 
-    document.getElementById('refresh-data').onclick = loadData;
-    loadData();
-</script>
+        document.getElementById('refresh-data').onclick = loadData;
+        loadData();
+    </script>
 </body>
+
 </html>
