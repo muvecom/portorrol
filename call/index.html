@@ -288,7 +288,7 @@
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th width="10%">Tipo</th>
+                        <th width="10%">Direção</th>
                         <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
                         <th width="40%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
@@ -354,7 +354,18 @@
             return "Atendimento Receptivo";
         }
 
-        function generateSmartSummary(text) {
+        function checkPlaybookCompliance(text) {
+            text = (text || "").toLowerCase();
+            return {
+                saudacao: text.includes("portorrol") && (text.includes("ajudar") || text.includes("ajudo") || text.includes("ajudá-lo")),
+                identificacao: text.includes("cnpj") || text.includes("razão social") || text.includes("cliente ou fornecedor"),
+                marcas: text.includes("nsk") || text.includes("timken") || text.includes("marca") || text.includes("autorizado"),
+                urgencia: text.includes("urgência") || text.includes("precisa para quando") || text.includes("prazo de entrega"),
+                fechamento: text.includes("vamos fechar") || text.includes("pode faturar") || text.includes("posso lançar o pedido")
+            };
+        }
+
+        function generateSmartSummary(text, compliance) {
             if (!text) return "Sem dados suficientes para resumo.";
             const lowerText = text.toLowerCase();
 
@@ -374,9 +385,19 @@
 
             let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
 
+            let complianceTags = [];
+            if (compliance.saudacao) complianceTags.push("✅ Saudação");
+            if (compliance.identificacao) complianceTags.push("✅ ID/CNPJ");
+            if (compliance.marcas) complianceTags.push("✅ NSK/Timken");
+            if (compliance.urgencia) complianceTags.push("✅ Urgência");
+
+            let complianceHtml = complianceTags.length > 0 
+                ? `<div style="margin-top:5px; font-size:11px; color:#137333;">${complianceTags.join(" ")}</div>` 
+                : "";
+
             let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
-            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
+            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags}${complianceHtml} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
         }
 
         function processAndRender() {
@@ -389,10 +410,13 @@
                     dataFormatada = dataObj.toLocaleString('pt-BR');
                 }
 
+                const compliance = checkPlaybookCompliance(textoTranscrito);
+
                 return {
                     ...c,
                     textoCompleto: textoTranscrito,
                     category: classify(textoTranscrito),
+                    compliance: compliance,
                     displayDate: dataFormatada,
                     filterDate: c.call_date ? c.call_date.split('T')[0] : null,
                     audioUrl: c.audio_url || null // Pega o link do áudio, se existir
@@ -476,7 +500,7 @@
                 const catName = conv.category;
                 const bgCor = colors[catName] || '#999';
 
-                const resumoInteligente = generateSmartSummary(conv.textoCompleto);
+                const resumoInteligente = generateSmartSummary(conv.textoCompleto, conv.compliance);
 
                 let audioHtml = '';
                 if (conv.audioUrl) {
@@ -542,14 +566,25 @@
 
             const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
 
+            // Métricas do Playbook
+            const compSaudacao = data.filter(c => c.compliance.saudacao).length;
+            const compID = data.filter(c => c.compliance.identificacao).length;
+            const compMarcas = data.filter(c => c.compliance.marcas).length;
+
+            const percSaudacao = totalGeral > 0 ? ((compSaudacao / totalGeral) * 100).toFixed(0) : 0;
+            const percID = totalComercial > 0 ? ((compID / totalComercial) * 100).toFixed(0) : 0;
+            const percMarcas = totalComercial > 0 ? ((compMarcas / totalComercial) * 100).toFixed(0) : 0;
+
             div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
                 <p>Total de Ligações</p>
                 <h2>${totalGeral}</h2>
+                <small style="color:#666">Saudação Playbook: ${percSaudacao}%</small>
             </div>
             <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
-                <p>Total de Ligações Válidas/Comerciais</p>
+                <p>Ligações Comerciais</p>
                 <h2>${totalComercial}</h2>
+                <small style="color:#666">ID CNPJ: ${percID}% | Mencionou NSK/Timken: ${percMarcas}%</small>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
                 <p>Fechamentos em Voz</p>
