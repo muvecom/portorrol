@@ -110,25 +110,6 @@
             text-align: center;
         }
 
-        .direction-tag {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .direction-entrada {
-            background: #e6f4ea;
-            color: #137333;
-        }
-
-        .direction-saida {
-            background: #fce8e6;
-            color: #c5221f;
-        }
-
         .conversation-full {
             background: #f8f9fa;
             padding: 15px;
@@ -237,26 +218,6 @@
         <div class="filter-section">
             <label>De: <input type="date" id="date-from"></label>
             <label>Até: <input type="date" id="date-to"></label>
-            <label>Tipo: 
-                <select id="filter-tipo" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
-                    <option value="">Entrada e Saída</option>
-                    <option value="Entrada">Entrada</option>
-                    <option value="Saída">Saída</option>
-                    <option value="Outros">Outros</option>
-                    <option value="Todos">Todos</option>
-                </select>
-            </label>
-            <label>Categoria: 
-                <select id="filter-categoria" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
-                    <option value="">Todas</option>
-                    <option value="Prospecção Ativa">Prospecção Ativa</option>
-                    <option value="Atendimento Receptivo">Atendimento Receptivo</option>
-                    <option value="Negociação">Negociação</option>
-                    <option value="Fechamento">Fechamento</option>
-                    <option value="Caixa Postal / Sem Interação">Caixa Postal / Sem Interação</option>
-                    <option value="Suporte / Relacionamento">Suporte / Relacionamento</option>
-                </select>
-            </label>
             <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
             <button class="filter-btn" style="background:#999" onclick="resetFilters()">Limpar</button>
         </div>
@@ -281,10 +242,9 @@
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th width="10%">Tipo</th>
-                        <th width="15%">Data / Hora</th>
+                        <th width="10%">Data</th>
                         <th width="15%">Categoria</th>
-                        <th width="45%">Resumo Inteligente (Clique p/ expandir a transcrição completa)</th>
+                        <th width="60%">Resumo Inteligente (Clique p/ expandir a transcrição completa)</th>
                         <th width="15%">Atendente</th>
                     </tr>
                 </thead>
@@ -386,32 +346,10 @@
         function processAndRender() {
             filteredData = rawData.map(c => {
                 const text = ((c.summary || "") + " " + (c.fullConversation || "")).toLowerCase();
-                
-                let dirStr = String(c.direction || c.context || c.tipo || '').toLowerCase();
-                let direcao = 'Outros';
-                if (dirStr.includes('entrada') || dirStr.includes('inbound') || dirStr.includes('recebid')) direcao = 'Entrada';
-                else if (dirStr.includes('saida') || dirStr.includes('saída') || dirStr.includes('outbound') || dirStr.includes('enviad')) direcao = 'Saída';
-
-                let filterDate = null;
-                if (c.date) {
-                    if (c.date.includes('T')) {
-                        filterDate = c.date.split('T')[0];
-                    } else if (c.date.match(/^\d{2}\/\d{2}\/\d{4}/)) {
-                        let parts = c.date.split(' ')[0].split('/');
-                        filterDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                    } else if (c.date.includes(' ')) {
-                        filterDate = c.date.split(' ')[0];
-                    } else {
-                        filterDate = c.date;
-                    }
-                }
-
                 return { 
                     ...c, 
                     category: classify(c),
-                    compliance: checkPlaybookCompliance(text),
-                    direcao: direcao,
-                    filterDate: filterDate
+                    compliance: checkPlaybookCompliance(text)
                 };
             });
             applyFilters();
@@ -420,24 +358,11 @@
         function applyFilters() {
             const from = document.getElementById('date-from').value;
             const to = document.getElementById('date-to').value;
-            const tipo = document.getElementById('filter-tipo').value;
-            const categoria = document.getElementById('filter-categoria').value;
 
             let data = [...filteredData];
 
-            if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
-            if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
-            
-            if (tipo === "") {
-                data = data.filter(c => c.direcao === 'Entrada' || c.direcao === 'Saída');
-            } else if (tipo !== "Todos") {
-                data = data.filter(c => c.direcao === tipo);
-            }
-
-            if (categoria) {
-                data = data.filter(c => c.category === categoria);
-            }
-
+            if (from) data = data.filter(c => new Date(c.date) >= new Date(from));
+            if (to) data = data.filter(c => new Date(c.date) <= new Date(to));
             if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
 
             currentFilteredData = data;
@@ -508,21 +433,7 @@
                 const textoParaResumir = (conv.summary || "") + " " + (conv.fullConversation || "");
                 const resumoInteligente = generateSmartSummary(textoParaResumir, conv.compliance);
 
-                let direcao = conv.direcao;
-                let dirClass = '';
-                let dirIcon = '💬';
-
-                if (direcao === 'Entrada') {
-                     dirClass = 'direction-entrada'; dirIcon = '📥';
-                } else if (direcao === 'Saída') {
-                     dirClass = 'direction-saida'; dirIcon = '📤';
-                }
-                
-                let nomeAtendente = conv.attendantName || 'Não Identificado';
-                if (nomeAtendente === 'N/A' || nomeAtendente === '') nomeAtendente = 'Não Identificado';
-
                 row.innerHTML = `
-                <td><span class="direction-tag ${dirClass}">${dirIcon} ${direcao}</span></td>
                 <td>${conv.date || 'N/A'}</td>
                 <td><span class="category-tag" style="background:${bgCor}">${catName}</span></td>
                 <td>
@@ -531,9 +442,7 @@
                         <strong>Transcrição da Conversa:</strong><br><br>${conv.fullConversation || conv.summary || 'Sem detalhes disponíveis'}
                     </div>
                 </td>
-                <td>
-                    <div style="font-weight:bold; margin-bottom:4px; font-size:13px; color:var(--primary-color);">${nomeAtendente}</div>
-                </td>
+                <td>${conv.attendantName || 'N/A'}</td>
             `;
 
                 row.onclick = () => {
@@ -590,8 +499,6 @@
             selectedCategory = null;
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
-            document.getElementById('filter-tipo').value = '';
-            document.getElementById('filter-categoria').value = '';
             applyFilters();
         }
 
