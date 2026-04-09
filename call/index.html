@@ -264,6 +264,26 @@
         <div class="filter-section">
             <label>De: <input type="date" id="date-from"></label>
             <label>Até: <input type="date" id="date-to"></label>
+            <label>Tipo: 
+                <select id="filter-tipo" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
+                    <option value="">Entrada e Saída</option>
+                    <option value="Entrada">Entrada</option>
+                    <option value="Saída">Saída</option>
+                    <option value="Outros">Outros</option>
+                    <option value="Todos">Todos</option>
+                </select>
+            </label>
+            <label>Categoria: 
+                <select id="filter-categoria" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
+                    <option value="">Todas</option>
+                    <option value="Prospecção Ativa">Prospecção Ativa</option>
+                    <option value="Atendimento Receptivo">Atendimento Receptivo</option>
+                    <option value="Negociação">Negociação</option>
+                    <option value="Fechamento">Fechamento</option>
+                    <option value="Caixa Postal / Sem Interação">Caixa Postal / Sem Interação</option>
+                    <option value="Suporte / Relacionamento">Suporte / Relacionamento</option>
+                </select>
+            </label>
             <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
             <button class="filter-btn" style="background:#999" onclick="resetFilters()">Limpar</button>
         </div>
@@ -288,12 +308,12 @@
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th width="10%">Direção</th>
+                        <th width="10%">Tipo</th>
                         <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
                         <th width="40%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
                         <th width="10%">Contato</th>
-                        <th width="10%">Atendente (Ramal)</th>
+                        <th width="10%">Atendente</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body"></tbody>
@@ -310,6 +330,7 @@
         let selectedCategory = null;
         let currentPage = 1;
         const itemsPerPage = 10;
+        let dicionarioRamais = {};
 
         // Coloque seu Webhook do n8n aqui
         const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
@@ -323,8 +344,25 @@
             "Suporte / Relacionamento": "#ea4335"
         };
 
+        async function loadRamais() {
+            try {
+                const resp = await fetch('http://portorrol.companysip.com.br:1187/list_ramais');
+                const json = await resp.json();
+                if (json && json.ramais) {
+                    json.ramais.forEach(r => {
+                        dicionarioRamais[r.ramal] = r.nome;
+                    });
+                }
+            } catch (e) {
+                console.error("Erro ao carregar ramais:", e);
+            }
+        }
+
         async function loadData() {
             try {
+                if (Object.keys(dicionarioRamais).length === 0) {
+                    await loadRamais();
+                }
                 const resp = await fetch(API_URL);
                 const json = await resp.json();
 
@@ -404,13 +442,26 @@
             filteredData = rawData.map(c => {
                 const textoTranscrito = c.resumo_conversa || "";
                 let dataFormatada = "N/A";
+                let filterDate = null;
 
                 if (c.call_date) {
                     const dataObj = new Date(c.call_date);
                     dataFormatada = dataObj.toLocaleString('pt-BR');
+                    if (c.call_date.includes('T')) {
+                        filterDate = c.call_date.split('T')[0];
+                    } else if (c.call_date.includes(' ')) {
+                        filterDate = c.call_date.split(' ')[0];
+                    } else {
+                        filterDate = c.call_date;
+                    }
                 }
 
                 const compliance = checkPlaybookCompliance(textoTranscrito);
+
+                let dirStr = String(c.context || '').toLowerCase();
+                let direcao = 'Outros';
+                if (dirStr.includes('entrada') || dirStr.includes('inbound')) direcao = 'Entrada';
+                else if (dirStr.includes('saida') || dirStr.includes('saída') || dirStr.includes('outbound')) direcao = 'Saída';
 
                 return {
                     ...c,
@@ -418,8 +469,9 @@
                     category: classify(textoTranscrito),
                     compliance: compliance,
                     displayDate: dataFormatada,
-                    filterDate: c.call_date ? c.call_date.split('T')[0] : null,
-                    audioUrl: c.audio_url || null // Pega o link do áudio, se existir
+                    filterDate: filterDate,
+                    audioUrl: c.audio_url || null,
+                    direcao: direcao
                 };
             });
             applyFilters();
@@ -428,11 +480,24 @@
         function applyFilters() {
             const from = document.getElementById('date-from').value;
             const to = document.getElementById('date-to').value;
+            const tipo = document.getElementById('filter-tipo').value;
+            const categoria = document.getElementById('filter-categoria').value;
 
             let data = [...filteredData];
 
-            if (from) data = data.filter(c => c.filterDate && new Date(c.filterDate) >= new Date(from));
-            if (to) data = data.filter(c => c.filterDate && new Date(c.filterDate) <= new Date(to));
+            if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
+            if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
+            
+            if (tipo === "") {
+                data = data.filter(c => c.direcao === 'Entrada' || c.direcao === 'Saída');
+            } else if (tipo !== "Todos") {
+                data = data.filter(c => c.direcao === tipo);
+            }
+
+            if (categoria) {
+                data = data.filter(c => c.category === categoria);
+            }
+
             if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
 
             currentFilteredData = data;
@@ -512,15 +577,21 @@
                 `;
                 }
 
-                let dirStr = String(conv.context || '').toLowerCase();
-                let direcao = 'Outros';
+                let direcao = conv.direcao;
                 let dirClass = '';
                 let dirIcon = '📞';
 
-                if (dirStr.includes('entrada') || dirStr.includes('inbound')) {
-                    direcao = 'Entrada'; dirClass = 'direction-entrada'; dirIcon = '📥';
-                } else if (dirStr.includes('saida') || dirStr.includes('saída') || dirStr.includes('outbound')) {
-                    direcao = 'Saída'; dirClass = 'direction-saida'; dirIcon = '📤';
+                if (direcao === 'Entrada') {
+                     dirClass = 'direction-entrada'; dirIcon = '📥';
+                } else if (direcao === 'Saída') {
+                     dirClass = 'direction-saida'; dirIcon = '📤';
+                }
+
+                let ramalStr = conv.ramal || 'N/A';
+                let nomeAtendente = dicionarioRamais[ramalStr] || 'Não Identificado';
+                if (ramalStr === 'N/A' || ramalStr === '') {
+                    nomeAtendente = 'Não Identificado';
+                    ramalStr = 'N/A';
                 }
 
                 row.innerHTML = `
@@ -535,7 +606,10 @@
                     </div>
                 </td>
                 <td>${conv.session || 'N/A'}</td>
-                <td>Ramal: <b>${conv.ramal || 'N/A'}</b></td>
+                <td>
+                    <div style="font-weight:bold; margin-bottom:4px; font-size:13px; color:var(--primary-color);">${nomeAtendente}</div>
+                    <div style="font-size:11px; color:#666;">Ramal: <b>${ramalStr}</b></div>
+                </td>
             `;
 
                 row.onclick = (e) => {
@@ -597,6 +671,8 @@
             selectedCategory = null;
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
+            document.getElementById('filter-tipo').value = '';
+            document.getElementById('filter-categoria').value = '';
             applyFilters();
         }
 
