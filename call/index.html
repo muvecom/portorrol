@@ -265,17 +265,14 @@
             <label>De: <input type="date" id="date-from"></label>
             <label>Até: <input type="date" id="date-to"></label>
             <label>Tipo: 
-                <select id="filter-tipo" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
-                    <option value="">Entrada e Saída</option>
-                    <option value="Entrada">Entrada</option>
-                    <option value="Saída">Saída</option>
+                <select id="filter-tipo" multiple size="3" style="padding:4px; border:1px solid #ddd; border-radius:4px; vertical-align:middle;">
+                    <option value="Entrada" selected>Entrada</option>
+                    <option value="Saída" selected>Saída</option>
                     <option value="Outros">Outros</option>
-                    <option value="Todos">Todos</option>
                 </select>
             </label>
             <label>Categoria: 
-                <select id="filter-categoria" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
-                    <option value="">Todas</option>
+                <select id="filter-categoria" multiple size="4" style="padding:4px; border:1px solid #ddd; border-radius:4px; vertical-align:middle;">
                     <option value="Prospecção Ativa">Prospecção Ativa</option>
                     <option value="Atendimento Receptivo">Atendimento Receptivo</option>
                     <option value="Negociação">Negociação</option>
@@ -283,6 +280,9 @@
                     <option value="Caixa Postal / Sem Interação">Caixa Postal / Sem Interação</option>
                     <option value="Suporte / Relacionamento">Suporte / Relacionamento</option>
                 </select>
+            </label>
+            <label>Atendente / Ramal:
+                <input type="text" id="filter-atendente" placeholder="Nome ou Ramal..." style="padding:6px; border:1px solid #ddd; border-radius:4px; max-width:150px; vertical-align:middle;">
             </label>
             <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
             <button class="filter-btn" style="background:#999" onclick="resetFilters()">Limpar</button>
@@ -346,7 +346,7 @@
 
         async function loadRamais() {
             try {
-                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04');
+                const resp = await fetch('http://portorrol.companysip.com.br:1187/list_ramais');
                 const json = await resp.json();
                 if (json && json.ramais) {
                     json.ramais.forEach(r => {
@@ -480,22 +480,29 @@
         function applyFilters() {
             const from = document.getElementById('date-from').value;
             const to = document.getElementById('date-to').value;
-            const tipo = document.getElementById('filter-tipo').value;
-            const categoria = document.getElementById('filter-categoria').value;
+            const tipoOptions = Array.from(document.getElementById('filter-tipo').selectedOptions).map(o => o.value);
+            const categoriaOptions = Array.from(document.getElementById('filter-categoria').selectedOptions).map(o => o.value);
+            const atendenteQuery = document.getElementById('filter-atendente').value.toLowerCase().trim();
 
             let data = [...filteredData];
 
             if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
             if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
             
-            if (tipo === "") {
-                data = data.filter(c => c.direcao === 'Entrada' || c.direcao === 'Saída');
-            } else if (tipo !== "Todos") {
-                data = data.filter(c => c.direcao === tipo);
+            if (tipoOptions.length > 0) {
+                data = data.filter(c => tipoOptions.includes(c.direcao));
             }
 
-            if (categoria) {
-                data = data.filter(c => c.category === categoria);
+            if (categoriaOptions.length > 0) {
+                data = data.filter(c => categoriaOptions.includes(c.category));
+            }
+            
+            if (atendenteQuery) {
+                data = data.filter(c => {
+                    let ramalInfo = (c.ramal || "").toString().toLowerCase();
+                    let nomeInfo = (dicionarioRamais[c.ramal] || "Não Identificado").toLowerCase();
+                    return ramalInfo.includes(atendenteQuery) || nomeInfo.includes(atendenteQuery);
+                });
             }
 
             if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
@@ -671,8 +678,11 @@
             selectedCategory = null;
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
-            document.getElementById('filter-tipo').value = '';
-            document.getElementById('filter-categoria').value = '';
+            
+            Array.from(document.getElementById('filter-categoria').options).forEach(opt => opt.selected = false);
+            Array.from(document.getElementById('filter-tipo').options).forEach(opt => opt.selected = (opt.value === 'Entrada' || opt.value === 'Saída'));
+            document.getElementById('filter-atendente').value = '';
+            
             applyFilters();
         }
 
