@@ -218,16 +218,17 @@
         <div class="filter-section">
             <label>De: <input type="date" id="date-from"></label>
             <label>Até: <input type="date" id="date-to"></label>
-            <label>Categoria: 
-                <select id="filter-categoria" multiple size="4" style="padding:4px; border:1px solid #ddd; border-radius:4px; vertical-align:middle;">
-                    <option value="Prospecção Ativa">Prospecção Ativa</option>
-                    <option value="Atendimento Receptivo">Atendimento Receptivo</option>
-                    <option value="Negociação">Negociação</option>
-                    <option value="Fechamento">Fechamento</option>
-                    <option value="Caixa Postal / Sem Interação">Caixa Postal / Sem Interação</option>
-                    <option value="Suporte / Relacionamento">Suporte / Relacionamento</option>
-                </select>
-            </label>
+            <div style="display:inline-flex; flex-direction:column; gap:4px; vertical-align:top;">
+                <label style="font-weight:bold; font-size:12px;">Categorias:</label>
+                <div style="border:1px solid #ddd; border-radius:4px; padding:4px; background:white; font-size:12px; display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Prospecção Ativa"> Prospecção Ativa</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Atendimento Receptivo"> Atendimento Recept.</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Negociação"> Negociação</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Fechamento"> Fechamento</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Caixa Postal / Sem Interação"> Caixa Postal</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Suporte / Relacionamento"> Suporte / Relacion. </label>
+                </div>
+            </div>
             <label>Atendente:
                 <input type="text" id="filter-atendente" placeholder="Nome..." style="padding:6px; border:1px solid #ddd; border-radius:4px; max-width:150px; vertical-align:middle;">
             </label>
@@ -371,7 +372,7 @@
         function applyFilters() {
             const from = document.getElementById('date-from').value;
             const to = document.getElementById('date-to').value;
-            const categoriaOpts = document.getElementById('filter-categoria') ? Array.from(document.getElementById('filter-categoria').selectedOptions).map(o => o.value) : [];
+            const categoriaOpts = Array.from(document.querySelectorAll('.filter-cat:checked')).map(o => o.value);
             const atendenteQuery = document.getElementById('filter-atendente') ? document.getElementById('filter-atendente').value.toLowerCase().trim() : '';
 
             let data = [...filteredData];
@@ -524,9 +525,7 @@
             selectedCategory = null;
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
-            if (document.getElementById('filter-categoria')) {
-                Array.from(document.getElementById('filter-categoria').options).forEach(opt => opt.selected = false);
-            }
+            document.querySelectorAll('.filter-cat').forEach(cb => cb.checked = false);
             if (document.getElementById('filter-atendente')) {
                 document.getElementById('filter-atendente').value = '';
             }
