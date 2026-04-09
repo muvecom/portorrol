@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qualidade de Atendimento - Portorrol Monitor IA</title>
+    <title>Qualidade de Atendimento (Voz) - Portorrol Monitor IA</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary-color: #1a73e8;
+            --primary-color: #673ab7;
             --success-color: #34a853;
             --warning-color: #f9ab00;
             --danger-color: #ea4335;
@@ -110,6 +110,60 @@
             text-align: center;
         }
 
+        .direction-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .direction-entrada {
+            background: #e6f4ea;
+            color: #137333;
+        }
+
+        .direction-saida {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            padding: 10px;
+        }
+
+        .pagination-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            color: var(--primary-color);
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f1f3f4;
+        }
+
+        .pagination-btn:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+            border-color: #eee;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .conversation-full {
             background: #f8f9fa;
             padding: 15px;
@@ -167,39 +221,31 @@
             color: #555;
         }
 
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            margin-top: 15px;
-            padding: 10px;
-        }
-
-        .pagination-btn {
-            padding: 6px 12px;
-            border: 1px solid #ddd;
+        .audio-player-container {
             background: white;
-            cursor: pointer;
-            border-radius: 4px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .audio-player-container audio {
+            width: 100%;
+            margin-top: 8px;
+            outline: none;
+        }
+
+        .download-link {
+            font-size: 13px;
             color: var(--primary-color);
+            text-decoration: none;
             font-weight: bold;
-            transition: background 0.2s;
+            display: inline-block;
+            margin-top: 5px;
         }
 
-        .pagination-btn:hover:not(:disabled) {
-            background: #f1f3f4;
-        }
-
-        .pagination-btn:disabled {
-            color: #ccc;
-            cursor: not-allowed;
-            border-color: #eee;
-        }
-
-        .pagination-info {
-            font-size: 14px;
-            font-weight: 500;
+        .download-link:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -209,28 +255,48 @@
         <header>
             <img src="https://portal.portorrol.com.br/imagens/logo.png" alt="Logo Portorrol" style="height: 40px;">
             <div>
+                <button class="filter-btn" style="background: #1a73e8;" onclick="window.location.href='/portorrol'">💬
+                    Dash de Texto</button>
                 <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
-                <button class="filter-btn" style="background: #673ab7;"
-                    onclick="window.location.href='/portorrol/call'">🎙️ Dash de Áudio</button>
             </div>
         </header>
 
         <div class="filter-section">
             <label>De: <input type="date" id="date-from"></label>
             <label>Até: <input type="date" id="date-to"></label>
+            <label>Tipo: 
+                <select id="filter-tipo" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
+                    <option value="">Entrada e Saída</option>
+                    <option value="Entrada">Entrada</option>
+                    <option value="Saída">Saída</option>
+                    <option value="Outros">Outros</option>
+                    <option value="Todos">Todos</option>
+                </select>
+            </label>
+            <label>Categoria: 
+                <select id="filter-categoria" style="padding:6px; border:1px solid #ddd; border-radius:4px;">
+                    <option value="">Todas</option>
+                    <option value="Prospecção Ativa">Prospecção Ativa</option>
+                    <option value="Atendimento Receptivo">Atendimento Receptivo</option>
+                    <option value="Negociação">Negociação</option>
+                    <option value="Fechamento">Fechamento</option>
+                    <option value="Caixa Postal / Sem Interação">Caixa Postal / Sem Interação</option>
+                    <option value="Suporte / Relacionamento">Suporte / Relacionamento</option>
+                </select>
+            </label>
             <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
             <button class="filter-btn" style="background:#999" onclick="resetFilters()">Limpar</button>
         </div>
 
         <div class="dashboard-grid">
             <div class="card">
-                <h3 style="margin-top:0;">Distribuição por Categoria</h3>
+                <h3 style="margin-top:0;">Distribuição por Categoria (Áudio)</h3>
                 <div class="chart-container">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
             <div class="card">
-                <h3 style="margin-top:0;">Quadro Resumo de Performance</h3>
+                <h3 style="margin-top:0;">Quadro Resumo de Performance (Áudio)</h3>
                 <div id="metric-summary" class="metrics-box">
                     <!-- Preenchido via JS -->
                 </div>
@@ -238,14 +304,16 @@
         </div>
 
         <div class="card">
-            <h3>Histórico Classificado</h3>
+            <h3>Histórico Transcrito (Voz)</h3>
             <table id="main-table">
                 <thead>
                     <tr>
-                        <th width="10%">Data</th>
+                        <th width="10%">Tipo</th>
+                        <th width="15%">Data / Hora</th>
                         <th width="15%">Categoria</th>
-                        <th width="60%">Resumo Inteligente (Clique p/ expandir a transcrição completa)</th>
-                        <th width="15%">Atendente</th>
+                        <th width="40%">Resumo Inteligente (Clique p/ expandir e ouvir)</th>
+                        <th width="10%">Contato</th>
+                        <th width="10%">Atendente</th>
                     </tr>
                 </thead>
                 <tbody id="conversations-body"></tbody>
@@ -262,27 +330,66 @@
         let selectedCategory = null;
         let currentPage = 1;
         const itemsPerPage = 10;
+        let dicionarioRamais = {};
 
-        const API_URL = 'https://evo.muvecom.com.br/webhook/71ae25a3-1d51-4e4a-91d6-aa90a23ae42b';
+        // Coloque seu Webhook do n8n aqui
+        const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
 
         const colors = {
-            "Prospecção Ativa": "#1a73e8",
+            "Prospecção Ativa": "#673ab7",
             "Atendimento Receptivo": "#9aa0a6",
             "Negociação": "#f9ab00",
             "Fechamento": "#34a853",
+            "Caixa Postal / Sem Interação": "#555555",
             "Suporte / Relacionamento": "#ea4335"
         };
 
+        async function loadRamais() {
+            try {
+                const resp = await fetch('http://portorrol.companysip.com.br:1187/list_ramais');
+                const json = await resp.json();
+                if (json && json.ramais) {
+                    json.ramais.forEach(r => {
+                        dicionarioRamais[r.ramal] = r.nome;
+                    });
+                }
+            } catch (e) {
+                console.error("Erro ao carregar ramais:", e);
+            }
+        }
+
         async function loadData() {
             try {
+                if (Object.keys(dicionarioRamais).length === 0) {
+                    await loadRamais();
+                }
                 const resp = await fetch(API_URL);
                 const json = await resp.json();
-                rawData = json.conversations || [];
+
+                if (Array.isArray(json)) {
+                    rawData = json;
+                } else {
+                    rawData = json.conversations || [];
+                }
+
                 processAndRender();
             } catch (e) {
                 console.error("Erro API:", e);
                 if (rawData.length === 0) processAndRender();
             }
+        }
+
+        function classify(text) {
+            text = (text || "").toLowerCase();
+
+            if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
+
+            if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
+            if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
+            if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
+            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
+
+            return "Atendimento Receptivo";
         }
 
         function checkPlaybookCompliance(text) {
@@ -296,34 +403,23 @@
             };
         }
 
-        // Função de categorização limpa (sem o A. na frente)
-        function classify(conv) {
-            const text = ((conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
-
-            if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
-            if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
-            if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
-            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
-
-            return "Atendimento Receptivo";
-        }
-
-        // NOVA FUNÇÃO: Gera um resumo por palavras-chave em vez de cortar o texto!
         function generateSmartSummary(text, compliance) {
             if (!text) return "Sem dados suficientes para resumo.";
             const lowerText = text.toLowerCase();
+
+            if (lowerText.match(/sem interação|correio de voz|interferência/)) {
+                return "🔕 <b>Status:</b> Chamada sem contato efetivo / Caixa postal.";
+            }
 
             const keywords = [];
             if (lowerText.match(/rolamento|peça|produto|material/)) keywords.push("Produtos");
             if (lowerText.match(/orçamento|cotação|preço|valor/)) keywords.push("Valores/Cotação");
             if (lowerText.match(/boleto|pagamento|faturamento|nota fiscal|nf|pix/)) keywords.push("Financeiro");
-            if (lowerText.match(/prazo|entrega|frete|rastreio/)) keywords.push("Logística");
-            if (lowerText.match(/defeito|garantia|problema|troca/)) keywords.push("Garantia/Problema");
+            if (lowerText.match(/prazo|entrega|frete|rastreio|coleta/)) keywords.push("Logística / Coleta");
 
             let action = "Contato Genérico";
-            if (lowerText.match(/faturar|aprovado|pedido feito|fechado/)) action = "Aprovação de Pedido";
+            if (lowerText.match(/faturar|aprovado|pedido feito|fechado|agendar uma coleta/)) action = "Agendamento / Fechamento";
             else if (lowerText.match(/orçamento|cotação|cotar/)) action = "Solicitação de Orçamento";
-            else if (lowerText.match(/problema|ajuda|não chegou/)) action = "Solicitação de Suporte";
 
             let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
 
@@ -337,19 +433,45 @@
                 ? `<div style="margin-top:5px; font-size:11px; color:#137333;">${complianceTags.join(" ")}</div>` 
                 : "";
 
-            // Pega um pequeno trecho real (limpando saudações chatas) para dar contexto
-            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 70);
+            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
-            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags}${complianceHtml} <br>💬 <i>Contexto: "${contextClean}..."</i>`;
+            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags}${complianceHtml} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
         }
 
         function processAndRender() {
             filteredData = rawData.map(c => {
-                const text = ((c.summary || "") + " " + (c.fullConversation || "")).toLowerCase();
-                return { 
-                    ...c, 
-                    category: classify(c),
-                    compliance: checkPlaybookCompliance(text)
+                const textoTranscrito = c.resumo_conversa || "";
+                let dataFormatada = "N/A";
+                let filterDate = null;
+
+                if (c.call_date) {
+                    const dataObj = new Date(c.call_date);
+                    dataFormatada = dataObj.toLocaleString('pt-BR');
+                    if (c.call_date.includes('T')) {
+                        filterDate = c.call_date.split('T')[0];
+                    } else if (c.call_date.includes(' ')) {
+                        filterDate = c.call_date.split(' ')[0];
+                    } else {
+                        filterDate = c.call_date;
+                    }
+                }
+
+                const compliance = checkPlaybookCompliance(textoTranscrito);
+
+                let dirStr = String(c.context || '').toLowerCase();
+                let direcao = 'Outros';
+                if (dirStr.includes('entrada') || dirStr.includes('inbound')) direcao = 'Entrada';
+                else if (dirStr.includes('saida') || dirStr.includes('saída') || dirStr.includes('outbound')) direcao = 'Saída';
+
+                return {
+                    ...c,
+                    textoCompleto: textoTranscrito,
+                    category: classify(textoTranscrito),
+                    compliance: compliance,
+                    displayDate: dataFormatada,
+                    filterDate: filterDate,
+                    audioUrl: c.audio_url || null,
+                    direcao: direcao
                 };
             });
             applyFilters();
@@ -358,11 +480,24 @@
         function applyFilters() {
             const from = document.getElementById('date-from').value;
             const to = document.getElementById('date-to').value;
+            const tipo = document.getElementById('filter-tipo').value;
+            const categoria = document.getElementById('filter-categoria').value;
 
             let data = [...filteredData];
 
-            if (from) data = data.filter(c => new Date(c.date) >= new Date(from));
-            if (to) data = data.filter(c => new Date(c.date) <= new Date(to));
+            if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
+            if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
+            
+            if (tipo === "") {
+                data = data.filter(c => c.direcao === 'Entrada' || c.direcao === 'Saída');
+            } else if (tipo !== "Todos") {
+                data = data.filter(c => c.direcao === tipo);
+            }
+
+            if (categoria) {
+                data = data.filter(c => c.category === categoria);
+            }
+
             if (selectedCategory) data = data.filter(c => c.category === selectedCategory);
 
             currentFilteredData = data;
@@ -423,29 +558,65 @@
 
             const body = document.getElementById('conversations-body');
             body.innerHTML = '';
+
             paginatedData.forEach(conv => {
                 const row = document.createElement('tr');
                 row.className = 'conversation-row';
                 const catName = conv.category;
                 const bgCor = colors[catName] || '#999';
 
-                // Aqui aplicamos o Resumo Inteligente extraindo as palavras-chave!
-                const textoParaResumir = (conv.summary || "") + " " + (conv.fullConversation || "");
-                const resumoInteligente = generateSmartSummary(textoParaResumir, conv.compliance);
+                const resumoInteligente = generateSmartSummary(conv.textoCompleto, conv.compliance);
+
+                let audioHtml = '';
+                if (conv.audioUrl) {
+                    audioHtml = `
+                    <div class="audio-player-container">
+                        <strong>🎧 Gravação de Áudio:</strong><br>
+                        <a href="${conv.audioUrl}" target="_blank" class="download-link">🔗 Abrir / Baixar Áudio Original</a>
+                    </div>
+                `;
+                }
+
+                let direcao = conv.direcao;
+                let dirClass = '';
+                let dirIcon = '📞';
+
+                if (direcao === 'Entrada') {
+                     dirClass = 'direction-entrada'; dirIcon = '📥';
+                } else if (direcao === 'Saída') {
+                     dirClass = 'direction-saida'; dirIcon = '📤';
+                }
+
+                let ramalStr = conv.ramal || 'N/A';
+                let nomeAtendente = dicionarioRamais[ramalStr] || 'Não Identificado';
+                if (ramalStr === 'N/A' || ramalStr === '') {
+                    nomeAtendente = 'Não Identificado';
+                    ramalStr = 'N/A';
+                }
 
                 row.innerHTML = `
-                <td>${conv.date || 'N/A'}</td>
+                <td><span class="direction-tag ${dirClass}">${dirIcon} ${direcao}</span></td>
+                <td>${conv.displayDate}</td>
                 <td><span class="category-tag" style="background:${bgCor}">${catName}</span></td>
                 <td>
-                    <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+]</b></span></div>
+                    <div class="summary-text">${resumoInteligente} <span style="color:var(--primary-color); cursor:pointer;"><b>[+ Expandir]</b></span></div>
                     <div class="conversation-full" style="display:none">
-                        <strong>Transcrição da Conversa:</strong><br><br>${conv.fullConversation || conv.summary || 'Sem detalhes disponíveis'}
+                        ${audioHtml}
+                        <strong>Transcrição Completa da Chamada:</strong><br><br>${conv.textoCompleto || 'Sem detalhes disponíveis'}
                     </div>
                 </td>
-                <td>${conv.attendantName || 'N/A'}</td>
+                <td>${conv.session || 'N/A'}</td>
+                <td>
+                    <div style="font-weight:bold; margin-bottom:4px; font-size:13px; color:var(--primary-color);">${nomeAtendente}</div>
+                    <div style="font-size:11px; color:#666;">Ramal: <b>${ramalStr}</b></div>
+                </td>
             `;
 
-                row.onclick = () => {
+                row.onclick = (e) => {
+                    // Previne fechar a aba se o usuário clicou no link
+                    if (e.target.tagName.toLowerCase() === 'a') {
+                        return;
+                    }
                     const full = row.querySelector('.conversation-full');
                     full.style.display = full.style.display === 'none' ? 'block' : 'none';
                 };
@@ -463,10 +634,11 @@
         function renderMetrics(data) {
             const div = document.getElementById('metric-summary');
             const totalGeral = data.length;
-            const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento");
+            const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
             const totalComercial = conversasComerciais.length;
             const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
-            const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : 0;
+
+            const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
 
             // Métricas do Playbook
             const compSaudacao = data.filter(c => c.compliance.saudacao).length;
@@ -479,18 +651,18 @@
 
             div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
-                <p>Total Geral de Conversas</p>
+                <p>Total de Ligações</p>
                 <h2>${totalGeral}</h2>
                 <small style="color:#666">Saudação Playbook: ${percSaudacao}%</small>
             </div>
-            <div class="metric-card" style="border-color: #1a73e8; background:#e8f0fe;">
-                <p>Conversas Comerciais</p>
+            <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
+                <p>Ligações Comerciais</p>
                 <h2>${totalComercial}</h2>
                 <small style="color:#666">ID CNPJ: ${percID}% | Mencionou NSK/Timken: ${percMarcas}%</small>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
-                <p>Total de Fechamentos</p>
-                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das comerciais)</span></h2>
+                <p>Fechamentos em Voz</p>
+                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das válidas)</span></h2>
             </div>
         `;
         }
@@ -499,6 +671,8 @@
             selectedCategory = null;
             document.getElementById('date-from').value = '';
             document.getElementById('date-to').value = '';
+            document.getElementById('filter-tipo').value = '';
+            document.getElementById('filter-categoria').value = '';
             applyFilters();
         }
 
