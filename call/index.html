@@ -546,8 +546,18 @@
             data = data.filter(c => c.duracaoSegundos >= 10);
             data = data.filter(c => c.category !== "Caixa Postal / Sem Interação" && c.category !== "Suporte / Relacionamento");
             
-            // Only keep Sales (Vendas) ramais
+            // Only keep Sales (Vendas)
             data = data.filter(c => {
+                // 1. Check tagsName (prioridade)
+                const tags = Array.isArray(c.tagsName) ? c.tagsName.join(' ').toLowerCase() : "";
+                const hasSalesTag = tags.includes('venda') || tags.includes('fechamento') || tags.includes('pedido') || tags.includes('concluido');
+                
+                // 2. Check s.venda fallback
+                const isVendaField = c.venda === true || c.venda === 'true' || c['s.venda'] === true || c.is_venda === true;
+                
+                if (hasSalesTag || isVendaField) return true;
+
+                // 3. Fallback for ramal identification
                 let ramalInfo = (c.ramal || "").toString().toLowerCase();
                 let nomeInfo = (dicionarioRamais[c.ramal] || "Não Identificado").toLowerCase();
                 return nomeInfo.includes("vendas") || nomeInfo.includes("v. ind") || nomeInfo.includes("v. rev");
