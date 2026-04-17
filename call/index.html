@@ -358,15 +358,17 @@
 
         async function loadRamais() {
             try {
-                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04', {
-                    headers: { 'Authorization': AUTH_TOKEN || '' }
-                });
+                const fetchOptions = {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                };
+                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04', fetchOptions);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
                 }
-                if (!resp.ok) throw new Error('API Ramais Error');
-                const json = await resp.json();
+                const text = await resp.text();
+                if (!text) throw new Error('Empty response from Ramais API');
+                const json = JSON.parse(text);
                 if (json && json.ramais) {
                     json.ramais.forEach(r => {
                         dicionarioRamais[r.ramal] = r.nome;
@@ -382,15 +384,24 @@
                 if (Object.keys(dicionarioRamais).length === 0) {
                     await loadRamais();
                 }
-                const resp = await fetch(API_URL, {
-                    headers: { 'Authorization': AUTH_TOKEN || '' }
-                });
+                const fetchOptions = {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                };
+                const resp = await fetch(API_URL, fetchOptions);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
                 }
-                if (!resp.ok) throw new Error('API Data Error');
-                const json = await resp.json();
+                if (!resp.ok) throw new Error('API Data Error: ' + resp.status);
+                
+                const text = await resp.text();
+                if (!text) {
+                    console.warn("API retornou corpo vazio.");
+                    rawData = [];
+                    processAndRender();
+                    return;
+                }
+                const json = JSON.parse(text);
 
                 if (Array.isArray(json)) {
                     rawData = json;
