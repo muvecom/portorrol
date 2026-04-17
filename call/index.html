@@ -258,11 +258,14 @@
                 <h2 style="margin:0; color:var(--primary-color); font-size:22px;">Monitor IA</h2>
             </div>
             <div>
-                <button class="filter-btn" style="background: #1a73e8;" onclick="window.location.href='/portorrol'">💬
-                    Dash de Texto</button>
+                <button class="filter-btn" style="background: #1a73e8;" id="btn-digisac">💬 Conversas Digisac</button>
                 <button class="filter-btn" id="refresh-data">🔄 Atualizar Dados</button>
             </div>
         </header>
+
+        <div style="font-size: 12px; color: #666; margin-top: -15px; margin-bottom: 15px; text-align: right;">
+            Última atualização: <span id="last-updated">--/--/---- --:--</span>
+        </div>
 
         <div class="filter-section">
             <label>De: <input type="date" id="date-from"></label>
@@ -278,12 +281,12 @@
             <div style="display:inline-flex; flex-direction:column; gap:4px; vertical-align:top;">
                 <label style="font-weight:bold; font-size:12px;">Categorias:</label>
                 <div style="border:1px solid #ddd; border-radius:4px; padding:4px; background:white; font-size:12px; display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Prospecção Ativa"> Prospecção Ativa</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Atendimento Receptivo"> Atendimento Recept.</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Negociação"> Negociação</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Fechamento"> Fechamento</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Caixa Postal / Sem Interação"> Caixa Postal</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Suporte / Relacionamento"> Suporte / Relacion. </label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Prospecção Ativa" checked> Prospecção Ativa</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Atendimento Receptivo" checked> Atend. Receptivo</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Negociação" checked> Negociação</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Fechamento" checked> Fechamento</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Caixa Postal / Sem Interação" checked> Caixa Postal</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Suporte / Relacionamento" checked> Suporte / Relacion.</label>
                 </div>
             </div>
             <label>Atendente / Ramal:
@@ -340,6 +343,15 @@
         // Coloque seu Webhook do n8n aqui
         const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const AUTH_TOKEN = urlParams.get('token');
+        const VALID_TOKEN = 'ptr_V8xQ9L1mN2bR';
+
+        if (AUTH_TOKEN !== VALID_TOKEN) {
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#c5221f;"><h2>Acesso Restrito. Credencial inválida ou ausente.</h2></div>';
+            throw new Error('Acesso não autorizado');
+        }
+
         const colors = {
             "Prospecção Ativa": "#673ab7",
             "Atendimento Receptivo": "#9aa0a6",
@@ -351,7 +363,9 @@
 
         async function loadRamais() {
             try {
-                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04');
+                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04', {
+                    headers: { 'Authorization': AUTH_TOKEN }
+                });
                 const json = await resp.json();
                 if (json && json.ramais) {
                     json.ramais.forEach(r => {
@@ -368,7 +382,9 @@
                 if (Object.keys(dicionarioRamais).length === 0) {
                     await loadRamais();
                 }
-                const resp = await fetch(API_URL);
+                const resp = await fetch(API_URL, {
+                    headers: { 'Authorization': AUTH_TOKEN }
+                });
                 const json = await resp.json();
 
                 if (Array.isArray(json)) {
@@ -384,16 +400,25 @@
             }
         }
 
-        function classify(text) {
+        function classify(text, direcao) {
             text = (text || "").toLowerCase();
+            direcao = direcao || "Outros";
 
             if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
 
             if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
             if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
             if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
-            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
+            
+            // Deterministic classification based on direction
+            if (direcao === "Saída") {
+                return "Prospecção Ativa";
+            } else if (direcao === "Entrada") {
+                return "Atendimento Receptivo";
+            }
 
+            // Fallback for "Outros"
+            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
             return "Atendimento Receptivo";
         }
 
@@ -412,35 +437,77 @@
             if (!text) return "Sem dados suficientes para resumo.";
             const lowerText = text.toLowerCase();
 
-            if (lowerText.match(/sem interação|correio de voz|interferência/)) {
-                return "🔕 <b>Status:</b> Chamada sem contato efetivo / Caixa postal.";
-            }
-
-            const keywords = [];
-            if (lowerText.match(/rolamento|peça|produto|material/)) keywords.push("Produtos");
-            if (lowerText.match(/orçamento|cotação|preço|valor/)) keywords.push("Valores/Cotação");
-            if (lowerText.match(/boleto|pagamento|faturamento|nota fiscal|nf|pix/)) keywords.push("Financeiro");
-            if (lowerText.match(/prazo|entrega|frete|rastreio|coleta/)) keywords.push("Logística / Coleta");
-
             let action = "Contato Genérico";
-            if (lowerText.match(/faturar|aprovado|pedido feito|fechado|agendar uma coleta/)) action = "Agendamento / Fechamento";
-            else if (lowerText.match(/orçamento|cotação|cotar/)) action = "Solicitação de Orçamento";
+            let tags = "Geral";
 
-            let tags = keywords.length > 0 ? keywords.join(", ") : "Geral";
-
-            let complianceTags = [];
-            if (compliance.saudacao) complianceTags.push("✅ Saudação");
-            if (compliance.identificacao) complianceTags.push("✅ ID/CNPJ");
-            if (compliance.marcas) complianceTags.push("✅ NSK/Timken");
-            if (compliance.urgencia) complianceTags.push("✅ Urgência");
-
-            let complianceHtml = complianceTags.length > 0 
-                ? `<div style="margin-top:5px; font-size:11px; color:#137333;">${complianceTags.join(" ")}</div>` 
-                : "";
+            // Prospecção Ativa
+            if (lowerText.match(/primeira abordagem|estou entrando em contato|vi seu contato/)) {
+                action = "Prospecção Ativa";
+                tags = "Primeira abordagem";
+            } else if (lowerText.match(/follow-up de tentativa anterior/)) {
+                 action = "Prospecção Ativa";
+                 tags = "Follow-up de tentativa anterior";
+            } else if (lowerText.match(/reativação de cliente inativo/)) {
+                 action = "Prospecção Ativa";
+                 tags = "Reativação de cliente inativo";
+            }
+            // Atendimento Receptivo
+            else if (lowerText.match(/cotação|orçamento/)) {
+                 action = "Atendimento Receptivo";
+                 tags = "Cotação";
+            } else if (lowerText.match(/dúvida técnica/)) {
+                 action = "Atendimento Receptivo";
+                 tags = "Dúvida técnica";
+            } else if (lowerText.match(/reclamação/)) {
+                 action = "Atendimento Receptivo";
+                 tags = "Reclamação";
+            } else if (lowerText.match(/pós-venda/)) {
+                 action = "Atendimento Receptivo";
+                 tags = "Pós-venda";
+            }
+            // Negociação
+            else if (lowerText.match(/ajuste de preço|preço|valor|desconto/)) {
+                 action = "Negociação";
+                 tags = "Ajuste de preço";
+            } else if (lowerText.match(/ajuste de prazo|prazo/)) {
+                 action = "Negociação";
+                 tags = "Ajuste de prazo";
+            } else if (lowerText.match(/substituição técnica/)) {
+                 action = "Negociação";
+                 tags = "Substituição técnica";
+            } else if (lowerText.match(/discussão de crédito|crédito|pagamento|condição/)) {
+                 action = "Negociação";
+                 tags = "Discussão de crédito";
+            }
+            // Fechamento
+            else if (lowerText.match(/pedido confirmado|pedido feito|fechado|aprovado|faturar/)) {
+                 action = "Fechamento";
+                 tags = "Pedido confirmado";
+            } else if (lowerText.match(/pedido parcial/)) {
+                 action = "Fechamento";
+                 tags = "Pedido parcial";
+            } else if (lowerText.match(/pedido perdido/)) {
+                 action = "Fechamento";
+                 tags = "Pedido perdido";
+            }
+            // Suporte / Relacionamento
+            else if (lowerText.match(/visita técnica/)) {
+                 action = "Suporte / Relacionamento";
+                 tags = "Visita técnica";
+            } else if (lowerText.match(/acompanhamento de entrega|entrega|frete|rastreio/)) {
+                 action = "Suporte / Relacionamento";
+                 tags = "Acompanhamento de entrega";
+            } else if (lowerText.match(/pós-venda ativo/)) {
+                 action = "Suporte / Relacionamento";
+                 tags = "Pós-venda ativo";
+            } else if (lowerText.match(/fidelização/)) {
+                 action = "Suporte / Relacionamento";
+                 tags = "Fidelização";
+            }
 
             let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
 
-            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags}${complianceHtml} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
+            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
         }
 
         function processAndRender() {
@@ -471,15 +538,17 @@
                 return {
                     ...c,
                     textoCompleto: textoTranscrito,
-                    category: classify(textoTranscrito),
-                    compliance: compliance,
+                    category: classify(textoTranscrito, direcao),
                     displayDate: dataFormatada,
                     filterDate: filterDate,
                     audioUrl: c.audio_url || null,
-                    direcao: direcao
+                    direcao: direcao,
+                    duracaoSegundos: c.duracao_segundos || 0
                 };
             });
             applyFilters();
+            
+            document.getElementById('last-updated').textContent = new Date().toLocaleString('pt-BR');
         }
 
         function applyFilters() {
@@ -493,7 +562,15 @@
 
             if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
             if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
+            data = data.filter(c => c.duracaoSegundos >= 10);
             
+            // Only keep Sales (Vendas)
+            data = data.filter(c => {
+                let ramalInfo = (c.ramal || "").toString().toLowerCase();
+                let nomeInfo = (dicionarioRamais[c.ramal] || "Não Identificado").toLowerCase();
+                return nomeInfo.includes("vendas") || nomeInfo.includes("v. ind") || nomeInfo.includes("v. rev");
+            });
+
             if (tipoOptions.length > 0) {
                 data = data.filter(c => tipoOptions.includes(c.direcao));
             }
@@ -545,7 +622,24 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'right' } },
+                    plugins: { 
+                        legend: { position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    let total = context.chart._metasets[context.datasetIndex].total;
+                                    let value = context.raw;
+                                    let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    label += value + ' (' + percentage + '%)';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
                     onClick: (evt, item) => {
                         if (item.length > 0) {
                             const label = categoryChart.data.labels[item[0].index];
@@ -577,7 +671,7 @@
                 const catName = conv.category;
                 const bgCor = colors[catName] || '#999';
 
-                const resumoInteligente = generateSmartSummary(conv.textoCompleto, conv.compliance);
+                const resumoInteligente = generateSmartSummary(conv.textoCompleto);
 
                 let audioHtml = '';
                 if (conv.audioUrl) {
@@ -652,25 +746,14 @@
 
             const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
 
-            // Métricas do Playbook
-            const compSaudacao = data.filter(c => c.compliance.saudacao).length;
-            const compID = data.filter(c => c.compliance.identificacao).length;
-            const compMarcas = data.filter(c => c.compliance.marcas).length;
-
-            const percSaudacao = totalGeral > 0 ? ((compSaudacao / totalGeral) * 100).toFixed(0) : 0;
-            const percID = totalComercial > 0 ? ((compID / totalComercial) * 100).toFixed(0) : 0;
-            const percMarcas = totalComercial > 0 ? ((compMarcas / totalComercial) * 100).toFixed(0) : 0;
-
             div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
-                <p>Total de Ligações</p>
+                <p>Total de Ligações Válidas (>10s)</p>
                 <h2>${totalGeral}</h2>
-                <small style="color:#666">Saudação Playbook: ${percSaudacao}%</small>
             </div>
             <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
-                <p>Ligações Comerciais</p>
+                <p>Ligações Comerciais Vendas</p>
                 <h2>${totalComercial}</h2>
-                <small style="color:#666">ID CNPJ: ${percID}% | Mencionou NSK/Timken: ${percMarcas}%</small>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
                 <p>Fechamentos em Voz</p>
@@ -692,6 +775,15 @@
         }
 
         document.getElementById('refresh-data').onclick = loadData;
+        document.getElementById('btn-digisac').onclick = () => window.location.href = '/portorrol?token=' + AUTH_TOKEN;
+        
+        // Initial setup for dates
+        let yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        let dateString = yesterday.toISOString().split('T')[0];
+        document.getElementById('date-from').value = dateString;
+        document.getElementById('date-to').value = dateString;
+        
         loadData();
     </script>
 </body>
