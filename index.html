@@ -299,15 +299,24 @@
 
         async function loadData() {
             try {
-                const resp = await fetch(API_URL, {
-                    headers: { 'Authorization': AUTH_TOKEN || '' }
-                });
+                const fetchOptions = {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                };
+                const resp = await fetch(API_URL, fetchOptions);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
                 }
-                if (!resp.ok) throw new Error('API Data Error');
-                const json = await resp.json();
+                if (!resp.ok) throw new Error('API Data Error: ' + resp.status);
+                
+                const text = await resp.text();
+                if (!text) {
+                    console.warn("API retornou corpo vazio.");
+                    rawData = [];
+                    processAndRender();
+                    return;
+                }
+                const json = JSON.parse(text);
                 rawData = json.conversations || [];
                 processAndRender();
             } catch (e) {
