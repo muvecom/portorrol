@@ -299,10 +299,11 @@
 
         async function loadData() {
             try {
-                const urlComToken = API_URL + (AUTH_TOKEN ? (API_URL.includes('?') ? '&' : '?') + 'token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlComToken, {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                });
+                // Token vai SOMENTE na URL — header Authorization causa CORS preflight
+                // que o n8n não responde, e o navegador bloqueia o corpo da resposta.
+                const urlComToken = API_URL + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
+                const resp = await fetch(urlComToken);
+
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -311,13 +312,22 @@
                 
                 const text = await resp.text();
                 if (!text) {
-                    console.warn("API retornou corpo vazio. Verifique o log do n8n para o token enviado.");
+                    console.warn("API retornou corpo vazio.");
                     rawData = [];
                     processAndRender();
                     return;
                 }
                 const json = JSON.parse(text);
-                rawData = json.conversations || [];
+
+                // A API retorna { conversations: [...], totalConversations: N, ... }
+                if (Array.isArray(json)) {
+                    rawData = json;
+                } else if (json.conversations) {
+                    rawData = json.conversations;
+                } else {
+                    rawData = [];
+                }
+
                 processAndRender();
             } catch (e) {
                 console.error("Erro API:", e);
@@ -336,9 +346,9 @@
             };
         }
 
-        // Função de categorização limpa (sem o A. na frente)
+        // Categorização baseada no conteúdo da conversa
         function classify(conv) {
-            const text = ((conv.transcription || conv.text || conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
+            const text = ((conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
 
             if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
             if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
@@ -390,7 +400,6 @@
 
         function processAndRender() {
             filteredData = rawData.map(c => {
-                const text = ((c.summary || "") + " " + (c.fullConversation || "")).toLowerCase();
                 return { 
                     ...c, 
                     category: classify(c)
@@ -430,8 +439,31 @@
             // Exclude noise categories
             data = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
 
-            if (from) data = data.filter(c => new Date(c.date) >= new Date(from));
-            if (to) data = data.filter(c => new Date(c.date) <= new Date(to));
+            // Date filter — API date format is "DD/MM/YYYY"
+            if (from) {
+                const fromDate = new Date(from + 'T00:00:00');
+                data = data.filter(c => {
+                    if (!c.date) return false;
+                    const parts = c.date.split('/');
+                    if (parts.length === 3) {
+                        const d = new Date(parts[2] + '-' + parts[1] + '-' + parts[0] + 'T00:00:00');
+                        return d >= fromDate;
+                    }
+                    return new Date(c.date) >= fromDate;
+                });
+            }
+            if (to) {
+                const toDate = new Date(to + 'T23:59:59');
+                data = data.filter(c => {
+                    if (!c.date) return false;
+                    const parts = c.date.split('/');
+                    if (parts.length === 3) {
+                        const d = new Date(parts[2] + '-' + parts[1] + '-' + parts[0] + 'T00:00:00');
+                        return d <= toDate;
+                    }
+                    return new Date(c.date) <= toDate;
+                });
+            }
             
             if (categoriaOpts.length > 0) {
                 data = data.filter(c => categoriaOpts.includes(c.category));
@@ -548,7 +580,6 @@
                 const catName = conv.category;
                 const bgCor = colors[catName] || '#999';
 
-                // Aqui aplicamos o Resumo Inteligente extraindo as palavras-chave!
                 const textoParaResumir = (conv.summary || "") + " " + (conv.fullConversation || "");
                 const resumoInteligente = generateSmartSummary(textoParaResumir);
 
