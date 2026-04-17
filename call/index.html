@@ -359,7 +359,9 @@
         async function loadRamais() {
             try {
                 const urlRamais = 'https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04' + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlRamais);
+                const resp = await fetch(urlRamais, {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                });
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -383,7 +385,9 @@
                     await loadRamais();
                 }
                 const urlComToken = API_URL + (AUTH_TOKEN ? (API_URL.includes('?') ? '&' : '?') + 'token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlComToken);
+                const resp = await fetch(urlComToken, {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                });
                 
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
@@ -791,7 +795,9 @@
         }
 
         document.getElementById('refresh-data').onclick = loadData;
-        document.getElementById('btn-digisac').onclick = () => window.location.href = '/portorrol?token=' + AUTH_TOKEN;
+        document.getElementById('btn-digisac').onclick = () => {
+            window.location.href = '../?token=' + AUTH_TOKEN;
+        };
         
         // Initial setup for dates
         let yesterday = new Date();
