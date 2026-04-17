@@ -338,7 +338,7 @@
 
         // Função de categorização limpa (sem o A. na frente)
         function classify(conv) {
-            const text = ((conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
+            const text = ((conv.transcription || conv.text || conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
 
             if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
             if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
@@ -620,7 +620,9 @@
         }
 
         document.getElementById('refresh-data').onclick = loadData;
-        document.getElementById('btn-audio').onclick = () => window.location.href = '/portorrol/call?token=' + AUTH_TOKEN;
+        document.getElementById('btn-audio').onclick = () => {
+            window.location.href = './call/?token=' + AUTH_TOKEN;
+        };
         
         // Initial setup for dates
         let yesterday = new Date();
