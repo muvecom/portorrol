@@ -345,11 +345,9 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const AUTH_TOKEN = urlParams.get('token');
-        const VALID_TOKEN = 'ptr_V8xQ9L1mN2bR';
 
-        if (AUTH_TOKEN !== VALID_TOKEN) {
-            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#c5221f;"><h2>Acesso Restrito. Credencial inválida ou ausente.</h2></div>';
-            throw new Error('Acesso não autorizado');
+        function handleAuthError() {
+            document.body.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;color:#c5221f;text-align:center;"><div><h2>Acesso Restrito</h2><p>Credencial inválida ou ausente. Verifique o token na URL.</p></div></div>';
         }
 
         const colors = {
@@ -364,8 +362,12 @@
         async function loadRamais() {
             try {
                 const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04', {
-                    headers: { 'Authorization': AUTH_TOKEN }
+                    headers: { 'Authorization': AUTH_TOKEN || '' }
                 });
+                if (resp.status === 401 || resp.status === 403) {
+                    handleAuthError();
+                    return;
+                }
                 const json = await resp.json();
                 if (json && json.ramais) {
                     json.ramais.forEach(r => {
@@ -383,8 +385,12 @@
                     await loadRamais();
                 }
                 const resp = await fetch(API_URL, {
-                    headers: { 'Authorization': AUTH_TOKEN }
+                    headers: { 'Authorization': AUTH_TOKEN || '' }
                 });
+                if (resp.status === 401 || resp.status === 403) {
+                    handleAuthError();
+                    return;
+                }
                 const json = await resp.json();
 
                 if (Array.isArray(json)) {
