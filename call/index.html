@@ -337,7 +337,6 @@
         const itemsPerPage = 10;
         let dicionarioRamais = {};
 
-        // Coloque seu Webhook do n8n aqui
         const API_URL = 'https://evo.muvecom.com.br/webhook/9625df8a-0143-45b7-ac00-a869fcbe144a';
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -358,10 +357,9 @@
 
         async function loadRamais() {
             try {
+                // Token SOMENTE na URL — header Authorization causa CORS preflight
                 const urlRamais = 'https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04' + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlRamais, {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                });
+                const resp = await fetch(urlRamais);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -384,10 +382,9 @@
                 if (Object.keys(dicionarioRamais).length === 0) {
                     await loadRamais();
                 }
-                const urlComToken = API_URL + (AUTH_TOKEN ? (API_URL.includes('?') ? '&' : '?') + 'token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlComToken, {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                });
+                // Token SOMENTE na URL — header Authorization causa CORS preflight
+                const urlComToken = API_URL + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
+                const resp = await fetch(urlComToken);
                 
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
@@ -397,13 +394,14 @@
                 
                 const text = await resp.text();
                 if (!text) {
-                    console.warn("API retornou corpo vazio. Verifique se o n8n está enviando dados.");
+                    console.warn("API retornou corpo vazio.");
                     rawData = [];
                     processAndRender();
                     return;
                 }
                 const json = JSON.parse(text);
 
+                // A API de voz retorna um array direto
                 if (Array.isArray(json)) {
                     rawData = json;
                 } else {
@@ -492,7 +490,8 @@
 
         function processAndRender() {
             filteredData = rawData.map(c => {
-                const textoTranscrito = c.transcription || c.text || c.resumo_conversa || "";
+                // Campo real da API de voz: resumo_conversa
+                const textoTranscrito = c.resumo_conversa || "";
                 let dataFormatada = "N/A";
                 let filterDate = null;
 
@@ -508,8 +507,7 @@
                     }
                 }
 
-                const compliance = checkPlaybookCompliance(textoTranscrito);
-
+                // Campo real da API: context (ex: "VendasRS")
                 let dirStr = String(c.context || '').toLowerCase();
                 let direcao = 'Outros';
                 if (dirStr.includes('entrada') || dirStr.includes('inbound')) direcao = 'Entrada';
@@ -522,8 +520,7 @@
                     displayDate: dataFormatada,
                     filterDate: filterDate,
                     audioUrl: c.audio_url || null,
-                    direcao: direcao,
-                    duracaoSegundos: c.duracao_segundos || 0
+                    direcao: direcao
                 };
             });
             applyFilters();
@@ -543,25 +540,15 @@
             if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
             if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
             
-            // Filters requested: Only >10s and exclude noise categories
-            data = data.filter(c => c.duracaoSegundos >= 10);
+            // Exclude noise categories
             data = data.filter(c => c.category !== "Caixa Postal / Sem Interação" && c.category !== "Suporte / Relacionamento");
             
-            // Only keep Sales (Vendas)
+            // Only keep Sales (Vendas) ramais — field from API is "ramal" (e.g. "5103")
+            // dicionarioRamais maps ramal -> nome (e.g. "Vendas | Victor Miqueloto")
             data = data.filter(c => {
-                // 1. Check tagsName (prioridade)
-                const tags = Array.isArray(c.tagsName) ? c.tagsName.join(' ').toLowerCase() : "";
-                const hasSalesTag = tags.includes('venda') || tags.includes('fechamento') || tags.includes('pedido') || tags.includes('concluido');
-                
-                // 2. Check s.venda fallback
-                const isVendaField = c.venda === true || c.venda === 'true' || c['s.venda'] === true || c.is_venda === true;
-                
-                if (hasSalesTag || isVendaField) return true;
-
-                // 3. Fallback for ramal identification
                 let ramalInfo = (c.ramal || "").toString().toLowerCase();
                 let nomeInfo = (dicionarioRamais[c.ramal] || "Não Identificado").toLowerCase();
-                return nomeInfo.includes("vendas") || nomeInfo.includes("v. ind") || nomeInfo.includes("v. rev");
+                return nomeInfo.startsWith("vendas");
             });
 
             if (tipoOptions.length > 0) {
@@ -764,7 +751,7 @@
 
             div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
-                <p>Total de Ligações Válidas (>10s)</p>
+                <p>Total de Ligações Válidas</p>
                 <h2>${totalGeral}</h2>
             </div>
             <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
