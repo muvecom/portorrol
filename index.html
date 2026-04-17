@@ -409,13 +409,22 @@
 
             let data = [...filteredData];
             
-            // Only keeping human attendants (removing bot and attendants like "Atendente Portorrol")
+            // Only keeping human attendants and sales conversations
             data = data.filter(c => {
                 let attendant = (c.attendantName || "").toLowerCase();
-                return attendant.length > 0 && 
-                       attendant !== "atendente portorrol" && 
-                       !attendant.includes("bot") &&
-                       (attendant.includes("vendas") || attendant.includes("v. ind") || attendant.includes("v. rev"));
+                const isHuman = attendant.length > 0 && attendant !== "atendente portorrol" && !attendant.includes("bot");
+                
+                // 1. Check tagsName (prioridade)
+                const tags = Array.isArray(c.tagsName) ? c.tagsName.join(' ').toLowerCase() : "";
+                const hasSalesTag = tags.includes('venda') || tags.includes('fechamento') || tags.includes('pedido') || tags.includes('concluido');
+                
+                // 2. Check s.venda fallback
+                const isVendaField = c.venda === true || c.venda === 'true' || c['s.venda'] === true || c.is_venda === true;
+                
+                // 3. Fallback ramal/attendant name
+                const isSalesAttendant = attendant.includes("vendas") || attendant.includes("v. ind") || attendant.includes("v. rev");
+
+                return isHuman && (hasSalesTag || isVendaField || isSalesAttendant);
             });
 
             // Exclude noise categories
