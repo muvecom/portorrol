@@ -358,10 +358,7 @@
 
         async function loadRamais() {
             try {
-                const fetchOptions = {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                };
-                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04', fetchOptions);
+                const resp = await fetch('https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04');
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -384,10 +381,7 @@
                 if (Object.keys(dicionarioRamais).length === 0) {
                     await loadRamais();
                 }
-                const fetchOptions = {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                };
-                const resp = await fetch(API_URL, fetchOptions);
+                const resp = await fetch(API_URL);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -396,7 +390,7 @@
                 
                 const text = await resp.text();
                 if (!text) {
-                    console.warn("API retornou corpo vazio.");
+                    console.warn("API retornou corpo vazio. O backend pode estar em carga ou sem dados.");
                     rawData = [];
                     processAndRender();
                     return;
