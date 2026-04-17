@@ -78,8 +78,7 @@
             background: white;
         }
 
-        th,
-        td {
+        th, td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
@@ -299,8 +298,7 @@
 
         async function loadData() {
             try {
-                // Token vai SOMENTE na URL — header Authorization causa CORS preflight
-                // que o n8n não responde, e o navegador bloqueia o corpo da resposta.
+                // Token só na URL — header Authorization causa CORS preflight que o n8n não responde
                 const urlComToken = API_URL + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
                 const resp = await fetch(urlComToken);
 
@@ -308,7 +306,7 @@
                     handleAuthError();
                     return;
                 }
-                if (!resp.ok) throw new Error('API Data Error: ' + resp.status);
+                if (!resp.ok) throw new Error('Erro na API: ' + resp.status);
                 
                 const text = await resp.text();
                 if (!text) {
@@ -335,22 +333,17 @@
             }
         }
 
-        function checkPlaybookCompliance(text) {
-            text = (text || "").toLowerCase();
-            return {
-                saudacao: text.includes("portorrol") && (text.includes("ajudar") || text.includes("ajudo") || text.includes("ajudá-lo")),
-                identificacao: text.includes("cnpj") || text.includes("razão social") || text.includes("cliente ou fornecedor"),
-                marcas: text.includes("nsk") || text.includes("timken") || text.includes("marca") || text.includes("autorizado"),
-                urgencia: text.includes("urgência") || text.includes("precisa para quando") || text.includes("prazo de entrega"),
-                fechamento: text.includes("vamos fechar") || text.includes("pode faturar") || text.includes("posso lançar o pedido")
-            };
-        }
-
-        // Categorização baseada no conteúdo da conversa
+        // Categorização usando o campo businessStatus da API + análise de texto
         function classify(conv) {
+            // A API já diz se foi fechado ou não
+            const status = (conv.businessStatus || "").toLowerCase();
+            if (status === "closed" || status === "fechado" || status === "fechados") {
+                return "Fechamento";
+            }
+
+            // Para os não-fechados, classificar pelo conteúdo
             const text = ((conv.summary || "") + " " + (conv.fullConversation || "")).toLowerCase();
 
-            if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro/)) return "Fechamento";
             if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
             if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
             if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
@@ -418,28 +411,16 @@
 
             let data = [...filteredData];
             
-            // Only keeping human attendants and sales conversations
+            // Remover apenas "Atendente Portorrol"
             data = data.filter(c => {
                 let attendant = (c.attendantName || "").toLowerCase();
-                const isHuman = attendant.length > 0 && attendant !== "atendente portorrol" && !attendant.includes("bot");
-                
-                // 1. Check tagsName (prioridade)
-                const tags = Array.isArray(c.tagsName) ? c.tagsName.join(' ').toLowerCase() : "";
-                const hasSalesTag = tags.includes('venda') || tags.includes('fechamento') || tags.includes('pedido') || tags.includes('concluido');
-                
-                // 2. Check s.venda fallback
-                const isVendaField = c.venda === true || c.venda === 'true' || c['s.venda'] === true || c.is_venda === true;
-                
-                // 3. Fallback ramal/attendant name
-                const isSalesAttendant = attendant.includes("vendas") || attendant.includes("v. ind") || attendant.includes("v. rev");
-
-                return isHuman && (hasSalesTag || isVendaField || isSalesAttendant);
+                return attendant !== "atendente portorrol";
             });
 
-            // Exclude noise categories
-            data = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
+            // Excluir categorias de ruído
+            data = data.filter(c => c.category !== "Suporte / Relacionamento");
 
-            // Date filter — API date format is "DD/MM/YYYY"
+            // Filtro de data — formato da API é "DD/MM/YYYY"
             if (from) {
                 const fromDate = new Date(from + 'T00:00:00');
                 data = data.filter(c => {
@@ -470,7 +451,7 @@
             }
             if (atendenteQuery) {
                 data = data.filter(c => {
-                    let nomeInfo = (c.attendantName || "Não Identificado").toLowerCase();
+                    let nomeInfo = (c.attendantName || "").toLowerCase();
                     return nomeInfo.includes(atendenteQuery);
                 });
             }
@@ -538,9 +519,7 @@
                             callbacks: {
                                 label: function(context) {
                                     let label = context.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
+                                    if (label) label += ': ';
                                     let total = context.chart._metasets[context.datasetIndex].total;
                                     let value = context.raw;
                                     let percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
@@ -615,7 +594,7 @@
             const totalGeral = data.length;
             const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento");
             const totalComercial = conversasComerciais.length;
-            const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
+            const fechamentos = data.filter(c => c.category === "Fechamento").length;
             const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : 0;
 
             div.innerHTML = `
@@ -655,7 +634,7 @@
             window.location.href = './call/?token=' + AUTH_TOKEN;
         };
         
-        // Initial setup for dates
+        // Datas padrão: ontem
         let yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         let dateString = yesterday.toISOString().split('T')[0];
