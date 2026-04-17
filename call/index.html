@@ -543,12 +543,10 @@
             // Exclude noise categories
             data = data.filter(c => c.category !== "Caixa Postal / Sem Interação" && c.category !== "Suporte / Relacionamento");
             
-            // Only keep Sales (Vendas) ramais — field from API is "ramal" (e.g. "5103")
-            // dicionarioRamais maps ramal -> nome (e.g. "Vendas | Victor Miqueloto")
+            // Só ramais que começam com V (Vendas | Nome)
             data = data.filter(c => {
-                let ramalInfo = (c.ramal || "").toString().toLowerCase();
-                let nomeInfo = (dicionarioRamais[c.ramal] || "Não Identificado").toLowerCase();
-                return nomeInfo.startsWith("vendas");
+                let nomeInfo = (dicionarioRamais[c.ramal] || "").toLowerCase();
+                return nomeInfo.includes("v");
             });
 
             if (tipoOptions.length > 0) {
