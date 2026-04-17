@@ -358,10 +358,8 @@
 
         async function loadRamais() {
             try {
-                const urlComToken = 'https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04' + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlComToken, {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                });
+                const urlRamais = 'https://evo.muvecom.com.br/webhook/2d07fe73-9bc7-4731-9886-e52ccfc08e04' + (AUTH_TOKEN ? '?token=' + AUTH_TOKEN : '');
+                const resp = await fetch(urlRamais);
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -385,9 +383,8 @@
                     await loadRamais();
                 }
                 const urlComToken = API_URL + (AUTH_TOKEN ? (API_URL.includes('?') ? '&' : '?') + 'token=' + AUTH_TOKEN : '');
-                const resp = await fetch(urlComToken, {
-                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
-                });
+                const resp = await fetch(urlComToken);
+                
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -396,7 +393,7 @@
                 
                 const text = await resp.text();
                 if (!text) {
-                    console.warn("API retornou corpo vazio. Verifique o log do n8n para o token enviado.");
+                    console.warn("API retornou corpo vazio. Verifique se o n8n está enviando dados.");
                     rawData = [];
                     processAndRender();
                     return;
@@ -491,7 +488,7 @@
 
         function processAndRender() {
             filteredData = rawData.map(c => {
-                const textoTranscrito = c.resumo_conversa || "";
+                const textoTranscrito = c.transcription || c.text || c.resumo_conversa || "";
                 let dataFormatada = "N/A";
                 let filterDate = null;
 
