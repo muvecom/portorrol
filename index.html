@@ -29,7 +29,8 @@
 
         header {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 30px;
             align-items: center;
             margin-bottom: 20px;
             background: white;
@@ -226,15 +227,12 @@
             <label>Até: <input type="date" id="date-to"></label>
             <div style="display:inline-flex; flex-direction:column; gap:4px; vertical-align:top;">
                 <label style="font-weight:bold; font-size:12px;">Categorias:</label>
-                <div style="border:1px solid #ddd; border-radius:4px; padding:4px; background:white; font-size:12px; display:grid; grid-template-columns: 1fr 1fr; gap:4px;">
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Prospecção Ativa" checked> Prospecção Ativa</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Atendimento Receptivo" checked> Atend. Receptivo</label>
+                <div style="border:1px solid #ddd; border-radius:4px; padding:4px; background:white; font-size:12px; display:grid; grid-template-columns: 1fr; gap:4px;">
                     <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Negociação" checked> Negociação</label>
                     <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Fechamento" checked> Fechamento</label>
-                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Suporte / Relacionamento" checked> Suporte / Relacion.</label>
                 </div>
             </div>
-            <label>Atendente:
+            <label>Vendedor:
                 <input type="text" id="filter-atendente" placeholder="Nome..." style="padding:6px; border:1px solid #ddd; border-radius:4px; max-width:150px; vertical-align:middle;">
             </label>
             <button class="filter-btn" onclick="applyFilters()">Aplicar Filtros</button>
@@ -308,6 +306,7 @@
                     handleAuthError();
                     return;
                 }
+                if (!resp.ok) throw new Error('API Data Error');
                 const json = await resp.json();
                 rawData = json.conversations || [];
                 processAndRender();
@@ -340,82 +339,44 @@
             return "Atendimento Receptivo";
         }
 
-        function generateSmartSummary(text, compliance) {
+        function generateSmartSummary(text) {
             if (!text) return "Sem dados suficientes para resumo.";
             const lowerText = text.toLowerCase();
 
             let action = "Contato Genérico";
-            let tags = "Geral";
+            let subAction = "";
 
-            // Prospecção Ativa
-            if (lowerText.match(/primeira abordagem|estou entrando em contato|vi seu contato/)) {
-                action = "Prospecção Ativa";
-                tags = "Primeira abordagem";
-            } else if (lowerText.match(/follow-up de tentativa anterior/)) {
-                 action = "Prospecção Ativa";
-                 tags = "Follow-up de tentativa anterior";
-            } else if (lowerText.match(/reativação de cliente inativo/)) {
-                 action = "Prospecção Ativa";
-                 tags = "Reativação de cliente inativo";
-            }
-            // Atendimento Receptivo
-            else if (lowerText.match(/cotação|orçamento/)) {
-                 action = "Atendimento Receptivo";
-                 tags = "Cotação";
-            } else if (lowerText.match(/dúvida técnica/)) {
-                 action = "Atendimento Receptivo";
-                 tags = "Dúvida técnica";
-            } else if (lowerText.match(/reclamação/)) {
-                 action = "Atendimento Receptivo";
-                 tags = "Reclamação";
-            } else if (lowerText.match(/pós-venda/)) {
-                 action = "Atendimento Receptivo";
-                 tags = "Pós-venda";
-            }
-            // Negociação
-            else if (lowerText.match(/ajuste de preço|preço|valor|desconto/)) {
-                 action = "Negociação";
-                 tags = "Ajuste de preço";
-            } else if (lowerText.match(/ajuste de prazo|prazo/)) {
-                 action = "Negociação";
-                 tags = "Ajuste de prazo";
-            } else if (lowerText.match(/substituição técnica/)) {
-                 action = "Negociação";
-                 tags = "Substituição técnica";
-            } else if (lowerText.match(/discussão de crédito|crédito|pagamento|condição/)) {
-                 action = "Negociação";
-                 tags = "Discussão de crédito";
-            }
-            // Fechamento
-            else if (lowerText.match(/pedido confirmado|pedido feito|fechado|aprovado|faturar/)) {
-                 action = "Fechamento";
-                 tags = "Pedido confirmado";
-            } else if (lowerText.match(/pedido parcial/)) {
-                 action = "Fechamento";
-                 tags = "Pedido parcial";
-            } else if (lowerText.match(/pedido perdido/)) {
-                 action = "Fechamento";
-                 tags = "Pedido perdido";
-            }
-            // Suporte / Relacionamento
-            else if (lowerText.match(/visita técnica/)) {
-                 action = "Suporte / Relacionamento";
-                 tags = "Visita técnica";
-            } else if (lowerText.match(/acompanhamento de entrega|entrega|frete|rastreio/)) {
-                 action = "Suporte / Relacionamento";
-                 tags = "Acompanhamento de entrega";
-            } else if (lowerText.match(/pós-venda ativo/)) {
-                 action = "Suporte / Relacionamento";
-                 tags = "Pós-venda ativo";
-            } else if (lowerText.match(/fidelização/)) {
-                 action = "Suporte / Relacionamento";
-                 tags = "Fidelização";
-            }
+            // A. Prospecção Ativa
+            if (lowerText.match(/primeira abordagem/)) { action = "A. Prospecção Ativa"; subAction = "Primeira abordagem"; }
+            else if (lowerText.match(/follow-up de tentativa anterior/)) { action = "A. Prospecção Ativa"; subAction = "Follow-up de tentativa anterior"; }
+            else if (lowerText.match(/reativação de cliente inativo/)) { action = "A. Prospecção Ativa"; subAction = "Reativação de cliente inativo"; }
+            
+            // B. Atendimento Receptivo
+            else if (lowerText.match(/cotação|orçamento/)) { action = "B. Atendimento Receptivo"; subAction = "Cotação"; }
+            else if (lowerText.match(/dúvida técnica/)) { action = "B. Atendimento Receptivo"; subAction = "Dúvida técnica"; }
+            else if (lowerText.match(/reclamação/)) { action = "B. Atendimento Receptivo"; subAction = "Reclamação"; }
+            else if (lowerText.match(/pós-venda|pós venda/)) { action = "B. Atendimento Receptivo"; subAction = "Pós-venda"; }
 
-            // Pega um pequeno trecho real (limpando saudações chatas) para dar contexto
-            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 70);
+            // C. Negociação
+            else if (lowerText.match(/ajuste de preço|preço|valor|desconto/)) { action = "C. Negociação"; subAction = "Ajuste de preço"; }
+            else if (lowerText.match(/ajuste de prazo|prazo/)) { action = "C. Negociação"; subAction = "Ajuste de prazo"; }
+            else if (lowerText.match(/substituição técnica/)) { action = "C. Negociação"; subAction = "Substituição técnica"; }
+            else if (lowerText.match(/discussão de crédito|crédito|pagamento|condição/)) { action = "C. Negociação"; subAction = "Discussão de crédito"; }
 
-            return `📍 <b>Ação:</b> ${action} <br>🏷️ <b>Tópicos:</b> ${tags} <br>💬 <i>Contexto: "${contextClean}..."</i>`;
+            // D. Fechamento
+            else if (lowerText.match(/pedido confirmado|pedido feito|fechado|aprovado|faturar/)) { action = "D. Fechamento"; subAction = "Pedido confirmado"; }
+            else if (lowerText.match(/pedido parcial/)) { action = "D. Fechamento"; subAction = "Pedido parcial"; }
+            else if (lowerText.match(/pedido perdido/)) { action = "D. Fechamento"; subAction = "Pedido perdido"; }
+
+            // E. Suporte / Relacionamento
+            else if (lowerText.match(/visita técnica/)) { action = "E. Suporte / Relacionamento"; subAction = "Visita técnica"; }
+            else if (lowerText.match(/acompanhamento de entrega|entrega|frete|rastreio/)) { action = "E. Suporte / Relacionamento"; subAction = "Acompanhamento de entrega"; }
+            else if (lowerText.match(/pós-venda ativo/)) { action = "E. Suporte / Relacionamento"; subAction = "Pós-venda ativo"; }
+            else if (lowerText.match(/fidelização/)) { action = "E. Suporte / Relacionamento"; subAction = "Fidelização"; }
+
+            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
+
+            return `📍 <b>Categoria:</b> ${action} <br>🏷️ <b>Ação:</b> ${subAction || "Geral"} <br>💬 <i>Contexto: "${contextClean}..."</i>`;
         }
 
         function processAndRender() {
@@ -439,11 +400,17 @@
 
             let data = [...filteredData];
             
-            // Only keeping human attendants (removing bot)
+            // Only keeping human attendants (removing bot and attendants like "Atendente Portorrol")
             data = data.filter(c => {
                 let attendant = (c.attendantName || "").toLowerCase();
-                return attendant.length > 0 && attendant !== "atendente portorrol" && !attendant.includes("bot");
+                return attendant.length > 0 && 
+                       attendant !== "atendente portorrol" && 
+                       !attendant.includes("bot") &&
+                       (attendant.includes("vendas") || attendant.includes("v. ind") || attendant.includes("v. rev"));
             });
+
+            // Exclude noise categories
+            data = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
 
             if (from) data = data.filter(c => new Date(c.date) >= new Date(from));
             if (to) data = data.filter(c => new Date(c.date) <= new Date(to));
@@ -493,7 +460,30 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { 
-                        legend: { position: 'right' },
+                        legend: { 
+                            position: 'right',
+                            labels: {
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const val = data.datasets[0].data[i];
+                                            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                            const perc = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                            return {
+                                                text: `${label}: ${val} (${perc}%)`,
+                                                fillStyle: data.datasets[0].backgroundColor[i],
+                                                strokeStyle: data.datasets[0].backgroundColor[i],
+                                                lineWidth: 1,
+                                                hidden: isNaN(data.datasets[0].data[i]) || chart.getDatasetMeta(0).data[i].hidden,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                    return [];
+                                }
+                            }
+                        },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -597,9 +587,14 @@
 
         function resetFilters() {
             selectedCategory = null;
-            document.getElementById('date-from').value = '';
-            document.getElementById('date-to').value = '';
-            document.querySelectorAll('.filter-cat').forEach(cb => cb.checked = false);
+
+            let yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            let dateString = yesterday.toISOString().split('T')[0];
+            document.getElementById('date-from').value = dateString;
+            document.getElementById('date-to').value = dateString;
+
+            document.querySelectorAll('.filter-cat').forEach(cb => cb.checked = true);
             if (document.getElementById('filter-atendente')) {
                 document.getElementById('filter-atendente').value = '';
             }
