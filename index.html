@@ -299,7 +299,10 @@
 
         async function loadData() {
             try {
-                const resp = await fetch(API_URL);
+                const urlComToken = API_URL + (AUTH_TOKEN ? (API_URL.includes('?') ? '&' : '?') + 'token=' + AUTH_TOKEN : '');
+                const resp = await fetch(urlComToken, {
+                    headers: AUTH_TOKEN ? { 'Authorization': AUTH_TOKEN } : {}
+                });
                 if (resp.status === 401 || resp.status === 403) {
                     handleAuthError();
                     return;
@@ -308,7 +311,7 @@
                 
                 const text = await resp.text();
                 if (!text) {
-                    console.warn("API retornou corpo vazio. O backend pode estar em carga ou sem dados.");
+                    console.warn("API retornou corpo vazio. Verifique o log do n8n para o token enviado.");
                     rawData = [];
                     processAndRender();
                     return;
