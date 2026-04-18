@@ -712,24 +712,23 @@
         function renderMetrics(data) {
             const div = document.getElementById('metric-summary');
             const totalGeral = data.length;
-            const conversasComerciais = data.filter(c => c.category !== "Suporte / Relacionamento" && c.category !== "Caixa Postal / Sem Interação");
+            const conversasComerciais = data.filter(c => c.category === "Negociação" || c.category === "Fechamento");
             const totalComercial = conversasComerciais.length;
-            const fechamentos = conversasComerciais.filter(c => c.category === "Fechamento").length;
-
-            const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : "0.00";
+            const fechamentos = data.filter(c => c.category === "Fechamento").length;
+            const taxa = totalComercial > 0 ? ((fechamentos / totalComercial) * 100).toFixed(2) : 0;
 
             div.innerHTML = `
             <div class="metric-card" style="border-color: #9aa0a6;">
                 <p>Total de Ligações Válidas</p>
                 <h2>${totalGeral}</h2>
             </div>
-            <div class="metric-card" style="border-color: #673ab7; background:#f4ebff;">
-                <p>Ligações Comerciais Vendas</p>
+            <div class="metric-card" style="border-color: #f9ab00; background:#fff7e6;">
+                <p>Ligações Comerciais (Neg.+Fech.)</p>
                 <h2>${totalComercial}</h2>
             </div>
             <div class="metric-card" style="border-color: #34a853; background:#e6f4ea;">
                 <p>Fechamentos em Voz</p>
-                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% das válidas)</span></h2>
+                <h2>${fechamentos} <span style="font-size:14px; font-weight:normal; color:#34a853;">(${String(taxa).replace('.', ',')}% de conversão)</span></h2>
             </div>
         `;
         }
