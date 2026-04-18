@@ -265,7 +265,7 @@
         </header>
 
         <div style="font-size: 12px; color: #666; margin-top: -15px; margin-bottom: 15px; text-align: right;">
-            Última atualização: <span id="last-updated">--/--/---- --:--</span>
+            Dados atualizados diariamente às 21h
         </div>
 
         <div class="filter-section">
@@ -284,6 +284,7 @@
                 <div style="border:1px solid #ddd; border-radius:4px; padding:4px; background:white; font-size:12px; display:grid; grid-template-columns: 1fr; gap:4px;">
                     <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Negociação" checked> Negociação</label>
                     <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Fechamento" checked> Fechamento</label>
+                    <label style="cursor:pointer;"><input type="checkbox" class="filter-cat" value="Outros" checked> Outros</label>
                 </div>
             </div>
             <label>Vendedor / Ramal:
@@ -347,12 +348,9 @@
         }
 
         const colors = {
-            "Prospecção Ativa": "#673ab7",
-            "Atendimento Receptivo": "#9aa0a6",
             "Negociação": "#f9ab00",
             "Fechamento": "#34a853",
-            "Caixa Postal / Sem Interação": "#555555",
-            "Suporte / Relacionamento": "#ea4335"
+            "Outros": "#9aa0a6"
         };
 
         async function loadRamais() {
@@ -415,26 +413,13 @@
             }
         }
 
-        function classify(text, direcao) {
+        function classify(text) {
             text = (text || "").toLowerCase();
-            direcao = direcao || "Outros";
-
-            if (text.match(/sem interação|correio de voz|interferência|música|suspense/)) return "Caixa Postal / Sem Interação";
 
             if (text.match(/confirmado|pedido feito|fechamos|faturar|pode faturar|segue o pedido|boleto enviado|enviado para o financeiro|coleta/)) return "Fechamento";
             if (text.match(/preço|valor|desconto|prazo|orçamento|cotar|cotação|condição|pagamento|crédito|substituição/)) return "Negociação";
-            if (text.match(/visita técnica|acompanhamento|entrega|problema|ajuda|reclamação|garantia|fidelização|rastreio|não chegou/)) return "Suporte / Relacionamento";
-            
-            // Deterministic classification based on direction
-            if (direcao === "Saída") {
-                return "Prospecção Ativa";
-            } else if (direcao === "Entrada") {
-                return "Atendimento Receptivo";
-            }
 
-            // Fallback for "Outros"
-            if (text.match(/bom dia|olá|como vai|estou entrando em contato|vi seu contato/)) return "Prospecção Ativa";
-            return "Atendimento Receptivo";
+            return "Outros";
         }
 
         function checkPlaybookCompliance(text) {
@@ -452,40 +437,27 @@
             if (!text) return "Sem dados suficientes para resumo.";
             const lowerText = text.toLowerCase();
 
-            let action = "Contato Genérico";
-            let subAction = "";
+            let acao = "Contato geral";
 
-            // A. Prospecção Ativa
-            if (lowerText.match(/primeira abordagem/)) { action = "A. Prospecção Ativa"; subAction = "Primeira abordagem"; }
-            else if (lowerText.match(/follow-up de tentativa anterior/)) { action = "A. Prospecção Ativa"; subAction = "Follow-up de tentativa anterior"; }
-            else if (lowerText.match(/reativação de cliente inativo/)) { action = "A. Prospecção Ativa"; subAction = "Reativação de cliente inativo"; }
-            
-            // B. Atendimento Receptivo
-            else if (lowerText.match(/cotação|orçamento/)) { action = "B. Atendimento Receptivo"; subAction = "Cotação"; }
-            else if (lowerText.match(/dúvida técnica/)) { action = "B. Atendimento Receptivo"; subAction = "Dúvida técnica"; }
-            else if (lowerText.match(/reclamação/)) { action = "B. Atendimento Receptivo"; subAction = "Reclamação"; }
-            else if (lowerText.match(/pós-venda|pós venda/)) { action = "B. Atendimento Receptivo"; subAction = "Pós-venda"; }
+            if (lowerText.match(/pedido confirmado|pedido feito|fechamos|aprovado|faturar|pode faturar|boleto enviado/)) acao = "Pedido confirmado";
+            else if (lowerText.match(/pedido parcial/)) acao = "Pedido parcial";
+            else if (lowerText.match(/pedido perdido|não fechou|perdemos/)) acao = "Pedido perdido";
+            else if (lowerText.match(/cotação|orçamento|cotar/)) acao = "Cotação solicitada";
+            else if (lowerText.match(/ajuste de preço|preço|valor|desconto/)) acao = "Discussão de preço";
+            else if (lowerText.match(/ajuste de prazo|prazo|entrega/)) acao = "Discussão de prazo";
+            else if (lowerText.match(/substituição técnica|substituição/)) acao = "Substituição técnica";
+            else if (lowerText.match(/crédito|pagamento|condição/)) acao = "Discussão de crédito";
+            else if (lowerText.match(/dúvida técnica/)) acao = "Dúvida técnica";
+            else if (lowerText.match(/reclamação/)) acao = "Reclamação";
+            else if (lowerText.match(/pós-venda|pós venda/)) acao = "Pós-venda";
+            else if (lowerText.match(/visita técnica/)) acao = "Visita técnica";
+            else if (lowerText.match(/fidelização/)) acao = "Fidelização";
+            else if (lowerText.match(/acompanhamento|rastreio|frete/)) acao = "Acompanhamento";
+            else if (lowerText.match(/primeira abordagem|follow-up|reativação/)) acao = "Prospecção";
 
-            // C. Negociação
-            else if (lowerText.match(/ajuste de preço|preço|valor|desconto/)) { action = "C. Negociação"; subAction = "Ajuste de preço"; }
-            else if (lowerText.match(/ajuste de prazo|prazo/)) { action = "C. Negociação"; subAction = "Ajuste de prazo"; }
-            else if (lowerText.match(/substituição técnica/)) { action = "C. Negociação"; subAction = "Substituição técnica"; }
-            else if (lowerText.match(/discussão de crédito|crédito|pagamento|condição/)) { action = "C. Negociação"; subAction = "Discussão de crédito"; }
+            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 120);
 
-            // D. Fechamento
-            else if (lowerText.match(/pedido confirmado|pedido feito|fechado|aprovado|faturar/)) { action = "D. Fechamento"; subAction = "Pedido confirmado"; }
-            else if (lowerText.match(/pedido parcial/)) { action = "D. Fechamento"; subAction = "Pedido parcial"; }
-            else if (lowerText.match(/pedido perdido/)) { action = "D. Fechamento"; subAction = "Pedido perdido"; }
-
-            // E. Suporte / Relacionamento
-            else if (lowerText.match(/visita técnica/)) { action = "E. Suporte / Relacionamento"; subAction = "Visita técnica"; }
-            else if (lowerText.match(/acompanhamento de entrega|entrega|frete|rastreio/)) { action = "E. Suporte / Relacionamento"; subAction = "Acompanhamento de entrega"; }
-            else if (lowerText.match(/pós-venda ativo/)) { action = "E. Suporte / Relacionamento"; subAction = "Pós-venda ativo"; }
-            else if (lowerText.match(/fidelização/)) { action = "E. Suporte / Relacionamento"; subAction = "Fidelização"; }
-
-            let contextClean = text.replace(/bom dia|boa tarde|boa noite|olá|tudo bem/gi, '').trim().substring(0, 100);
-
-            return `📍 <b>Categoria:</b> ${action} <br>🏷️ <b>Ação:</b> ${subAction || "Geral"} <br>🎙️ <i>Trecho: "${contextClean}..."</i>`;
+            return `🏷️ <b>Ação:</b> ${acao} <br>🎙️ <i>"${contextClean}..."</i>`;
         }
 
         function processAndRender() {
@@ -516,7 +488,7 @@
                 return {
                     ...c,
                     textoCompleto: textoTranscrito,
-                    category: classify(textoTranscrito, direcao),
+                    category: classify(textoTranscrito),
                     displayDate: dataFormatada,
                     filterDate: filterDate,
                     audioUrl: c.audio_url || null,
@@ -525,7 +497,7 @@
             });
             applyFilters();
             
-            document.getElementById('last-updated').textContent = new Date().toLocaleString('pt-BR');
+
         }
 
         function applyFilters() {
@@ -540,8 +512,7 @@
             if (from) data = data.filter(c => c.filterDate && c.filterDate >= from);
             if (to) data = data.filter(c => c.filterDate && c.filterDate <= to);
             
-            // Exclude noise categories
-            data = data.filter(c => c.category !== "Caixa Postal / Sem Interação" && c.category !== "Suporte / Relacionamento");
+
             
             // Só ramais que começam com V (Vendas | Nome)
             data = data.filter(c => {
